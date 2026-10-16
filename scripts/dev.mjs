@@ -1,7 +1,7 @@
 // Development install: this checkout, linked into the isolated DSH home
 // `.dsh-dev/` inside the repository. Your daily DSH home is never touched.
 //
-//   node scripts/dev.mjs cli [version]  install DSH (default: latest) into .dsh-cli
+//   node scripts/dev.mjs cli [version]  install DSH (default: package.json config.dshVersion) into .dsh-cli
 //   node scripts/dev.mjs install        link this checkout into .dsh-dev
 //   node scripts/dev.mjs start          install, then start the web profile on a free port
 //   node scripts/dev.mjs run <args...>  run any dsh command against .dsh-dev
@@ -12,6 +12,7 @@
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { DEFAULT_DSH_VERSION, exactDshVersion } from './dsh-version.mjs'
 import {
   assertInstalled,
   assertMounted,
@@ -41,7 +42,8 @@ if (command === 'clean') {
 }
 
 if (command === 'cli') {
-  const version = rest[0] ?? 'latest'
+  const requested = rest[0] ?? pkg.config?.dshVersion ?? DEFAULT_DSH_VERSION
+  const version = requested === '0.2' ? exactDshVersion(requested) : requested
   if (!/^[0-9A-Za-z.-]+$/.test(version))
     throw new Error(`Not a DSH version or dist-tag: ${version}.`)
   // npm, not pnpm: .dsh-cli is a standalone tool directory outside this

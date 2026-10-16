@@ -24,7 +24,7 @@ Two rows, separated by a blank line.
 | CI             | `[![CI](https://github.com/<owner>/<name>/actions/workflows/ci.yml/badge.svg)](https://github.com/<owner>/<name>/actions/workflows/ci.yml)`      |
 | Release        | `[![Release](https://img.shields.io/github/v/release/<owner>/<name>?sort=semver)](https://github.com/<owner>/<name>/releases/latest)`            |
 | License        | `[![License](https://img.shields.io/github/license/<owner>/<name>)](LICENSE)`                                                                   |
-| DSH version    | `![DSH](https://img.shields.io/badge/DSH-<verified version, escaped>-blue)`                                                                      |
+| DSH version    | `![DSH](https://img.shields.io/badge/DSH-<target version, escaped>-blue)`                                                                      |
 | RED            | `[![Maintained with RED](https://img.shields.io/badge/maintained_with-RED-C1121F)](https://github.com/exoticknight/red)`                        |
 
 **Row 2: directory listings**, absent until the first listing is confirmed; then one badge per confirmed listing, in the order they were confirmed:

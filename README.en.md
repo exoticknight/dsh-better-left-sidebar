@@ -14,9 +14,6 @@ Repository, init, build, tests, CI, npm and GitHub releases, directory listings:
 
 </div>
 
-> [!IMPORTANT]
-> **AI agents:** this is an uninitialized template. Read [`AGENTS.md`](AGENTS.md), then follow [`playbooks/00-init.md`](playbooks/00-init.md). Do not write plugin code before initialization.
-
 ## Start in 30 seconds
 
 Send this to Claude Code, Codex, Cursor or any coding agent, with your own feature filled in:
@@ -99,10 +96,13 @@ The agent does everything else.
 
 **Copy, then an agent.** Click **Use this template** above (or clone the repository), open it with your agent and say _"initialize this plugin"_.
 
+Initialization asks for your target DSH version. If no answer is available, it defaults to the 0.2 baseline, currently pinned to the published `0.2.0-rc.2`. A manual invocation without `--dsh-version` prompts in a terminal; blank or noninteractive input uses the default. Compatibility defaults to the exact selected version; `--dsh-min` can extend the range downwards. Development targets and actual verification records are kept separately.
+
 **Fully manual.** Requirements: Node.js `^22.19.0 || >=24`, pnpm, git, a logged-in GitHub CLI; a DSH CLI for local testing.
 
 ```sh
-node scripts/init.mjs --name dsh-foo --owner <github-user> --dsh-version <dsh version> \
+pnpm install
+node scripts/init.mjs --name dsh-foo --owner <github-user> --dsh-version 0.2 \
   --title "Foo" --description "Foo for DeepSeek Harness."
 pnpm install
 pnpm hooks:install
@@ -118,7 +118,7 @@ Then follow [`10-github`](playbooks/10-github.md), [`20-npm`](playbooks/20-npm.m
 | ---------------- | -------- | ----------------------------------------------------------------- |
 | `--name`         | yes      | npm and repository name, `dsh-<slug>`                             |
 | `--owner`        | yes      | GitHub user or organization                                       |
-| `--dsh-version`  | yes      | DSH version the plugin is verified on                             |
+| `--dsh-version`  |          | Target version; prompts if omitted, falling back to 0.2 (0.2.0-rc.2)                             |
 | `--dsh-min`      |          | Minimum supported DSH (default: `--dsh-version`)                  |
 | `--title`        |          | Display name (default: derived from the name)                     |
 | `--description`  |          | One English sentence (default: "`<title>` for DeepSeek Harness.") |
@@ -134,7 +134,7 @@ Then follow [`10-github`](playbooks/10-github.md), [`20-npm`](playbooks/20-npm.m
 <summary><b>What init does</b></summary>
 
 - Copies the plugin README skeletons in `.template/` over `README.md` (Chinese) and `README.en.md` (English), replacing this page
-- Replaces every placeholder: `dsh-plugin-template`, `{{OWNER}}`, `{{PLUGIN_TITLE}}`, `{{DESCRIPTION}}`, `{{AUTHOR}}`, `{{DSH_VERSION}}`, `{{DSH_VERSION_BADGE}}`, `{{DSH_MIN_VERSION}}`, `{{DSH_PROFILE}}`
+- Replaces every placeholder: `dsh-plugin-template`, `{{OWNER}}`, `{{PLUGIN_TITLE}}`, `{{DESCRIPTION}}`, `{{AUTHOR}}`, `{{DSH_VERSION}}`, `{{DSH_VERSION_BADGE}}`, `{{DSH_MIN_VERSION}}`, `{{DSH_COMPAT_RANGE}}`, `{{DSH_PROFILE}}`
 - Removes template-only content: the template section of `AGENTS.md`, `.template/`, and the init script itself; plus the client entry or npm parts when the flags ask for it
 - Keeps `playbooks/` (releases and maintenance use them) and records the template in the `template` field of `package.json`
 

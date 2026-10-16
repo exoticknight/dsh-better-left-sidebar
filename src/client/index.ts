@@ -1,5 +1,6 @@
 // Client entry: runs in the DSH web page. Bundled to lib/client.js.
-// Client services come from the packages listed in package.json dsh.client.inject.
+// Declare required Cordis services in inject below. Declare module requests beyond
+// DSH's built-in baseline in package.json dsh.client.external.
 
 interface ClientContext {
   effect: (effect: () => (() => void) | void, label?: string) => void

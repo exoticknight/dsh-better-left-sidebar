@@ -2,6 +2,7 @@
   "name": "dsh-plugin-template",
   "version": "0.1.0",
   "description": "{{DESCRIPTION}}",
+  "icon": "./icon.svg",
   "license": "Apache-2.0",
   "author": "{{AUTHOR}}",
   "keywords": [
@@ -25,7 +26,8 @@
   "type": "module",
   "packageManager": "pnpm@11.24.0",
   "engines": {
-    "node": "^22.19.0 || >=24.0.0"
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": "0.2.0-rc.2"
   },
   "main": "./lib/index.js",
   "exports": {
@@ -36,6 +38,7 @@
   "files": [
     "lib/index.js",
     "lib/client.js",
+    "icon.svg",
     "cordis.patch.yml",
     "README.md",
     "README.en.md",
@@ -50,10 +53,7 @@
       "patch": "./cordis.patch.yml"
     },
     "client": {
-      "platform": "web",
-      "inject": [
-        "@deepseek-ai/dsh-client-runtime"
-      ]
+      "platform": "web"
     }
   },
   "scripts": {
@@ -79,10 +79,22 @@
     "@deepseek-ai/schemastery": "^3.18.2"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/cordis": "^4.0.4",
     "@types/node": "^24.13.3",
     "esbuild": "^0.28.2",
+    "semver": "^7.8.5",
     "simple-git-hooks": "^2.14.0",
     "typescript": "^7.0.2"
+  },
+  "config": {
+    "dshVersion": "0.2.0-rc.2"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh": "0.2.0-rc.2"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh": {
+      "optional": true
+    }
   }
 }

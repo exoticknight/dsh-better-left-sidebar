@@ -1,14 +1,15 @@
 // Turns this template into a concrete plugin. Runs once; deletes itself.
 //
 //   node scripts/init.mjs --name dsh-foo --owner my-github \
-//     --dsh-version 0.1.5-rc.2 [--title "Foo"] [--description "..."]
-//     [--author "Me"] [--dsh-min 0.1.5-rc.2] [--keywords a,b]
+//     [--dsh-version 0.2] [--title "Foo"] [--description "..."]
+//     [--author "Me"] [--dsh-min 0.2.0-rc.2] [--keywords a,b]
 //     [--host-only] [--no-npm] [--dry-run]
 //
 // See playbooks/00-init.md for how to choose each value.
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { chooseDshVersion, exactDshVersion, dshCompatibility } from './dsh-version.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const TEMPLATE_NAME = 'dsh-plugin-template'
@@ -42,8 +43,6 @@ for (let i = 0; i < argv.length; i++) {
   } else fail(`unknown argument ${argv[i]}.`)
 }
 
-const semver = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/
-
 const pkgPath = path.join(root, 'package.json')
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'))
 if (pkg.name !== TEMPLATE_NAME)
@@ -61,11 +60,13 @@ if (!name.startsWith('dsh-'))
 if (!args.owner) fail('--owner (GitHub user or organization) is required.')
 if (!/^[A-Za-z0-9](?:-?[A-Za-z0-9])*$/.test(args.owner))
   fail(`--owner ${args.owner} is not a GitHub user or organization name.`)
-if (!args['dsh-version'])
-  fail('--dsh-version (verified DSH version) is required.')
-for (const key of ['dsh-version', 'dsh-min'])
-  if (args[key] !== undefined && !semver.test(args[key]))
-    fail(`--${key} must be an exact version such as 0.1.5 or 0.1.5-rc.2.`)
+let compatibility
+try {
+  args['dsh-version'] = await chooseDshVersion(args['dsh-version'])
+  args['dsh-min'] = exactDshVersion(args['dsh-min'] ?? args['dsh-version'])
+  compatibility = dshCompatibility(args['dsh-version'], args['dsh-min'])
+} catch (error) { fail(error.message) }
+console.log(`DSH target: ${args['dsh-version']}; compatibility: ${compatibility}`)
 
 const hostOnly = Boolean(args['host-only'])
 const title =
@@ -85,6 +86,7 @@ const values = {
   // shields.io static badges use '-' as a separator.
   '{{DSH_VERSION_BADGE}}': args['dsh-version'].replace(/-/g, '--').replace(/_/g, '__'),
   '{{DSH_MIN_VERSION}}': args['dsh-min'] ?? args['dsh-version'],
+  '{{DSH_COMPAT_RANGE}}': compatibility,
   '{{DSH_PROFILE}}': hostOnly ? 'headless' : 'web',
 }
 
@@ -101,7 +103,7 @@ const remove = (file) => {
 }
 
 // Files that talk about the template itself keep its name.
-const skipDirs = new Set(['.git', 'node_modules', 'lib', 'playbooks'])
+const skipDirs = new Set(['.git', 'node_modules', 'lib', 'playbooks', '.research', '.evolve', '.dsh-cli', '.dsh-dev', '.tmp', '.pnpm-store', 'artifacts'])
 const skipFiles = new Set([
   'LICENSE',
   'pnpm-lock.yaml',
@@ -167,6 +169,10 @@ const nextPkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'), (_, value) =>
   typeof value === 'string' ? substitute(value) : value,
 )
 nextPkg.version = '0.1.0'
+nextPkg.config = { ...nextPkg.config, dshVersion: args['dsh-version'] }
+nextPkg.engines = { ...nextPkg.engines, dsh: compatibility }
+nextPkg.peerDependencies = { ...nextPkg.peerDependencies, '@deepseek-ai/dsh': compatibility }
+nextPkg.peerDependenciesMeta = { ...nextPkg.peerDependenciesMeta, '@deepseek-ai/dsh': { optional: true } }
 delete nextPkg.scripts.init
 // The token pass renamed the template; restore its credit.
 nextPkg.template = pkg.template

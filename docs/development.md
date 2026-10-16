@@ -25,7 +25,7 @@ pnpm verify
 | `src/host/index.ts`  | Host entry. Runs in the DSH Node process and builds to `lib/index.js` (ESM) |
 | `src/client/`        | Client entry. Runs in the DSH web page and builds to `lib/client.js`        |
 | `cordis.patch.yml`   | DSH bundle patch: mounts the host entry with its default config             |
-| `package.json` `dsh` | Bundle patch path, client platform and the client packages it injects       |
+| `package.json` `dsh` | Bundle patch path, client platform and explicit external module requests   |
 | `scripts/build.mjs`  | esbuild for both entries                                                    |
 | `scripts/dev.mjs`    | Isolated development DSH in `.dsh-dev`                                      |
 | `tests/`             | `node --test` contract tests against the built `lib/`                       |
@@ -42,7 +42,7 @@ pnpm verify
 | `pnpm check:package` | List the npm tarball contents and check them                |
 | `pnpm check:release` | Release gate: tag, version, metadata, leftover placeholders |
 | `pnpm verify`        | Everything CI runs                                          |
-| `pnpm dev:cli [ver]` | Install DSH (default: latest) into `.dsh-cli` for testing   |
+| `pnpm dev:cli [ver]` | Install DSH (default: package.json config.dshVersion) into `.dsh-cli` for testing   |
 | `pnpm dev`           | Link this checkout into `.dsh-dev` and start the web profile |
 | `pnpm dev:install`   | Link into `.dsh-dev` without starting DSH                   |
 | `pnpm dev:dsh …`     | Run any dsh command against `.dsh-dev`                      |
@@ -52,6 +52,8 @@ pnpm verify
 ## Isolated DSH
 
 All local testing happens in `.dsh-dev/`, a DSH home inside the repository. Your daily DSH home (`~/.dsh`) is never used.
+
+Init asks for a target version; unavailable input defaults to the published 0.2 baseline, `0.2.0-rc.2`. `config.dshVersion` pins the default for `pnpm dev:cli`. The optional DSH host peer and `engines.dsh` carry the same bounded compatibility range. `pnpm-workspace.yaml` sets `autoInstallPeers: false` so a normal workspace install does not pull in the CLI; install additional development peers explicitly.
 
 - `pnpm dev` links this checkout into `.dsh-dev` with `dsh plugin --profile <profile> add .`, checks that the install really landed there, and starts the web profile on a free port without opening a browser. The printed link contains a login token; do not share it.
 - The install is a link: after a change, run `pnpm build`, stop DSH with `Ctrl+C`, and run `pnpm dev` again.

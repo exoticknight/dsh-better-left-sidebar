@@ -15,7 +15,13 @@ if (result.status !== 0) {
 const [{ files, size }] = JSON.parse(result.stdout)
 const packed = new Set(files.map((file) => file.path))
 
-const required = ['package.json', 'lib/index.js', 'cordis.patch.yml', 'LICENSE']
+const required = [
+  'package.json',
+  'lib/index.js',
+  'icon.svg',
+  'cordis.patch.yml',
+  'LICENSE',
+]
 if (pkg.dsh?.client) required.push('lib/client.js')
 const missing = required.filter((file) => !packed.has(file))
 const leaked = [...packed].filter((file) =>

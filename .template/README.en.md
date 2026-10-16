@@ -24,7 +24,7 @@
 
 ## Install
 
-Requirements: DeepSeek Harness `{{DSH_MIN_VERSION}}` or newer (verified on `{{DSH_VERSION}}`) with a `{{DSH_PROFILE}}` profile.
+Requirements: DeepSeek Harness matching `{{DSH_COMPAT_RANGE}}` (development target: `{{DSH_VERSION}}`; verification records below) with a `{{DSH_PROFILE}}` profile.
 
 <!-- npm:start -->
 

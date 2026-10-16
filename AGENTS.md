@@ -40,7 +40,7 @@ This file is loaded for every task. It holds only what always applies. Everythin
 ```sh
 pnpm install && pnpm hooks:install
 pnpm verify          # what CI runs: typecheck, build, tests, package check
-pnpm dev:cli [ver]   # isolated DSH CLI in .dsh-cli (default: latest)
+pnpm dev:cli [ver]   # isolated DSH CLI in .dsh-cli (default: package.json config.dshVersion)
 pnpm dev             # this checkout linked into the isolated DSH home .dsh-dev
 pnpm smoke <spec>    # a published version installed into a throwaway DSH home
 pnpm check:release   # release gate

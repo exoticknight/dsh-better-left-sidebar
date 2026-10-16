@@ -1,5 +1,5 @@
 // Install a published version exactly as a user would, into a throwaway DSH
-// home, and check that it becomes an active, mounted bundle.
+// home, and check that it is installed and present in the merged configuration.
 //
 //   node scripts/smoke.mjs <name>@X.Y.Z [profile]                  npm
 //   node scripts/smoke.mjs github:<owner>/<name>#vX.Y.Z [profile]  GitHub release
@@ -33,7 +33,7 @@ try {
   if (status !== 0) throw new Error(`dsh plugin add ${spec} failed (${status}).`)
   assertInstalled(home, profile)
   assertMounted(home, profile)
-  console.log(`Smoke test passed: ${spec} is active in a fresh ${profile} profile.`)
+  console.log(`Smoke test passed: ${spec} is installed and configured in a fresh ${profile} profile.`)
 } finally {
   cleanup()
 }

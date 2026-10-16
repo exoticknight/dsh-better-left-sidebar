@@ -25,7 +25,7 @@ pnpm smoke github:<owner>/<name>#vX.Y.Z
 Only into the repository's own `.dsh-dev/`, preferably with a DSH CLI installed only for this repository:
 
 ```sh
-pnpm dev:cli [ver]   # install DSH <ver> (default: latest) into .dsh-cli
+pnpm dev:cli [ver]   # install DSH <ver> (default: package.json config.dshVersion) into .dsh-cli
 pnpm dev             # link this checkout into .dsh-dev and start DSH
 pnpm dev:install     # link only
 pnpm dev:dsh <args>  # any dsh command against .dsh-dev
@@ -41,6 +41,10 @@ The scripts pick the DSH CLI in this order:
 3. The machine's own DSH, found through `dsh` on PATH. The scripts never run that command; they read the `bin.js` behind it and ask before using it. Without a terminal (agents, CI) they stop instead: tell the user, and set `DSH_BIN` to the printed path only if they agree.
 
 `@deepseek-ai/dsh` is deliberately not a dev dependency: its dependencies have build scripts, which make every later `pnpm install` fail under pnpm 11, and CI would download all of DSH on every run.
+
+It is an optional compatibility peer. Keep `autoInstallPeers: false` in `pnpm-workspace.yaml`: pnpm 11 can install even an optional peer automatically. The runtime host still checks the peer range, including prereleases. Keep `engines.dsh` synchronized as informational metadata.
+
+`pnpm smoke` confirms installation and merged configuration, not runtime activation. Start `pnpm dev` and check host and browser client behavior before marking a version verified.
 
 Do not replace these scripts with `DSH_HOME=… dsh …`: `dsh` on PATH may be a launcher that ignores `DSH_HOME` and writes to the user's real home.
 

@@ -4,9 +4,19 @@ import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import test from 'node:test'
 import { Context } from '@deepseek-ai/cordis'
+import semver from 'semver'
 
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'))
 const patch = fs.readFileSync('cordis.patch.yml', 'utf8')
+
+test('development target and host compatibility metadata agree', () => {
+  const range = pkg.peerDependencies['@deepseek-ai/dsh']
+  assert.equal(pkg.engines.dsh, range)
+  assert.ok(semver.valid(pkg.config.dshVersion))
+  assert.ok(semver.satisfies(pkg.config.dshVersion, range, { includePrerelease: true }))
+  assert.equal(pkg.peerDependenciesMeta['@deepseek-ai/dsh'].optional, true)
+  assert.match(fs.readFileSync('pnpm-workspace.yaml', 'utf8'), /^autoInstallPeers: false$/m)
+})
 
 test('package metadata points at the bundle patch and entries', () => {
   assert.equal(pkg.type, 'module')

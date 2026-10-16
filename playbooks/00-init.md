@@ -4,7 +4,7 @@ Goal: a local repository for `<owner>/<name>` with every placeholder replaced, `
 
 ## 1. Collect parameters
 
-Infer what you can. Ask the user once, in a single message, only for the rest. Then show a summary and get a yes before step 3.
+Ask which DSH version the user wants to target, together with other missing parameters. Reuse a version the user has already supplied. If no answer can be obtained, or no agent is involved, use the 0.2 baseline (`0.2.0-rc.2`). Do not inspect the user’s own CLI without permission. Infer other values where possible.
 
 | Parameter         | init flag        | How to decide                                                                                                                |
 | ----------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -13,8 +13,8 @@ Infer what you can. Ask the user once, in a single message, only for the rest. T
 | Display title     | `--title`        | Human name for README headings. Defaults to the name without `dsh-`, title-cased.                                            |
 | Description       | `--description`  | One English sentence ending with "for DeepSeek Harness." Reused for npm and the GitHub description.                          |
 | Author            | `--author`       | Defaults to the owner. Ask only if the user wants a different credit.                                                        |
-| Verified DSH      | `--dsh-version`  | The DSH version the user runs (`dsh --version`), or the latest (`npm view @deepseek-ai/dsh dist-tags --json`).               |
-| Minimum DSH       | `--dsh-min`      | Defaults to the verified version. Lower it only after testing on that version.                                               |
+| Target DSH        | `--dsh-version`  | Ask the user; accept `0.2` or an exact version. Fallback: `0.2.0-rc.2`. This is a target, not proof of verification.               |
+| Minimum DSH       | `--dsh-min`      | Defaults to the target. Lower only after verification; admission is bounded by the target, including prereleases.                                               |
 | Client entry      | `--host-only`    | Omit when the plugin has any UI in the DSH web page (themes, settings cards, buttons). Use for host-only services and tools. |
 | Distribution      | `--no-npm`       | Default: npm and GitHub Releases. Use `--no-npm` for GitHub-only plugins.                                                    |
 | Extra keywords    | `--keywords a,b` | 2–6 domain words. `deepseek-harness`, `dsh` and `dsh-plugin` are already included.                                           |
@@ -58,9 +58,12 @@ Create the GitHub repository later, in 10-github §1.
 ## 3. Run init
 
 ```sh
+pnpm install
 node scripts/init.mjs --name <name> --owner <owner> --dsh-version <ver> \
   --title "<title>" --description "<sentence>" [--keywords a,b] [--host-only] [--no-npm]
 ```
+
+`--dsh-version` is optional: an interactive terminal prompts; an empty answer, unavailable input, or noninteractive invocation uses `0.2.0-rc.2`. Explicit invalid versions fail before writing. `0.2` is a pinned alias for that published prerelease, not an unpublished stable `0.2.0`. Init writes `config.dshVersion`, `engines.dsh` and an optional `@deepseek-ai/dsh` peer. Compatibility defaults to the exact target; `--dsh-min` produces `>=minimum <=target`. `pnpm-workspace.yaml` disables automatic peer installation; the optional host peer allows development without a workspace CLI, while DSH still checks it at runtime.
 
 Add `--dry-run` first if you want to see which files change. Init replaces every placeholder, removes the template-only blocks (and the npm or client blocks when those flags are set), adjusts `package.json`, and deletes itself. It also replaces the template's own `README.md` / `README.en.md` with the plugin README skeletons from `.template/` and removes that directory. The `playbooks/` stay because they are needed for releases.
 
@@ -87,8 +90,8 @@ pnpm verify
 Do what the user asked for and fill in the TODOs:
 
 - `src/host/index.ts`: `Config` schema and `apply`. Put the defaults in `cordis.patch.yml` `config:` as well.
-- `src/client/index.ts` (if present): client services in `inject`, and the injected DSH client packages in `package.json` `dsh.client.inject`.
-- Runtime dependencies go in `dependencies`. `@deepseek-ai/*` packages that DSH provides go in `peerDependencies` + `devDependencies` and stay external in the build.
+- `src/client/index.ts` (if present): Cordis service names in source `inject`; non-baseline module requests in `package.json` `dsh.client.external`. `dsh.client.inject` is informational package metadata, not service injection.
+- Runtime dependencies go in `dependencies`. Keep the CLI itself as an optional host peer, installed separately with `pnpm dev:cli`. `@deepseek-ai/*` packages that DSH provides go in `peerDependencies` + `devDependencies` and stay external in the build.
 - `README.md` (Chinese, primary) and `README.en.md` (English): fill every TODO following [reference/readme.md](reference/readme.md). The release gate rejects a README that still contains `TODO`.
 - `docs/compatibility.md`: integration contracts.
 - `.github/ISSUE_TEMPLATE/bug_report.yml`: add plugin-specific fields (for example the mode or setting in use).
@@ -102,7 +105,7 @@ Run `pnpm verify` again.
 pnpm dev
 ```
 
-It needs a DSH CLI for isolated runs: run `pnpm dev:cli` first (installs the latest DSH into `.dsh-cli/`; pass a version to choose another). If `pnpm dev` stops because only the user's own DSH was found, ask the user before using it ([installing.md § Development installs](reference/installing.md#development-installs)). Give the printed link to the user. It contains a login token, so do not paste it anywhere public. Manual checks that pass go into `docs/compatibility.md` → Manual verification.
+It needs a DSH CLI for isolated runs: run `pnpm dev:cli` first (installs `package.json` → `config.dshVersion` into `.dsh-cli/`; pass a version to choose another). If `pnpm dev` stops because only the user's own DSH was found, ask the user before using it ([installing.md § Development installs](reference/installing.md#development-installs)). Give the printed link to the user. It contains a login token, so do not paste it anywhere public. Manual checks that pass go into `docs/compatibility.md` → Manual verification.
 
 ## 7. First commit
 

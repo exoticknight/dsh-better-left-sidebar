@@ -24,7 +24,7 @@ TODO：一句话说明插件为用户做什么（与 package.json description �
 
 ## 安装
 
-要求 DeepSeek Harness `{{DSH_MIN_VERSION}}` 或更新版本（已在 `{{DSH_VERSION}}` 验证），使用 `{{DSH_PROFILE}}` profile。
+环境要求：DeepSeek Harness 版本满足 `{{DSH_COMPAT_RANGE}}`，使用 `{{DSH_PROFILE}}` profile。开发目标为 `{{DSH_VERSION}}`，实际验证结果见兼容性记录。
 
 <!-- npm:start -->
 
