@@ -30,6 +30,20 @@ test('package metadata points at the bundle patch and entries', () => {
   if (pkg.dsh.client) assert.equal(pkg.exports['./client'], './lib/client.js')
 })
 
+test('Chinese and English plugin metadata is exported with the package', () => {
+  assert.equal(pkg.exports['./locale/*.json'], './locale/*.json')
+  assert.ok(pkg.files.includes('locale/*.json'))
+  const en = JSON.parse(fs.readFileSync('locale/en.json', 'utf8'))
+  const zh = JSON.parse(fs.readFileSync('locale/zh.json', 'utf8'))
+  assert.deepEqual(Object.keys(zh.meta).sort(), Object.keys(en.meta).sort())
+  for (const field of ['title', 'description']) {
+    assert.equal(typeof en.meta[field], 'string')
+    assert.ok(en.meta[field].length > 0)
+    assert.equal(typeof zh.meta[field], 'string')
+    assert.ok(zh.meta[field].length > 0)
+  }
+})
+
 // `dsh plugin add` installs with pnpm 11 in the user's profile, which blocks
 // lifecycle scripts and non-registry sub-dependencies and skips peers.
 // See playbooks/reference/installing.md.
@@ -50,7 +64,7 @@ test('package installs cleanly into a DSH profile', () => {
 // `github:` installs download GitHub's source archive, which drops
 // export-ignore paths. Everything the package ships must survive it.
 test('packaged files are not export-ignored', (t) => {
-  const shipped = ['package.json', ...pkg.files]
+  const shipped = ['package.json', ...pkg.files, 'locale/en.json', 'locale/zh.json']
   const result = spawnSync('git', ['check-attr', 'export-ignore', '--', ...shipped], {
     encoding: 'utf8',
   })

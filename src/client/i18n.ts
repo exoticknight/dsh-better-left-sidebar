@@ -1,0 +1,90 @@
+/** Plugin-owned UI copy; DSH's active locale selects zh or en. */
+export const NAMESPACE = 'dsh-better-left-sidebar'
+
+const en = {
+  summary: 'Set how navigation opens and where each built-in area lives.',
+  navigationBehavior: 'Navigation behavior',
+  contentLayout: 'Content layout',
+  expansion: 'Expansion',
+  expandNavigation: 'Expand navigation',
+  closeNavigation: 'Close navigation',
+  animation: 'Animation',
+  hover: 'Hover to expand',
+  click: 'Click to expand',
+  standard: 'Soft',
+  fast: 'Fast',
+  off: 'Off',
+  brand: 'Brand',
+  globalNavigation: 'Global navigation',
+  tools: 'Tools and status',
+  navigationTop: 'Navigation top',
+  sidebarTop: 'Conversation pane top',
+  hidden: 'Hidden',
+  rail: 'Navigation rail',
+  conversationTop: 'Above conversations',
+  railBottom: 'Navigation bottom',
+  conversationBottom: 'Below conversations',
+  applied: 'Applied',
+  preview: 'Unsaved preview',
+  previewBrand: 'Brand',
+  previewNavigation: 'Nav',
+  previewTools: 'Tools',
+  previewNewSession: 'New session',
+  previewConversations: 'Workspaces and conversations',
+  resetLayout: 'Restore default layout',
+  cancel: 'Discard changes',
+  unavailable: 'Settings are unavailable while this component is not loaded.',
+  readOnly: 'This DSH profile does not allow settings changes.',
+  saveFailed: 'DSH did not accept these settings. Your draft is still here; try saving again.',
+  save: 'Save settings',
+  saving: 'Saving…',
+} as const
+
+const zh = {
+  summary: '设置导航展开方式，并为各个区域选择位置。',
+  navigationBehavior: '导航行为',
+  contentLayout: '内容布局',
+  expansion: '展开方式',
+  expandNavigation: '展开导航',
+  closeNavigation: '收起导航',
+  animation: '动画效果',
+  hover: '悬停展开',
+  click: '点击展开',
+  standard: '柔和',
+  fast: '快速',
+  off: '无动画',
+  brand: '品牌区',
+  globalNavigation: '全局导航',
+  tools: '工具与状态',
+  navigationTop: '导航栏顶部',
+  sidebarTop: '对话面板顶部',
+  hidden: '隐藏品牌',
+  rail: '左侧导航栏',
+  conversationTop: '对话列表上方',
+  railBottom: '导航栏底部',
+  conversationBottom: '对话列表下方',
+  applied: '已生效',
+  preview: '未保存预览',
+  previewBrand: '品牌区',
+  previewNavigation: '全局',
+  previewTools: '工具',
+  previewNewSession: '新建会话',
+  previewConversations: '工作区与会话',
+  resetLayout: '恢复默认布局',
+  cancel: '放弃更改',
+  unavailable: '此组件未加载时，设置不可用。',
+  readOnly: '当前 DSH profile 不允许修改设置。',
+  saveFailed: 'DSH 未接受这些设置。草稿仍保留，请重试保存。',
+  save: '保存设置',
+  saving: '保存中…',
+} satisfies Record<keyof typeof en, string>
+
+export const messages = { en, zh }
+export type MessageKey = keyof typeof en
+
+/** Chinese copy keeps the click toggle readable before DSH binds its locale. */
+export function fallbackTranslate(key: string): string {
+  if (key === 'closeNavigation') return zh.closeNavigation
+  if (key === 'expandNavigation') return zh.expandNavigation
+  return key
+}

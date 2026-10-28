@@ -1,5 +1,6 @@
 import type { ExpansionMode, SidebarPreferences } from '../preferences.js'
 import { createNavigationToggle } from './footer.js'
+import { fallbackTranslate } from './i18n.js'
 
 const NAV_REGION = '[data-dsh-better-left-sidebar-region="brand"], [data-dsh-better-left-sidebar-region="global-navigation"], [data-dsh-better-left-sidebar-region="tools"]'
 const POPUP_SELECTOR = '[role="menu"], [role="listbox"], [role="dialog"], [data-menu-material]'
@@ -22,7 +23,7 @@ export function connectInteraction(): SidebarInteraction {
   let preferences: SidebarPreferences | undefined
   let expansion: ExpansionMode = 'hover'
   let mode: 'compact' | 'temporary' | 'pinned' = 'compact'
-  let translate: Translate = (key) => key === 'closeNavigation' ? 'Close navigation' : 'Expand navigation'
+  let translate: Translate = fallbackTranslate
   let pointerInside = false
   let focusInside = false
   let pointerTarget: EventTarget | null = null

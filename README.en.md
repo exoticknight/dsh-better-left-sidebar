@@ -4,34 +4,48 @@
 
 [简体中文](README.md) | English
 
-![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.3-blue) [![Maintained with RED](https://img.shields.io/badge/maintained_with-RED-C1121F)](https://github.com/exoticknight/red)
+[![CI](https://github.com/exoticknight/dsh-better-left-sidebar/actions/workflows/ci.yml/badge.svg)](https://github.com/exoticknight/dsh-better-left-sidebar/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/exoticknight/dsh-better-left-sidebar)](LICENSE) ![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.3-blue) [![Maintained with RED](https://img.shields.io/badge/maintained_with-RED-C1121F)](https://github.com/exoticknight/red)
 
 <!-- Listing badges: add a row here only after each listing is confirmed. See playbooks/reference/badges.md. -->
 
-A conversation-first left navigation layout for DeepSeek Harness.
+You need a cleaner DeepSeek Harness sidebar: keep workspaces and conversations in place, and expand full navigation only when you need it.
 
 <!-- client:start -->
 
 <div align="center">
-  <img src="docs/images/sidebar.png" alt="Default: a narrow icon rail beside the open workspace and session list" width="49%" />
-  <img src="docs/images/sidebar-hover.png" alt="On hover: full navigation overlays the sidebar without shifting the conversation pane" width="49%" />
+  <img src="https://raw.githubusercontent.com/exoticknight/dsh-better-left-sidebar/main/docs/images/sidebar-en.png" alt="Default layout: a narrow icon rail beside the open workspace and conversation list" width="49%" />
+  <img src="https://raw.githubusercontent.com/exoticknight/dsh-better-left-sidebar/main/docs/images/sidebar-hover-en.png" alt="Expanded navigation: full labels overlay the sidebar without moving the conversation pane" width="49%" />
 </div>
+
+<p align="center"><sub>Screenshots captured on DSH 0.2.1-rc.3.</sub></p>
 
 <!-- client:end -->
 
 ## Features
 
-- **Keep workspaces and sessions in view**: the session browser stays in its own wide column instead of competing with global navigation.
-- **Open navigation on demand**: global panels start as icons; hover or keyboard focus opens a full overlay without shifting conversations.
-- **Keep the conversation column open**: workspaces and sessions stay in the original wide panel, and the old collapse button is removed.
-- **Keep controls consistent**: New Session, panel, and footer controls share a 36px default hit area.
-- **Keep DSH's existing panels**: DSH-provided icons, labels, workspace list, settings, and footer actions remain in their existing slots.
+- **Keep conversations in the foreground**: workspaces and conversations stay in a dedicated wide pane; navigation overlays it instead of squeezing the conversation area.
+- **Tuck global entry points out of the way**: place the brand, panels, and tools along a narrow left rail to leave more room for browsing sessions.
+- **Choose the interaction that fits**: hover or keyboard focus expands the rail by default; click mode pins it open and closes on another click, Escape, or an outside click.
+- **Shape the sidebar around your workflow**: reposition the brand, global navigation, and tools, then compare the saved layout with an unsaved preview before applying it.
+- **Keep DSH's native actions**: New Session, panels, workspaces, settings, and footer tools keep their DSH entry points and behavior.
 
 ## Install
 
-Runtime verification passed on DSH `0.2.0-rc.2`, `0.2.1-rc.2`, and `0.2.1-rc.3` `web` profiles; see the compatibility record for the supported range. This checkout is not published to npm or GitHub Releases yet.
+Verified on DSH `0.2.0-rc.2`, `0.2.1-rc.2`, and `0.2.1-rc.3` in the `web` profile. See the [compatibility record](docs/compatibility.md) for the supported range.
 
-To preview it locally, run these commands from the repository:
+### Everyday users: GitHub preview
+
+There is no npm package or versioned GitHub release yet. You can install the preview from the public `main` branch. It is a rolling preview channel; installed copies do not update automatically.
+
+```sh
+dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#main
+```
+
+Restart DSH after installing.
+
+### Developers: local preview
+
+Run these commands from the repository. Development uses the isolated `.dsh-cli/` and `.dsh-dev/` directories; it does not modify your everyday DSH profile.
 
 ```sh
 pnpm install
@@ -45,41 +59,51 @@ pnpm dev:cli 0.2.1-rc.3
 pnpm dev
 ```
 
-This uses the DSH installation and profile isolated in the repository; it does not change your everyday DSH. Distribution install instructions will be added with the first release.
-
 ## Usage
 
-1. The workspace and session column stays open. The far-left rail shows the DSH logo, New Session, global panels, and the footer entry.
-2. Hover over the rail or keyboard-focus a navigation item to reveal the full labels in an overlay; leaving the rail closes it without moving the conversation column.
-3. Open DSH settings from the footer entry. In DSH `0.2.1`, select “More / Account menu”, then “Settings”. The plugin has no separate settings page or sidebar-collapse button.
+1. When enabled, the workspace and conversation list stay open; the far-left rail holds the DSH brand, global panels, and tools.
+2. In the default mode, hover over the rail or keyboard-focus a navigation item to reveal the full navigation. It closes after you leave it. Choose click mode in the plugin settings to pin or close the rail with the toggle button.
+3. Open **Plugins** in the sidebar, then **Better Left Sidebar** to configure expansion, animation, and region placement. Review the preview and select **Save settings** to apply changes. Copy follows DSH's active language; switch between Chinese and English in **Settings → General**.
 
 ## Configuration
 
-There are no plugin settings or saved values. Panel entries and labels come from the panels registered by the current DSH page.
+After you select **Save settings**, layout preferences are stored in the current DSH profile's plugin configuration.
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| Expansion | `hover` | Expand on hover or keyboard focus; `click` pins the rail open with a toggle. |
+| Animation | `standard` | Choose soft, fast, or no animation. |
+| Brand | `navigation-top` | Place the brand at the top of the rail, at the top of the conversation pane, or hide it. |
+| Global navigation | `rail` | Keep global navigation in the rail or move it above conversations. |
+| Tools and status | `rail-bottom` | Keep tools at the bottom of the rail or move them below conversations. |
 
 ## Update, roll back, remove
 
-Only a local development version exists; there is no release to update or roll back to yet. During development, restart `pnpm dev` after rebuilding to load the updated code.
+The current user install is a preview from `main`, with no versioned release yet. To update it, remove the preview and install it again using the command above. A versioned rollback will be available once GitHub Releases has a tagged release.
 
-To remove it from the isolated development profile:
+```sh
+dsh plugin --profile web remove dsh-better-left-sidebar
+```
+
+[View GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases).
+
+Developers can remove the plugin from the isolated preview profile:
 
 ```sh
 pnpm dev:dsh --profile web plugin remove dsh-better-left-sidebar
 ```
 
-The plugin writes no settings, browser storage, or workspace files. Removing it leaves the conversations and other DSH data in `.dsh-dev/` intact.
-
 ## Privacy and data
 
-The plugin rearranges DSH's existing sidebar, invokes DSH's native open action if the conversation column starts collapsed, and mirrors panel buttons' accessible names into native hover tooltips. It makes no network requests, writes no files, stores no credentials, and collects no telemetry. DSH continues to manage conversations and settings under its own storage rules.
+The plugin rearranges DSH's existing sidebar and uses DSH's built-in configuration service to save layout preferences you explicitly submit. It makes no direct network requests, reads no conversation content, writes no workspace files, stores no credentials, and collects no telemetry. DSH manages the profile's configuration storage and sync.
 
 ## Compatibility
 
-See [docs/compatibility.md](docs/compatibility.md).
+Supports the `web` profile on DSH `>=0.2.0-rc.2 <0.2.2-0`. The plugin keeps DSH's native sidebar width. At a `567×626` viewport, DSH's “Standard mode” label can truncate at the default `280px` or minimum `264px` width; widen the DSH sidebar if the full label matters. See the [compatibility record](docs/compatibility.md).
 
 ## Development
 
-See [docs/development.md](docs/development.md) and [CONTRIBUTING.md](CONTRIBUTING.md). When an AI agent develops, releases or maintains the plugin, have it read [AGENTS.md](AGENTS.md) first.
+See [docs/development.md](docs/development.md), [CONTRIBUTING.md](CONTRIBUTING.md), and [AGENTS.md](AGENTS.md).
 
 ## License
 

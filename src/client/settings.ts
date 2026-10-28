@@ -10,95 +10,18 @@ import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import { createElement as h, useCallback, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { DEFAULT_PREFERENCES, normalizePreferences } from '../preferences.js'
 import type { BrandPosition, GlobalNavigationPosition, SidebarPreferences, ToolsPosition } from '../preferences.js'
+import { messages, NAMESPACE } from './i18n.js'
+import type { MessageKey } from './i18n.js'
 
-const NS = 'dsh-better-left-sidebar'
 const PACKAGE = 'dsh-better-left-sidebar'
-
-const en = {
-  summary: 'Set how navigation opens and where each built-in area lives.',
-  navigationBehavior: 'Navigation behavior',
-  contentLayout: 'Content layout',
-  expansion: 'Expansion',
-  expandNavigation: 'Expand navigation',
-  closeNavigation: 'Close navigation',
-  animation: 'Animation',
-  hover: 'Hover to expand',
-  click: 'Click to expand',
-  standard: 'Soft',
-  fast: 'Fast',
-  off: 'Off',
-  brand: 'Brand',
-  globalNavigation: 'Global navigation',
-  tools: 'Tools and status',
-  navigationTop: 'Navigation top',
-  sidebarTop: 'Conversation pane top',
-  hidden: 'Hidden',
-  rail: 'Navigation rail',
-  conversationTop: 'Above conversations',
-  railBottom: 'Navigation bottom',
-  conversationBottom: 'Below conversations',
-  applied: 'Applied',
-  preview: 'Unsaved preview',
-  previewBrand: 'Brand',
-  previewNavigation: 'Nav',
-  previewTools: 'Tools',
-  previewNewSession: 'New session',
-  previewConversations: 'Workspaces and conversations',
-  resetLayout: 'Restore default layout',
-  cancel: 'Discard changes',
-  unavailable: 'Settings are unavailable while this component is not loaded.',
-  readOnly: 'This DSH profile does not allow settings changes.',
-  saveFailed: 'DSH did not accept these settings. Your draft is still here; try saving again.',
-  save: 'Save settings',
-  saving: 'Saving…',
-}
-
-const zh = {
-  summary: '设置导航展开方式，并为各个区域选择位置。',
-  navigationBehavior: '导航行为',
-  contentLayout: '内容布局',
-  expansion: '展开方式',
-  expandNavigation: '展开导航',
-  closeNavigation: '收起导航',
-  animation: '动画效果',
-  hover: '悬停展开',
-  click: '点击展开',
-  standard: '柔和',
-  fast: '快速',
-  off: '无动画',
-  brand: '品牌区',
-  globalNavigation: '全局导航',
-  tools: '工具与状态',
-  navigationTop: '导航栏顶部',
-  sidebarTop: '对话面板顶部',
-  hidden: '隐藏品牌',
-  rail: '左侧导航栏',
-  conversationTop: '对话列表上方',
-  railBottom: '导航栏底部',
-  conversationBottom: '对话列表下方',
-  applied: '已生效',
-  preview: '未保存预览',
-  previewBrand: '品牌区',
-  previewNavigation: '全局',
-  previewTools: '工具',
-  previewNewSession: '新建会话',
-  previewConversations: '工作区与会话',
-  resetLayout: '恢复默认布局',
-  cancel: '放弃更改',
-  unavailable: '此组件未加载时，设置不可用。',
-  readOnly: '当前 DSH profile 不允许修改设置。',
-  saveFailed: 'DSH 未接受这些设置。草稿仍保留，请重试保存。',
-  save: '保存设置',
-  saving: '保存中…',
-}
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
-    'dsh-better-left-sidebar': keyof typeof en
+    'dsh-better-left-sidebar': MessageKey
   }
 }
 
-type Copy = Translate<keyof typeof en>
+type Copy = Translate<MessageKey>
 type ConfigValues = Record<string, unknown>
 type PageProps = PluginConfigViewProps & { t: Copy }
 type BoundPageProps = PageProps & { ctx: Context }
@@ -144,17 +67,17 @@ export function connectSettings(
       return form.subscribe(sync)
     }, 'better-left-sidebar: profile preferences')
     settingsCtx.effect(
-      () => settingsCtx.locale.register(NS, { zh, en }),
+      () => settingsCtx.locale.register(NAMESPACE, messages),
       'better-left-sidebar: settings copy',
     )
     settingsCtx.effect(() => {
-      const sync = (): void => onTranslate(settingsCtx.locale.bind(NS) as unknown as (key: string) => string)
+      const sync = (): void => onTranslate(settingsCtx.locale.bind(NAMESPACE) as unknown as (key: string) => string)
       sync()
       return settingsCtx.locale.subscribe(sync)
     }, 'better-left-sidebar: toggle copy')
     settingsCtx.effect(
       () => settingsCtx.slots.inject('plugins.bundle.config', () => settingsCtx.slots.register(
-        { name: 'plugins.bundle.config', key: PACKAGE, locale: NS },
+        { name: 'plugins.bundle.config', key: PACKAGE, locale: NAMESPACE },
         (props: PageProps) => h(SettingsPage, { ...props, ctx: settingsCtx }),
       )),
       'better-left-sidebar: settings page',

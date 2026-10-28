@@ -1,7 +1,7 @@
 {
   "name": "dsh-better-left-sidebar",
   "version": "0.1.0",
-  "description": "A conversation-first left navigation layout for DeepSeek Harness.",
+  "description": "You need a cleaner DeepSeek Harness sidebar: keep workspaces and conversations in place, and expand full navigation only when you need it.",
   "icon": "./icon.svg",
   "license": "Apache-2.0",
   "author": "exoticknight",
@@ -36,13 +36,15 @@
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
   },
   "files": [
     "lib/index.js",
     "lib/client.js",
     "icon.svg",
     "cordis.patch.yml",
+    "locale/*.json",
     "README.md",
     "README.en.md",
     "LICENSE"

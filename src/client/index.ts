@@ -3,6 +3,7 @@ import css from './sidebar.css'
 import { DEFAULT_PREFERENCES, normalizePreferences } from '../preferences.js'
 import type { SidebarPreferences } from '../preferences.js'
 import { connectInteraction } from './interaction.js'
+import { fallbackTranslate } from './i18n.js'
 import { connectLayoutAdapter } from './layout-adapter.js'
 import { connectNavigation } from './navigation.js'
 import { connectSettings } from './settings.js'
@@ -12,7 +13,7 @@ export const inject: string[] = ['slots', 'locale', 'configForms']
 
 export function apply(ctx: ClientContext): void {
   let preferences: SidebarPreferences = DEFAULT_PREFERENCES
-  let translate: (key: string) => string = (key) => key
+  let translate: (key: string) => string = fallbackTranslate
 
   ctx.effect(() => {
     const html = document.documentElement
