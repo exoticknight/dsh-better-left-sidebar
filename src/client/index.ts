@@ -1,16 +1,50 @@
-// Client entry: runs in the DSH web page. Bundled to lib/client.js.
-// Declare required Cordis services in inject below. Declare module requests beyond
-// DSH's built-in baseline in package.json dsh.client.external.
+import type { Context as ClientContext } from '@deepseek-ai/cordis'
+import css from './sidebar.css'
+import { DEFAULT_PREFERENCES, normalizePreferences } from '../preferences.js'
+import type { SidebarPreferences } from '../preferences.js'
+import { connectInteraction } from './interaction.js'
+import { connectLayoutAdapter } from './layout-adapter.js'
+import { connectNavigation } from './navigation.js'
+import { connectSettings } from './settings.js'
 
-interface ClientContext {
-  effect: (effect: () => (() => void) | void, label?: string) => void
-}
+/** Adapt DSH-owned navigation surfaces without replacing their slot owners. */
+export const inject: string[] = ['slots', 'locale', 'configForms']
 
-// Client services this entry needs, e.g. ['slots', 'theme'].
-export const inject: string[] = []
+export function apply(ctx: ClientContext): void {
+  let preferences: SidebarPreferences = DEFAULT_PREFERENCES
+  let translate: (key: string) => string = (key) => key
 
-export function apply(ctx: ClientContext) {
   ctx.effect(() => {
-    console.info(`[${__PLUGIN_NAME__}] client ${__PLUGIN_VERSION__} ready`)
-  })
+    const html = document.documentElement
+    const style = document.createElement('style')
+    style.dataset.dshBetterLeftSidebar = ''
+    style.textContent = css
+    document.head.append(style)
+    html.classList.add('dsh-better-left-sidebar')
+
+    const interaction = connectInteraction()
+    const layout = connectLayoutAdapter(interaction.setRoot)
+    const applyPreferences = (value: unknown): void => {
+      preferences = normalizePreferences(value)
+      layout.update(preferences)
+      interaction.setPreferences(preferences)
+    }
+    const applyTranslate = (next: (key: string) => string): void => {
+      translate = next
+      interaction.setTranslate(translate)
+    }
+
+    applyPreferences(DEFAULT_PREFERENCES)
+    interaction.setTranslate(translate)
+    const disposeNavigation = connectNavigation(ctx)
+    connectSettings(ctx, applyPreferences, applyTranslate)
+
+    return () => {
+      disposeNavigation()
+      layout.dispose()
+      interaction.dispose()
+      html.classList.remove('dsh-better-left-sidebar')
+      style.remove()
+    }
+  }, 'better-left-sidebar: navigation shell')
 }

@@ -1,9 +1,9 @@
 import semver from 'semver'
 import { createInterface } from 'node:readline/promises'
 
-// The 0.2 release line currently starts at this published prerelease.
-// Keep the fallback reproducible; do not resolve a moving dist-tag during init.
-export const DEFAULT_DSH_VERSION = '0.2.0-rc.2'
+// Keep the development fallback pinned to the latest adapted prerelease;
+// do not resolve a moving dist-tag during init.
+export const DEFAULT_DSH_VERSION = '0.2.1-rc.3'
 
 export function exactDshVersion(input) {
   const value = input.trim() === '0.2' ? DEFAULT_DSH_VERSION : input.trim()

@@ -1,157 +1,86 @@
-<div align="center">
+<!-- 写作规范见 playbooks/reference/readme.md；与 README.en.md 保持相同章节。 -->
 
-# DSH 插件模板
-
-**一句话交给 AI，从想法到上架一个 DeepSeek Harness 插件。**
-
-建仓、初始化、构建、测试、CI、npm 与 GitHub 发布、插件目录收录，全部准备好，并写成 AI 能照着执行的手册。
-
-[![Use this template](https://img.shields.io/badge/Use_this_template-2ea44f?style=for-the-badge&logo=github)](https://github.com/new?template_name=dsh-plugin-template&template_owner=exoticknight)
-
-[![CI](https://github.com/exoticknight/dsh-plugin-template/actions/workflows/ci.yml/badge.svg)](https://github.com/exoticknight/dsh-plugin-template/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/exoticknight/dsh-plugin-template)](LICENSE) [![Maintained with RED](https://img.shields.io/badge/maintained_with-RED-C1121F)](https://github.com/exoticknight/red)
+# Better Left Sidebar
 
 简体中文 | [English](README.en.md)
 
+![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.3-blue) [![Maintained with RED](https://img.shields.io/badge/maintained_with-RED-C1121F)](https://github.com/exoticknight/red)
+
+<!-- Listing badges: add a row here only after each listing is confirmed. See playbooks/reference/badges.md. -->
+
+把全局导航收进最左侧窄栏，同时保留宽侧栏浏览工作区和会话。
+
+<!-- client:start -->
+
+<div align="center">
+  <img src="docs/images/sidebar.png" alt="默认状态：左侧为窄图标栏，旁边的工作区与会话列表保持展开" width="49%" />
+  <img src="docs/images/sidebar-hover.png" alt="悬停状态：完整导航覆盖在侧栏上，不推动对话区" width="49%" />
 </div>
 
-## 30 秒上手
+<!-- client:end -->
 
-把下面这句话发给 Claude Code、Codex、Cursor 或任何编程 agent，把功能换成你想要的：
+## 功能
 
-```text
-用 https://github.com/exoticknight/dsh-plugin-template 建一个 DSH 插件 dsh-foo，
-功能是……，发布到 npm。
-```
+- **工作区和会话更醒目**：会话浏览区保留独立的宽栏，不再与全局入口挤在一起。
+- **侧栏按需展开**：全局入口默认显示为图标；鼠标移入或键盘聚焦后，完整导航覆盖在会话栏上，不推动会话内容。
+- **对话区保持展开**：工作区与会话列表一直留在原有宽栏，旧的折叠按钮不再占位。
+- **常用操作规格一致**：新建会话、面板和页脚入口使用统一的 36px 默认点击区域。
+- **保留 DSH 原有面板**：图标、名称、工作区列表、设置和页脚操作仍由 DSH 原有插槽提供。
 
-agent 会创建你的仓库、完成初始化、实现功能、配置 GitHub 和 npm、发布第一个版本，再帮你提交到插件目录。只有登录 npm、首次发布这类必须由你本人完成的步骤，它才会停下来问你。
+## 安装
 
-## 从一句话到上架
+已在 DSH `0.2.0-rc.2`、`0.2.1-rc.2` 和 `0.2.1-rc.3` 的 `web` profile 完成运行验证，兼容范围见记录。当前仓库尚未发布到 npm 或 GitHub Releases。
 
-```mermaid
-flowchart LR
-  A["一句话需求"] --> B["建仓 + 初始化<br/>00-init"]
-  B --> C["实现功能<br/>pnpm verify"]
-  C --> D["GitHub 配置<br/>10-github"]
-  D --> E["npm 首发<br/>20-npm"]
-  E --> F["推 tag 发布<br/>30-release"]
-  F --> G["目录收录 + badge<br/>50-listings"]
-```
-
-每一步都有一份 [playbook](playbooks/)：写明目标、前置条件、可以直接执行的命令和完成标准。之后的升级、发版和维护也按同样的方式进行。
-
-## 你会得到
-
-**🧩 开箱即用的插件骨架**
-
-- Host 入口运行在 DSH 的 Node 进程中，由 Cordis 挂载，带配置 schema
-- Client 入口运行在 DSH 页面中，打包成 DSH 模块加载器使用的格式；纯服务插件可以一键去掉
-- esbuild 构建：`@deepseek-ai/*` 由 DSH 提供，插件名和版本号在构建时注入
-
-**✅ 不会坏的质量关卡**
-
-- TypeScript strict，契约测试覆盖包元数据、Cordis 挂载与卸载、client 注册
-- 检查 npm 包内容，确保入口文件齐全、源码和测试不会混入
-- 发布前把关：tag 与版本一致、仓库地址正确、没有残留占位符
-
-**🚀 一个 tag 完成发布**
-
-- CI 覆盖 Ubuntu / Windows × Node 22.19 / 24
-- npm Trusted Publishing，并自动创建 GitHub Release：按 PR 标签分类变更、标注贡献者，可附加版本重点与升级说明
-- 预发布版本自动走 npm `next` 通道；每一步都能安全重跑
-- 也可以只发布到 GitHub（`--no-npm`）
-
-**🧪 不污染日常环境的本地调试**
-
-- `pnpm dev` 把当前源码链接进仓库内的隔离目录 `.dsh-dev` 并启动 DSH；`pnpm smoke` 在一次性目录中按用户的方式安装已发布版本并验证。两者都会校验隔离是否生效，绝不改动你日常使用的 DSH
-
-**🤖 写给 AI 的操作手册**
-
-| 文件                                                       | 内容                                                          |
-| ---------------------------------------------------------- | ------------------------------------------------------------- |
-| [`AGENTS.md`](AGENTS.md)                                   | 入口：项目事实、规则、按任务选择手册（`CLAUDE.md` 导入它）    |
-| [`00-init`](playbooks/00-init.md)                          | 收集参数、建仓、初始化、首次提交                              |
-| [`10-github`](playbooks/10-github.md)                      | 仓库元数据、Actions 权限、npm environment、tag 保护、安全功能 |
-| [`20-npm`](playbooks/20-npm.md)                            | 首次发布、配置 Trusted Publisher、禁止 token 发布             |
-| [`30-release`](playbooks/30-release.md)                    | 发布版本、验证、各环节失败后的恢复方法                        |
-| [`40-maintain`](playbooks/40-maintain.md)                  | DSH 升级、Node 版本、Dependabot、同步模板更新                 |
-| [`50-listings`](playbooks/50-listings.md)                  | 提交插件目录、跟进状态、添加收录 badge                        |
-| [`reference/`](playbooks/reference/checklist.md)           | 完整检查清单、README 写作规范、插件目录列表、badge 规则              |
-
-**📦 完整的仓库规范**
-
-- Dependabot、Bug 报告模板、中英双语 README、CONTRIBUTING、SECURITY；版本历史统一保存在 GitHub Releases，插件 README 提供链接
-- 使用 [RED](https://github.com/exoticknight/red) 管理研究、变更与文档
-
-## 需要你本人完成的事
-
-手册会让 agent 在这些步骤停下来，交给你操作：
-
-- `npm login` 和首次 `npm publish`（需要你的账号和两步验证码）
-- 在 npmjs.com 上配置 Trusted Publisher
-- 批准以你的名义向插件目录提交收录
-
-其余步骤都由 agent 完成。
-
-## 其他用法
-
-**手动复制，再交给 agent。** 点击上方的 **Use this template**（或 clone 仓库），用 agent 打开后说「初始化这个插件」。
-
-初始化会询问目标 DSH 版本。无法取得答案时默认使用 0.2，目前固定为已发布的 `0.2.0-rc.2`。手动运行时也可以省略 `--dsh-version`：终端会询问，留空或非交互运行采用默认值。默认只声明兼容所选版本；`--dsh-min` 可将范围扩展到指定下限，开发目标与实际验证记录分别保存。
-
-**完全手动。** 环境要求：Node.js `^22.19.0 || >=24`、pnpm、git、已登录的 GitHub CLI；本地测试需要 DSH CLI。
+本地预览请在仓库目录依次运行：
 
 ```sh
 pnpm install
-node scripts/init.mjs --name dsh-foo --owner <github-user> --dsh-version 0.2 \
-  --title "Foo" --description "Foo for DeepSeek Harness."
-pnpm install
-pnpm hooks:install
-pnpm verify
 ```
 
-然后依次按 [`10-github`](playbooks/10-github.md)、[`20-npm`](playbooks/20-npm.md)、[`30-release`](playbooks/30-release.md)、[`50-listings`](playbooks/50-listings.md) 操作。
+```sh
+pnpm dev:cli 0.2.1-rc.3
+```
 
-<details>
-<summary><b>init 参数</b></summary>
+```sh
+pnpm dev
+```
 
-| 参数             | 必填 | 含义                                                   |
-| ---------------- | ---- | ------------------------------------------------------ |
-| `--name`         | 是   | npm 包名与仓库名，格式 `dsh-<slug>`                    |
-| `--owner`        | 是   | GitHub 用户或组织                                      |
-| `--dsh-version`  |      | 目标版本；省略时询问，无法询问或留空默认 0.2（0.2.0-rc.2）                                      |
-| `--dsh-min`      |      | 最低支持的 DSH 版本（默认同 `--dsh-version`）          |
-| `--title`        |      | 显示名称（默认由包名生成）                             |
-| `--description`  |      | 一句英文简介（默认 "`<title>` for DeepSeek Harness."） |
-| `--author`       |      | `package.json` 作者（默认同 owner）                    |
-| `--keywords a,b` |      | 额外的 npm 关键词                                      |
-| `--host-only`    |      | 不要 client 入口，默认 profile 变为 `headless`         |
-| `--no-npm`       |      | 只发布到 GitHub，去掉 npm badge 与安装说明             |
-| `--dry-run`      |      | 只显示会改动的文件                                     |
+这会使用仓库内隔离的 DSH 安装和 `.dsh-dev/` 配置，不会改动日常使用的 DSH。安装到本机 DSH 的发布命令会在首个发行版创建后补上。
 
-</details>
+## 使用
 
-<details>
-<summary><b>初始化做了什么</b></summary>
+1. 插件加载后，工作区与会话栏保持展开；最左侧显示 DSH 标志、新建会话、全局面板和页脚入口。
+2. 将鼠标移入左侧导航，或用键盘聚焦导航项，即可展开覆盖层查看完整名称；移出后收回，不会挤动会话栏。
+3. 通过页脚入口打开 DSH 设置；在 DSH `0.2.1` 中，先选“更多 / 账号菜单”，再选“设置”。插件没有单独的设置页面或侧栏折叠按钮。
 
-- 把 `.template/` 中的插件 README 骨架复制为 `README.md`（中文）和 `README.en.md`（英文），替换本页
-- 替换所有占位符：`dsh-plugin-template`、`{{OWNER}}`、`{{PLUGIN_TITLE}}`、`{{DESCRIPTION}}`、`{{AUTHOR}}`、`{{DSH_VERSION}}`、`{{DSH_VERSION_BADGE}}`、`{{DSH_MIN_VERSION}}`、`{{DSH_COMPAT_RANGE}}`、`{{DSH_PROFILE}}`
-- 删除仅属于模板的内容：`AGENTS.md` 中的模板说明段、`.template/`、初始化脚本本身；按参数删除 client 入口或 npm 相关内容
-- 保留 `playbooks/`（发布和维护还要用），并在 `package.json` 的 `template` 字段记录模板来源
+## 配置
 
-`src/` 中的 `__PLUGIN_NAME__` 与 `__PLUGIN_VERSION__` 不是占位符，而是 `scripts/build.mjs` 从 `package.json` 填入的构建常量。
+本插件没有可配置项，也不保存独立设置。面板入口和标签来自当前 DSH 页面已注册的面板。
 
-</details>
+## 更新、回滚与卸载
 
-<details>
-<summary><b>维护模板</b></summary>
+当前只有本地开发版本，尚无可更新或回滚的发行包。开发预览中，改完代码后重启 `pnpm dev` 即可加载新版本。
 
-- 将仓库标记为模板，`gh repo create --template` 和 **Use this template** 按钮才能使用：`gh repo edit exoticknight/dsh-plugin-template --template`
-- CI 会对占位符插件运行 `pnpm verify`，保证模板本身始终可以构建
-- 不要在本仓库推送 `v*` tag；`check:release` 也会拒绝带占位符的发布
-- [`playbooks/reference/checklist.md`](playbooks/reference/checklist.md) 记录模板统一的所有规范，修改规范时同步修改清单和对应文件
+从隔离的开发 profile 移除插件：
 
-</details>
+```sh
+pnpm dev:dsh --profile web plugin remove dsh-better-left-sidebar
+```
 
----
+插件不写入设置、浏览器存储或工作区文件；移除后，`.dsh-dev/` 中的会话和其他 DSH 数据仍保留。
 
-由 [exoticknight](https://github.com/exoticknight) 创建和维护 · [Apache License 2.0](LICENSE)
+## 隐私与数据
+
+插件只调整 DSH 现有侧栏的布局；若 DSH 启动时处于折叠状态，插件会调用原生展开按钮以显示会话栏，并把面板按钮的无障碍名称同步为原生悬停提示。插件自身不发起网络请求、不写入文件、不保存凭据，也不采集遥测。DSH 对话和设置仍按 DSH 自身的存储规则管理。
+
+## 兼容性
+
+见 [docs/compatibility.md](docs/compatibility.md)。
+
+## 开发
+
+见 [docs/development.md](docs/development.md) 与 [CONTRIBUTING.md](CONTRIBUTING.md)。使用 AI agent 开发、发布或维护时，让它先读 [AGENTS.md](AGENTS.md)。
+
+## 许可证
+
+[Apache License 2.0](LICENSE)

@@ -4,7 +4,7 @@ Everything a DSH plugin built from this template should have, inside and outside
 
 ## Repository
 
-Version policy: ask for the target during initialization; unavailable input defaults to `0.2.0-rc.2` (`0.2`). Keep `config.dshVersion`, the optional `@deepseek-ai/dsh` peer, `engines.dsh` and compatibility docs synchronized. Keep `autoInstallPeers: false` in pnpm workspace settings. Only record verification after actual host/client checks.
+Version policy: ask for the target during initialization; unavailable input defaults to `0.2.1-rc.3` (`0.2`). Keep `config.dshVersion`, the optional `@deepseek-ai/dsh` peer, `engines.dsh` and compatibility docs synchronized. Keep `autoInstallPeers: false` in pnpm workspace settings. Only record verification after actual host/client checks.
 
 | Item                         | Expectation                                                                                                                                                                             | Check                                       |
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |

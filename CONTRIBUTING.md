@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping improve {{PLUGIN_TITLE}}.
+Thanks for helping improve Better Left Sidebar.
 
 Working with an AI agent? Point it at [AGENTS.md](AGENTS.md); it links the step-by-step playbooks for development, releases and maintenance.
 

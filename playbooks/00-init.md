@@ -4,7 +4,7 @@ Goal: a local repository for `<owner>/<name>` with every placeholder replaced, `
 
 ## 1. Collect parameters
 
-Ask which DSH version the user wants to target, together with other missing parameters. Reuse a version the user has already supplied. If no answer can be obtained, or no agent is involved, use the 0.2 baseline (`0.2.0-rc.2`). Do not inspect the user’s own CLI without permission. Infer other values where possible.
+Ask which DSH version the user wants to target, together with other missing parameters. Reuse a version the user has already supplied. If no answer can be obtained, or no agent is involved, use the 0.2 baseline (`0.2.1-rc.3`). Do not inspect the user’s own CLI without permission. Infer other values where possible.
 
 | Parameter         | init flag        | How to decide                                                                                                                |
 | ----------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -13,7 +13,7 @@ Ask which DSH version the user wants to target, together with other missing para
 | Display title     | `--title`        | Human name for README headings. Defaults to the name without `dsh-`, title-cased.                                            |
 | Description       | `--description`  | One English sentence ending with "for DeepSeek Harness." Reused for npm and the GitHub description.                          |
 | Author            | `--author`       | Defaults to the owner. Ask only if the user wants a different credit.                                                        |
-| Target DSH        | `--dsh-version`  | Ask the user; accept `0.2` or an exact version. Fallback: `0.2.0-rc.2`. This is a target, not proof of verification.               |
+| Target DSH        | `--dsh-version`  | Ask the user; accept `0.2` or an exact version. Fallback: `0.2.1-rc.3`. This is a target, not proof of verification.               |
 | Minimum DSH       | `--dsh-min`      | Defaults to the target. Lower only after verification; admission is bounded by the target, including prereleases.                                               |
 | Client entry      | `--host-only`    | Omit when the plugin has any UI in the DSH web page (themes, settings cards, buttons). Use for host-only services and tools. |
 | Distribution      | `--no-npm`       | Default: npm and GitHub Releases. Use `--no-npm` for GitHub-only plugins.                                                    |
@@ -63,7 +63,7 @@ node scripts/init.mjs --name <name> --owner <owner> --dsh-version <ver> \
   --title "<title>" --description "<sentence>" [--keywords a,b] [--host-only] [--no-npm]
 ```
 
-`--dsh-version` is optional: an interactive terminal prompts; an empty answer, unavailable input, or noninteractive invocation uses `0.2.0-rc.2`. Explicit invalid versions fail before writing. `0.2` is a pinned alias for that published prerelease, not an unpublished stable `0.2.0`. Init writes `config.dshVersion`, `engines.dsh` and an optional `@deepseek-ai/dsh` peer. Compatibility defaults to the exact target; `--dsh-min` produces `>=minimum <=target`. `pnpm-workspace.yaml` disables automatic peer installation; the optional host peer allows development without a workspace CLI, while DSH still checks it at runtime.
+`--dsh-version` is optional: an interactive terminal prompts; an empty answer, unavailable input, or noninteractive invocation uses `0.2.1-rc.3`. Explicit invalid versions fail before writing. `0.2` is a pinned alias for that published prerelease, not an unpublished stable `0.2.0`. Init writes `config.dshVersion`, `engines.dsh` and an optional `@deepseek-ai/dsh` peer. Compatibility defaults to the exact target; `--dsh-min` produces `>=minimum <=target`. `pnpm-workspace.yaml` disables automatic peer installation; the optional host peer allows development without a workspace CLI, while DSH still checks it at runtime.
 
 Add `--dry-run` first if you want to see which files change. Init replaces every placeholder, removes the template-only blocks (and the npm or client blocks when those flags are set), adjusts `package.json`, and deletes itself. It also replaces the template's own `README.md` / `README.en.md` with the plugin README skeletons from `.template/` and removes that directory. The `playbooks/` stay because they are needed for releases.
 

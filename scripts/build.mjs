@@ -29,7 +29,7 @@ const normalizeTextNewlines = {
 }
 
 // Host: DSH packages and node builtins resolve from the install tree.
-await build({
+const host = await build({
   define,
   entryPoints: [path.join(root, 'src/host/index.ts')],
   bundle: true,
@@ -38,8 +38,13 @@ await build({
   target: 'node22',
   outfile: path.join(lib, 'index.js'),
   external: ['@deepseek-ai/*', 'node:*'],
+  // Keep all output writes in this Node process. On Windows the esbuild
+  // service child can be denied filesystem writes even when the caller can
+  // write the same file; the client build already uses this supported path.
+  write: false,
   logLevel: 'info',
 })
+fs.writeFileSync(path.join(lib, 'index.js'), host.outputFiles[0].text)
 
 if (pkg.dsh?.client) {
   const client = await build({

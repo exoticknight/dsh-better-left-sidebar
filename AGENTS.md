@@ -1,18 +1,5 @@
 # Agent guide
 
-<!-- template:start -->
-
-## This repository is still the template
-
-`package.json` `name` is `dsh-plugin-template`, so nothing has been initialized yet. Do not write plugin features first. Follow [`playbooks/00-init.md`](playbooks/00-init.md) from the top. It covers both cases:
-
-- **You only have this template's URL** (the user said something like "use <url> to make a DSH plugin that …"). Create the user's own repository from the template first (00-init §2A), then continue inside the new clone.
-- **You are inside a copy** of the template (the user clicked "Use this template" or cloned it). Start at 00-init §1.
-
-Initialization removes this section.
-
-<!-- template:end -->
-
 This repository is a DeepSeek Harness (DSH) plugin, distributed through npm and/or GitHub Releases and installed by users with `dsh plugin add`.
 
 This file is loaded for every task. It holds only what always applies. Everything else is in the document the routing table points to; read that one document, not all of them.

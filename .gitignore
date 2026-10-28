@@ -19,6 +19,10 @@ artifacts/
 # DSH CLI installed only for testing (pnpm dev:cli).
 .dsh-cli/
 
+# Local Playwright browser sessions and screenshots.
+.playwright-cli/
+output/
+
 # RED working records are local-only.
 .research/
 .evolve/

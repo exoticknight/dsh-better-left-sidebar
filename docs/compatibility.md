@@ -1,31 +1,30 @@
 # Compatibility
 
-| Item         | Value                    |
-| ------------ | ------------------------ |
-| Minimum DSH  | `{{DSH_MIN_VERSION}}`    |
-| Target DSH   | `{{DSH_VERSION}}`        |
-| Supported range | `{{DSH_COMPAT_RANGE}}` |
-| Verified DSH | Pending plugin-specific verification |
-| Node.js      | `^22.19.0 \|\| >=24.0.0` |
-| Profile      | `{{DSH_PROFILE}}`        |
+| Item | Value |
+| --- | --- |
+| Minimum DSH | `0.2.0-rc.2` |
+| Target DSH | `0.2.1-rc.3` |
+| Supported range | `>=0.2.0-rc.2 <0.2.2-0` |
+| Verified DSH | Prior client: `0.2.0-rc.2` and `0.2.1-rc.2` on 2026-10-27; redesigned client: `0.2.1-rc.2` and `0.2.1-rc.3` on 2026-10-28 |
+| Node.js | `^22.19.0 || >=24.0.0` |
+| Profile | `web` |
 
 ## Integration contracts
 
-List each DSH service, slot, route or DOM anchor the plugin relies on, and how the plugin behaves when it is missing. Check this list again whenever the verified DSH version changes.
+The client keeps DSH's native sidebar owner and adds a semantic layout adapter, an interaction state owner, and a staged settings form. It does not create a second sidebar or move React-managed nodes.
 
-- Host admission: `peerDependencies` on `@deepseek-ai/dsh` and `@deepseek-ai/dsh-*` are checked with prereleases included. The optional host peer still participates. `engines.dsh` mirrors the range for tooling but does not enforce it. Keep both synchronized with the development target in `config.dshVersion`.
-- Client: `./client` registers a lazy CommonJS factory through `window.__ModuleLoader__.load`. Source `inject` lists Cordis services; `dsh.client.external` lists module requests beyond the platform baseline. `dsh.client.inject` is informational metadata. This scaffold has no client module or service dependencies.
-- Plugin Manager icon: DSH reads a package-root plugin's top-level `icon` from its exported `package.json`; the path is relative to the package root. This template declares `./icon.svg` and ships it in the npm package. Missing or invalid icons use DSH's default artwork. See the [versioned metadata guide](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/docs/cookbook/adding-a-package.md).
-- These contracts were inspected in the published `0.2.0-rc.2` packages `@deepseek-ai/dsh-app-boot`, `@deepseek-ai/dsh-client-modules` and `@deepseek-ai/dsh-package-manifest`. See the [versioned module documentation](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/packages/client/modules/README.md). Recheck them for a different target and record plugin-specific services here.
+- **Host admission:** DSH `0.2.1-rc.2` checks `engines.dsh` during installation and checks `peerDependencies` on `@deepseek-ai/dsh` and `@deepseek-ai/dsh-*` before loading, including prereleases. The optional host peer still participates. Keep both declarations on the same bounded range, and keep `config.dshVersion` inside that range as the reproducible development target.
+- **Client lifecycle:** `./client` registers a lazy CommonJS factory through `window.__ModuleLoader__.load`. Cordis `ctx.effect()` owns the stylesheet, layout adapter, interaction listeners, observers, and teardown. The client requests `slots`, `locale`, and `configForms`; no additional client modules are injected.
+- **Sidebar ownership and layout:** `@deepseek-ai/dsh-client-ui-sidebar` owns the single `sidebar` slot and declares child seats such as `sidebar.brand.mark`, `sidebar.panellist`, `sidebar.workspaces`, and `sidebar.settings`; it also exposes the root-scoped `sidebar.panellist.actions` list. The slot registry allows one declaration per child seat, so a replacement root cannot safely redeclare them. DSH `0.2.1-rc.3` has no official region-reordering API. The adapter therefore keeps the stock root and its native DOM/slot owners, annotates the direct regions, and positions them with CSS. When actions are registered, the sidebar More launcher renders as a regular `.panelRow` inside `.panelList`; existing panel-row and portaled-menu handling covers it without a version-specific exception. A missing anchor leaves the native layout intact and reports the exact missing region.
+- **Version-specific anchors:** `src/client/layout-adapter.ts` is the only module that knows the CSS-module classes. For `0.2.1-rc.3`, it finds the root under `[data-slot="sidebar"]` and anchors the logo row `.hHd-Xa_logoRow`, New Session `.hHd-Xa_newSession`, global panel list `.hHd-Xa_panelList`, conversation/workspace area `.hHd-Xa_regionArea`, and tools/footer area `.hHd-Xa_footArea`. Recheck these names before widening the supported range. DSH exposes no generic stable-ID contribution contract for third-party compact/expanded navigation content, so the redesign positions the existing native regions and does not infer plugin identity from labels or DOM order.
+- **New Session and brand action:** DSH's brand button also invokes `startSession()`, while a separate New Session action exists in the conversation region. The adapter keeps that explicit New Session control in the conversation pane; the brand button is inert when its brand region is in the rail or hidden, and remains actionable only when the brand is in the conversation pane. This prevents hiding or relocating the logo from removing the conversation action.
+- **Sidebar width:** `@deepseek-ai/dsh-client-ui-layout` passes the user's sidebar width to the native sidebar root as its `width` prop; the `0.2.1-rc.3` layout accepts 264–420 px and defaults to 280 px. The plugin leaves that width intact, keeps the navigation rail at 56 px, and sizes the conversation/workspace pane to the remaining sidebar width. Expanding the navigation flyout overlays that pane without another layout change. There is no plugin-specific width preference. The footer launcher uses `settings.trigger` in DSH `0.2.0-rc.2` and `settings.launcher` in `0.2.1-rc.2`.
+- **Configuration and migration:** DSH's `configForms` service exposes a snapshot, revision-fenced mutation, and subscription. `SettingsFormModel`/`SettingsForm` provide the native staged draft, save, discard, and save-error contract. Preferences store semantic positions, animation, and expansion mode. The legacy `hiddenRegions` field is removed from the schema and ignored rather than translated, since the old values cannot express placement; animation and expansion remain supported. `layoutVersion` records an explicit layout choice. Restoring the default layout changes only the three position fields and that marker.
+- **Menus and focus:** DSH menus expose `role="menu"`, `aria-haspopup="menu"`, `aria-expanded`, and portaled surfaces. The sidebar More menu is opened by a panel-row launcher contributed through `sidebar.panellist.actions`. The native Escape handler closes the menu and restores focus to its trigger. The adapter tracks only popups opened from navigation triggers (and their nested triggers), leaving unrelated dialogs and menus out of the expanded state. Escape is handled after the native menu has had the first opportunity to close.
+- **Interaction:** one controller owns compact, temporary, and pinned states. It handles pointer dwell/close timing, keyboard focus, click-mode pinning, outside close, toggle labeling, and popup lifecycle. Click mode uses a fixed 36×36 px control; hover mode has no substitute control. Both modes respect reduced motion, and animation preferences are soft, fast, or off.
+- **Plugin Manager icon:** DSH reads a package-root plugin's top-level `icon` from the exported `package.json`; the path is relative to the package root. This template declares `./icon.svg` and ships it in the npm package. Missing or invalid icons use DSH's default artwork. See the [versioned metadata guide](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.0-rc.2/docs/cookbook/adding-a-package.md).
+- **References:** [slot contracts](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.3/docs/subsystems/slots.md), [ui-sidebar](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.3/packages/client/ui-sidebar/README.md), and [ui-layout](https://github.com/deepseek-ai/deepseek-harness/blob/dsh-v0.2.1-rc.3/packages/client/ui-layout/README.md). The pinned development target and version-specific sidebar contracts are `0.2.1-rc.3`.
 
-## Manual verification
+## Known limitation
 
-<!-- template:start -->
-
-Template baseline checked on 2026-10-04 with Windows, Node 24.20.0 and DSH 0.2.0-rc.2: the template and a generated plugin both logged host `loaded` and browser `client 0.1.0 ready` in isolated homes. The generated plugin installed from the frozen lockfile without pulling the CLI into its dependencies. This evidence covers the blank scaffold; initialization removes this note so new plugin behavior starts with a pending verification record.
-
-<!-- template:end -->
-
-Record the exact DSH version, date and observed host/client behavior. Selecting a target does not verify a plugin. `pnpm smoke` checks installation and merged configuration only; confirm runtime activation with `pnpm dev` and the browser.
-
-- TODO
+At a 567×626 viewport, DSH's native “Standard mode” label can truncate in the main column at the default 280 px sidebar width and at its 264 px minimum. The plugin preserves DSH's native width control so users can choose a wider sidebar when the full label matters.

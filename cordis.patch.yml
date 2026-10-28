@@ -1,6 +1,11 @@
 # Host activation for the DSH bundle. Add default config under `config:`;
 # users override it in their DSH settings.
 - insert:
-    - id: dsh-plugin-template
-      name: dsh-plugin-template
-      config: {}
+    - id: dsh-better-left-sidebar
+      name: dsh-better-left-sidebar
+      config:
+        animation: standard
+        expansion: hover
+        brandPosition: navigation-top
+        globalNavigationPosition: rail
+        toolsPosition: rail-bottom
