@@ -6,9 +6,9 @@ html.dsh-better-left-sidebar {
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] {
-  --dsh-better-left-sidebar-rail: 56px;
+  --dsh-better-left-sidebar-rail: min(56px, 100%);
   --dsh-better-left-sidebar-open: 100%;
-  --dsh-better-left-sidebar-conversation: calc(100% - var(--dsh-better-left-sidebar-rail));
+  --dsh-better-left-sidebar-conversation: max(0px, calc(100% - var(--dsh-better-left-sidebar-rail)));
   position: relative !important;
   display: block !important;
   min-height: 0;

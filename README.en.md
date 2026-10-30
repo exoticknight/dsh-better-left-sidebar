@@ -23,7 +23,9 @@ You need a cleaner DeepSeek Harness sidebar: keep workspaces and conversations i
 
 ## Features
 
-- **Keep conversations in the foreground**: workspaces and conversations stay in a dedicated wide pane; navigation overlays it instead of squeezing the conversation area.
+> This page describes the current source. Short-window navigation improvements are available through the local preview below and have not been published to npm `0.1.0`.
+
+- **Keep conversations in the foreground**: workspaces and conversations stay in a dedicated wide pane; expanded navigation overlays it instead of squeezing the conversation area.
 - **Tuck global entry points out of the way**: place the brand, panels, and tools along a narrow left rail to leave more room for browsing sessions.
 - **Choose the interaction that fits**: hover or keyboard focus expands the rail by default; click mode pins it open and closes on another click, Escape, or an outside click.
 - **Shape the sidebar around your workflow**: reposition the brand, global navigation, and tools, then compare the saved layout with an unsaved preview before applying it.
@@ -31,11 +33,21 @@ You need a cleaner DeepSeek Harness sidebar: keep workspaces and conversations i
 
 ## Install
 
-Verified on DSH `0.2.0-rc.2`, `0.2.1-rc.2`, and `0.2.1-rc.3` in the `web` profile. See the [compatibility record](docs/compatibility.md) for the supported range.
+The current source was verified on DSH `0.2.1-rc.3` in the `web` profile. See the [compatibility record](docs/compatibility.md) for the supported range.
 
-### Everyday users: GitHub preview
+### Everyday users: npm release
 
-There is no npm package or versioned GitHub release yet. You can install the preview from the public `main` branch. It is a rolling preview channel; installed copies do not update automatically.
+The current npm release is `0.1.0`. Install that exact version:
+
+```sh
+dsh plugin --profile web add dsh-better-left-sidebar@0.1.0
+```
+
+Restart DSH after installing.
+
+### Try the GitHub main preview
+
+You can also install the rolling preview from the public `main` branch. It does not update automatically; reinstall it to get the branch's current contents.
 
 ```sh
 dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#main
@@ -79,13 +91,19 @@ After you select **Save settings**, layout preferences are stored in the current
 
 ## Update, roll back, remove
 
-The current user install is a preview from `main`, with no versioned release yet. To update it, remove the preview and install it again using the command above. A versioned rollback will be available once GitHub Releases has a tagged release.
+To refresh the main preview, remove it and reinstall with the command above. To switch to or reinstall the current npm release, `0.1.0`:
 
 ```sh
 dsh plugin --profile web remove dsh-better-left-sidebar
 ```
 
-[View GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases).
+```sh
+dsh plugin --profile web add dsh-better-left-sidebar@0.1.0
+```
+
+The only stable npm release is currently `0.1.0`, so there is no earlier formal version to roll back to. [View GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases).
+
+Removing the plugin uninstalls its package; conversations and other plugins in the DSH profile remain.
 
 Developers can remove the plugin from the isolated preview profile:
 
@@ -99,7 +117,7 @@ The plugin rearranges DSH's existing sidebar and uses DSH's built-in configurati
 
 ## Compatibility
 
-Supports the `web` profile on DSH `>=0.2.0-rc.2 <0.2.2-0`. The plugin keeps DSH's native sidebar width. At a `567×626` viewport, DSH's “Standard mode” label can truncate at the default `280px` or minimum `264px` width; widen the DSH sidebar if the full label matters. See the [compatibility record](docs/compatibility.md).
+Supports the `web` profile on DSH `>=0.2.0-rc.2 <0.2.2-0`. With Global navigation set to Above conversations, the global-navigation list scrolls independently to leave room for conversation content and footer tools; it shrinks first in short windows and can reach `0` at extreme heights. DSH's native “Standard mode” label can still truncate at a `567×626` viewport and the default `280px` or minimum `264px` sidebar width; widen the DSH sidebar if the full label matters. See the [compatibility record](docs/compatibility.md).
 
 ## Development
 

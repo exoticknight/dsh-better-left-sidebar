@@ -20,8 +20,6 @@ pnpm verify
 
 ## Layout
 
-For the navigation rewrite, start with [导航停靠栏重构规格](navigation-redesign.md). It defines the accepted target behavior, architecture, migration requirements, and acceptance criteria; it is not a claim that the current implementation already provides them.
-
 | Path                 | Role                                                                        |
 | -------------------- | --------------------------------------------------------------------------- |
 | `src/host/index.ts`  | Host entry. Runs in the DSH Node process and builds to `lib/index.js` (ESM) |

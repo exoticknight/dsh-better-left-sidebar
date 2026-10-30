@@ -40,15 +40,35 @@ export interface LayoutAdapter {
   dispose(): void
 }
 
+export function sizeConversationNavigation(
+  rootHeight: number,
+  navigationTop: number,
+  footerHeight: number,
+  panelContentHeight: number,
+): { panelHeight: number; conversationTop: number } {
+  const height = Math.max(0, rootHeight)
+  const top = Math.max(0, navigationTop)
+  const footer = Math.max(0, footerHeight)
+  const content = Math.max(0, panelContentHeight)
+  const availableContentHeight = Math.max(0, height - top - footer - 8)
+  const contentReserve = Math.min(112, availableContentHeight)
+  const panelHeight = Math.min(content, Math.max(0, availableContentHeight - contentReserve))
+  return {
+    panelHeight,
+    conversationTop: top + (panelHeight > 0 ? panelHeight + 8 : 0),
+  }
+}
+
 /** The only module that knows DSH's version-specific sidebar DOM classes. */
-export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined) => void): LayoutAdapter {
+export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined, anchorsChanged?: boolean) => void): LayoutAdapter {
   let preferences: SidebarPreferences | undefined
   let current: LayoutAnchors | undefined
-  let sidebarObserver: MutationObserver | undefined
+  let candidateRoot: HTMLElement | undefined
+  let observedSidebar: HTMLElement | undefined
   let childrenObserver: MutationObserver | undefined
   let measurementObserver: MutationObserver | undefined
   let collapseObserver: MutationObserver | undefined
-  let pendingObserver: MutationObserver | undefined
+  let hostObserver: MutationObserver | undefined
   let resizeObserver: ResizeObserver | undefined
   let measureFrame = 0
   let warnedFor = new WeakSet<HTMLElement>()
@@ -66,7 +86,7 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined) => 
       !conversation && 'conversation/workspace region',
       !tools && 'footer tools region',
     ].filter(Boolean)
-    if (missing.length) {
+    if (missing.length > 0) {
       if (!warnedFor.has(root)) {
         console.warn(`[dsh-better-left-sidebar] DSH sidebar adapter is inactive: missing ${missing.join(', ')}.`)
         warnedFor.add(root)
@@ -111,13 +131,18 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined) => 
     const conversationGlobalTop = sessionTop + sessionHeight + 8
     const panelRows = [...anchors.panelList.querySelectorAll<HTMLElement>(DSH.panelButton)]
     const rowHeight = panelRows.reduce((height, row) => height + Math.ceil(row.getBoundingClientRect().height), 0)
-    const rowGap = Number.parseFloat(getComputedStyle(anchors.panelList).rowGap) || 4
-    const panelContentHeight = Math.max(36, rowHeight + Math.max(0, panelRows.length - 1) * rowGap)
-    const conversationHeight = anchors.root.getBoundingClientRect().height
-    const availablePanelHeight = Math.max(36, conversationHeight - conversationGlobalTop - (preferences?.toolsPosition === 'conversation-bottom' ? toolsHeight + 8 : 8) - 16)
-    const panelHeight = Math.min(panelContentHeight, availablePanelHeight)
-    const conversationTop = conversationGlobalTop + (preferences?.globalNavigationPosition === 'conversation-top' ? panelHeight + 8 : 0)
+    const rowGap = Math.max(0, Number.parseFloat(getComputedStyle(anchors.panelList).rowGap) || 4)
     const bottomPad = preferences?.toolsPosition === 'conversation-bottom' ? toolsHeight + 8 : 0
+    const panelContentHeight = panelRows.length > 0 ? rowHeight + (panelRows.length - 1) * rowGap : 0
+    const conversationNavigation = preferences?.globalNavigationPosition === 'conversation-top'
+    const conversationSizing = sizeConversationNavigation(
+      anchors.root.getBoundingClientRect().height,
+      conversationGlobalTop,
+      bottomPad,
+      panelContentHeight,
+    )
+    const panelHeight = conversationNavigation ? conversationSizing.panelHeight : panelContentHeight
+    const conversationTop = conversationNavigation ? conversationSizing.conversationTop : conversationGlobalTop
     const navBottomReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
     const toggleReserve = preferences?.expansion === 'click' ? 44 : 0
 
@@ -136,6 +161,39 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined) => 
   const scheduleMeasure = (): void => {
     if (measureFrame) window.cancelAnimationFrame(measureFrame)
     measureFrame = window.requestAnimationFrame(measure)
+  }
+
+  const observeAnchors = (anchors: LayoutAnchors): void => {
+    resizeObserver?.disconnect()
+    measurementObserver?.disconnect()
+    resizeObserver = new ResizeObserver(scheduleMeasure)
+    for (const element of [anchors.root, anchors.brand, anchors.newSession, anchors.panelList, anchors.tools]) resizeObserver.observe(element)
+    measurementObserver = new MutationObserver(scheduleMeasure)
+    measurementObserver.observe(anchors.panelList, { childList: true, subtree: true })
+    measurementObserver.observe(anchors.tools, { childList: true, subtree: true })
+  }
+
+  const sameAnchors = (a: LayoutAnchors, b: LayoutAnchors): boolean => a.root === b.root
+    && a.brand === b.brand
+    && a.newSession === b.newSession
+    && a.panelList === b.panelList
+    && a.conversation === b.conversation
+    && a.tools === b.tools
+
+  const releaseStaleAnchors = (previous: LayoutAnchors, next: LayoutAnchors): void => {
+    const retained = new Set([next.brand, next.newSession, next.panelList, next.conversation, next.tools])
+    for (const element of [previous.brand, previous.newSession, previous.panelList, previous.conversation, previous.tools]) {
+      if (retained.has(element)) continue
+      element.removeAttribute(REGION_MARK)
+      element.querySelector<HTMLElement>(DSH.brandButton)?.removeAttribute('inert')
+      element.querySelectorAll(`[${ROW_MARK}], [${GLYPH_MARK}], [${TITLE_MARK}], [data-dsh-better-left-sidebar-brand-mark], [data-dsh-better-left-sidebar-brand-name], [data-dsh-better-left-sidebar-session-label], [data-dsh-better-left-sidebar-settings-trigger-row]`).forEach((marked) => {
+        for (const attribute of [ROW_MARK, GLYPH_MARK, TITLE_MARK, 'data-dsh-better-left-sidebar-brand-mark', 'data-dsh-better-left-sidebar-brand-name', 'data-dsh-better-left-sidebar-session-label', 'data-dsh-better-left-sidebar-settings-trigger-row']) marked.removeAttribute(attribute)
+      })
+      element.querySelectorAll('[data-dsh-better-left-sidebar-owned-title]').forEach((ownedTitle) => {
+        ownedTitle.removeAttribute('title')
+        ownedTitle.removeAttribute('data-dsh-better-left-sidebar-owned-title')
+      })
+    }
   }
 
   const apply = (anchors: LayoutAnchors, next: SidebarPreferences): void => {
@@ -169,12 +227,10 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined) => 
   }
 
   const detach = (): void => {
-    sidebarObserver?.disconnect()
     childrenObserver?.disconnect()
     measurementObserver?.disconnect()
     collapseObserver?.disconnect()
     resizeObserver?.disconnect()
-    sidebarObserver = undefined
     childrenObserver = undefined
     measurementObserver = undefined
     collapseObserver = undefined
@@ -210,16 +266,33 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined) => 
     current = undefined
   }
 
-  const watchPending = (): void => {
-    if (pendingObserver) return
-    // Watch only while the native root is absent or incomplete; stop as soon as it is attached.
-    pendingObserver = new MutationObserver(() => {
-      if (attach()) {
-        pendingObserver?.disconnect()
-        pendingObserver = undefined
-      }
+  const subtreeHas = (node: Node, selector: string): boolean => {
+    if (!(node instanceof Element)) return false
+    return node.matches(selector) || Boolean(node.querySelector(selector))
+  }
+
+  const watchHost = (): void => {
+    if (hostObserver) return
+    hostObserver = new MutationObserver((records) => {
+      const targetRoot = current?.root ?? candidateRoot
+      const relevant = records.some((record) => {
+        const target = record.target
+        if (target === observedSidebar) return true
+        if (target === targetRoot) return !current || record.type !== 'childList'
+        if (target instanceof Element && (target.matches(DSH.sidebarSlot) || target.matches(DSH.root))) return true
+        if (target instanceof Element && target.parentElement === targetRoot) return !current || record.type !== 'childList'
+        return [...record.addedNodes, ...record.removedNodes].some((node) =>
+          node === targetRoot || subtreeHas(node, DSH.sidebarSlot) || subtreeHas(node, DSH.root),
+        )
+      })
+      if (relevant) attach()
     })
-    pendingObserver.observe(document.body, { childList: true, subtree: true })
+    hostObserver.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['class', 'data-slot'],
+    })
   }
 
   const attach = (): boolean => {
@@ -230,15 +303,34 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined) => 
         detach()
         onRoot(undefined)
       }
-      watchPending()
+      observedSidebar = sidebar ?? undefined
+      candidateRoot = undefined
       return false
     }
-    if (current?.root === root) return true
+    observedSidebar = sidebar
+    candidateRoot = root
+    if (current?.root === root) {
+      const refreshed = readAnchors(root)
+      if (!refreshed) {
+        detach()
+        onRoot(undefined)
+        return false
+      }
+      if (sameAnchors(current, refreshed)) {
+        if (preferences) apply(refreshed, preferences)
+        return true
+      }
+      releaseStaleAnchors(current, refreshed)
+      current = refreshed
+      observeAnchors(refreshed)
+      if (preferences) apply(refreshed, preferences)
+      onRoot(root, true)
+      return true
+    }
     detach()
     const anchors = readAnchors(root)
     if (!anchors) {
       onRoot(undefined)
-      watchPending()
       return false
     }
     current = anchors
@@ -247,36 +339,19 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined) => 
     if (root.classList.contains('hHd-Xa_collapsed')) root.querySelector<HTMLButtonElement>(DSH.collapse)?.click()
     childrenObserver = new MutationObserver(() => {
       if (!current || current.root !== root) return
-      const reread = readAnchors(root)
-      if (!reread) {
-        detach()
-        onRoot(undefined)
-        watchPending()
-        return
-      }
-      current = reread
-      if (preferences) apply(reread, preferences)
+      attach()
     })
     childrenObserver.observe(root, { childList: true, subtree: true })
     collapseObserver = new MutationObserver(() => {
       if (root.classList.contains('hHd-Xa_collapsed')) root.querySelector<HTMLButtonElement>(DSH.collapse)?.click()
     })
     collapseObserver.observe(root, { attributes: true, attributeFilter: ['class'] })
-    resizeObserver = new ResizeObserver(scheduleMeasure)
-    for (const element of [anchors.root, anchors.brand, anchors.newSession, anchors.panelList, anchors.tools]) resizeObserver.observe(element)
-    measurementObserver = new MutationObserver(scheduleMeasure)
-    measurementObserver.observe(anchors.panelList, { childList: true, subtree: true })
-    measurementObserver.observe(anchors.tools, { childList: true, subtree: true })
-    sidebarObserver = new MutationObserver(() => attach())
-    sidebarObserver.observe(sidebar, { childList: true, subtree: true })
+    observeAnchors(anchors)
     return true
   }
 
-  const sync = (): void => {
-    attach()
-  }
-
-  sync()
+  watchHost()
+  attach()
 
   return {
     update(next) {
@@ -284,9 +359,11 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined) => 
       if (current) apply(current, next)
     },
     dispose() {
-      pendingObserver?.disconnect()
-      pendingObserver = undefined
+      hostObserver?.disconnect()
+      hostObserver = undefined
       detach()
+      candidateRoot = undefined
+      observedSidebar = undefined
       onRoot(undefined)
     },
   }

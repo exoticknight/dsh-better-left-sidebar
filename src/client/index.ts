@@ -24,7 +24,7 @@ export function apply(ctx: ClientContext): void {
     html.classList.add('dsh-better-left-sidebar')
 
     const interaction = connectInteraction()
-    const layout = connectLayoutAdapter(interaction.setRoot)
+    const layout = connectLayoutAdapter((root, anchorsChanged) => interaction.setRoot(root, anchorsChanged))
     const applyPreferences = (value: unknown): void => {
       preferences = normalizePreferences(value)
       layout.update(preferences)
