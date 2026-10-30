@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { DEFAULT_PREFERENCES, normalizePreferences } from '../src/preferences.ts'
+import { sizeConversationNavigation } from '../src/client/layout-adapter.ts'
 
 test('obsolete hidden-area settings are discarded while valid behavior preferences survive', () => {
   const old = {
@@ -39,4 +40,15 @@ test('explicit semantic layout values are accepted and invalid values fall back 
   assert.equal(invalid.brandPosition, DEFAULT_PREFERENCES.brandPosition)
   assert.equal(invalid.globalNavigationPosition, DEFAULT_PREFERENCES.globalNavigationPosition)
   assert.equal(invalid.toolsPosition, DEFAULT_PREFERENCES.toolsPosition)
+})
+
+test('navigation-above preserves conversation space and floors allocations at zero', () => {
+  const ordinary = sizeConversationNavigation(626, 54, 72, 800)
+  assert.deepEqual(ordinary, { panelHeight: 380, conversationTop: 442 })
+  assert.equal(626 - ordinary.conversationTop - 72, 112)
+
+  const veryShort = sizeConversationNavigation(80, 64, 36, 400)
+  assert.deepEqual(veryShort, { panelHeight: 0, conversationTop: 64 })
+  assert.ok(veryShort.panelHeight >= 0)
+  assert.ok(veryShort.conversationTop >= 0)
 })

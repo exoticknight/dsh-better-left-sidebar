@@ -23,19 +23,31 @@
 
 ## 功能
 
-- **让会话始终留在主位**：工作区和会话列表保留在独立宽栏；导航展开时覆盖在其上方，不会挤窄对话区。
-- **把全局入口收纳起来**：品牌、面板和工具可以分布在左侧窄栏，空出更完整的会话浏览区域。
+> 本页描述当前源码功能。小窗口导航改进可通过下方本地预览体验，尚未发布到 npm `0.1.0`。
+
+- **让会话始终留在主位**：工作区和会话列表保留在独立宽栏；展开导航时覆盖在其上，不会挤窄对话区。
+- **把全局入口收纳起来**：品牌、面板和工具可分布在左侧窄栏，空出更完整的会话浏览区域。
 - **鼠标、键盘、点击都能顺手操作**：默认悬停或聚焦时展开；也可切换为点击固定展开，并用再次点击、Esc 或外部点击收起。
 - **按自己的习惯安排侧栏**：调整品牌、全局导航和工具区的位置；保存前可对照当前布局与未保存预览。
 - **保留 DSH 原生操作**：新建会话、面板、工作区、设置和页脚工具仍使用 DSH 自己的入口与处理逻辑。
 
 ## 安装
 
-已在 DSH `0.2.0-rc.2`、`0.2.1-rc.2` 和 `0.2.1-rc.3` 的 `web` profile 验证；支持范围见[兼容性记录](docs/compatibility.md)。
+当前源码已在 DSH `0.2.1-rc.3` 的 `web` profile 验证；支持范围见[兼容性记录](docs/compatibility.md)。
 
-### 普通使用者：GitHub 预览版
+### 普通用户：npm 发布版
 
-目前还没有 npm 包或正式 GitHub Release。可以从公开仓库安装 `main` 分支的预览版；它是持续更新的预览渠道，已安装的插件不会自动更新。
+npm 当前发布版本为 `0.1.0`。安装该精确版本：
+
+```sh
+dsh plugin --profile web add dsh-better-left-sidebar@0.1.0
+```
+
+安装后重启 DSH。
+
+### 试用 GitHub main 预览版
+
+也可以从公开仓库安装 `main` 分支的滚动预览版；预览不会自动更新，重新安装可获取分支当前内容。
 
 ```sh
 dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#main
@@ -79,13 +91,19 @@ pnpm dev
 
 ## 更新、回滚与卸载
 
-当前普通用户安装来源是 `main` 预览版，还没有带版本号的正式发行包。更新预览版时，先卸载再按上方命令重新安装；回滚到正式版本需等 GitHub Releases 提供带版本号的发行版。
+刷新 main 预览版时，先移除插件，再按上方命令重新安装。切换到 npm 当前发布版或重新安装 `0.1.0` 时：
 
 ```sh
 dsh plugin --profile web remove dsh-better-left-sidebar
 ```
 
-[查看 GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases)。
+```sh
+dsh plugin --profile web add dsh-better-left-sidebar@0.1.0
+```
+
+目前只有 npm `0.1.0` 这一正式版本，没有更早的正式版本可回滚。[查看 GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases)。
+
+移除插件只会卸载插件包；当前 DSH profile 中的会话和其他插件会保留。
 
 开发者可从隔离的预览 profile 移除插件：
 
@@ -99,7 +117,7 @@ pnpm dev:dsh --profile web plugin remove dsh-better-left-sidebar
 
 ## 兼容性
 
-支持 DSH `>=0.2.0-rc.2 <0.2.2-0` 的 `web` profile。插件沿用 DSH 原生侧栏宽度；DSH 自带的“Standard mode”标签在 `567×626` 窗口和默认 `280px` 或最小 `264px` 侧栏宽度下可能被截断，可调宽 DSH 侧栏。详见[兼容性记录](docs/compatibility.md)。
+支持 DSH `>=0.2.0-rc.2 <0.2.2-0` 的 `web` profile。将“全局导航”设为“对话列表上方”时，导航列表独立滚动，为会话内容和底部工具留出空间；窗口变矮时导航区优先收缩，极端高度下可缩至 `0`。DSH 自带的“Standard mode”标签在 `567×626` 窗口和默认 `280px` 或最小 `264px` 侧栏宽度下仍可能被截断，可调宽 DSH 侧栏。详见[兼容性记录](docs/compatibility.md)。
 
 ## 开发
 

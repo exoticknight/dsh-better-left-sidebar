@@ -11,7 +11,7 @@ const POPUP_PENDING_DELAY = 900
 type Translate = (key: string) => string
 
 export interface SidebarInteraction {
-  setRoot(root: HTMLElement | undefined): void
+  setRoot(root: HTMLElement | undefined, refreshAnchors?: boolean): void
   setPreferences(preferences: SidebarPreferences): void
   setTranslate(translate: Translate): void
   dispose(): void
@@ -225,14 +225,21 @@ export function connectInteraction(): SidebarInteraction {
     updateTogglePosition()
   }
 
-  const createToggle = (): void => {
-    if (!root || preferences?.expansion !== 'click' || toggle) return
-    toggle = createNavigationToggle(onToggleClick)
-    document.body.append(toggle)
+  const refreshToggleObservation = (): void => {
+    if (!root || !toggle) return
+    resizeObserver?.disconnect()
     resizeObserver = new ResizeObserver(updateTogglePosition)
     resizeObserver.observe(root)
     const tools = root.querySelector<HTMLElement>('[data-dsh-better-left-sidebar-region="tools"]')
     if (tools) resizeObserver.observe(tools)
+    updateTogglePosition()
+  }
+
+  const createToggle = (): void => {
+    if (!root || preferences?.expansion !== 'click' || toggle) return
+    toggle = createNavigationToggle(onToggleClick)
+    document.body.append(toggle)
+    refreshToggleObservation()
     window.addEventListener('resize', updateTogglePosition)
     window.addEventListener('scroll', updateTogglePosition, true)
     syncToggle()
@@ -361,8 +368,11 @@ export function connectInteraction(): SidebarInteraction {
 
   documentCleanup = attachDocumentListeners()
 
-  const setRoot = (next: HTMLElement | undefined): void => {
-    if (next === root) return
+  const setRoot = (next: HTMLElement | undefined, refreshAnchors = false): void => {
+    if (next === root) {
+      if (refreshAnchors) refreshToggleObservation()
+      return
+    }
     if (root && rootIdOwned && root.id === 'dsh-better-left-sidebar-navigation') root.removeAttribute('id')
     rootIdOwned = false
     removeToggle()
