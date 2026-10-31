@@ -258,14 +258,11 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   gap: 4px;
   box-sizing: border-box;
   padding: 0 10px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  overflow: hidden;
 }
 
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="compact-widgets"]::-webkit-scrollbar {
-  display: none;
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-compact-widget-clipped] {
+  visibility: hidden;
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="compact-widgets"][hidden] {

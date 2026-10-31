@@ -60,6 +60,23 @@ export function sizeConversationNavigation(
   }
 }
 
+const COMPACT_WIDGETS_MAX_HEIGHT = 112
+const COMPACT_WIDGET_GAP = 4
+const CLIPPED_MARK = 'data-dsh-better-left-sidebar-compact-widget-clipped'
+
+/** Keep whole widget boxes in order until the next one would exceed the height limit. */
+export function fitCompactWidgets(heights: readonly number[], gap: number, limit: number): { visible: number; height: number } {
+  let height = 0
+  let visible = 0
+  for (const boxHeight of heights) {
+    const next = height + (visible > 0 ? gap : 0) + Math.max(0, boxHeight)
+    if (next > limit) break
+    height = next
+    visible += 1
+  }
+  return { visible, height }
+}
+
 /** The only module that knows DSH's version-specific sidebar DOM classes. */
 export function connectLayoutAdapter(
   onRoot: (root: HTMLElement | undefined, anchorsChanged?: boolean) => void,
@@ -152,11 +169,15 @@ export function connectLayoutAdapter(
     const navBottomReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
     const toggleReserve = preferences?.expansion === 'click' ? 44 : 0
     const footerReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
-    const widgetContentReserve = compactWidgetsActive && compactWidgetCount > 0
-      ? Math.min(compactWidgetCount * 56 + (compactWidgetCount - 1) * 4, 112)
-      : 0
+    const widgetBoxes = [...compactWidgets.children].filter((child): child is HTMLElement => child instanceof HTMLElement)
+    for (const box of widgetBoxes) resizeObserver?.observe(box)
+    const widgetBoxHeights = compactWidgetsActive && compactWidgetCount > 0
+      ? widgetBoxes.map((box) => Math.ceil(box.getBoundingClientRect().height))
+      : []
     const widgetAvailable = Math.max(0, anchors.root.getBoundingClientRect().height - railGlobalTop - footerReserve - toggleReserve - 16)
-    const widgetHeight = Math.min(widgetContentReserve, widgetAvailable)
+    const widgetFit = fitCompactWidgets(widgetBoxHeights, COMPACT_WIDGET_GAP, Math.min(COMPACT_WIDGETS_MAX_HEIGHT, widgetAvailable))
+    widgetBoxes.forEach((box, index) => box.toggleAttribute(CLIPPED_MARK, index >= widgetFit.visible))
+    const widgetHeight = widgetFit.height
     const widgetBottom = footerReserve + toggleReserve + 8
     const railBottomReserve = widgetHeight > 0
       ? footerReserve + toggleReserve + widgetHeight + 16
@@ -189,6 +210,7 @@ export function connectLayoutAdapter(
     measurementObserver = new MutationObserver(scheduleMeasure)
     measurementObserver.observe(anchors.panelList, { childList: true, subtree: true })
     measurementObserver.observe(anchors.tools, { childList: true, subtree: true })
+    measurementObserver.observe(compactWidgets, { childList: true })
   }
 
   const sameAnchors = (a: LayoutAnchors, b: LayoutAnchors): boolean => a.root === b.root

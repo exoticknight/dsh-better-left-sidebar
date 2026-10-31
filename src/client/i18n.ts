@@ -4,7 +4,7 @@ export const NAMESPACE = 'dsh-better-left-sidebar'
 const en = {
   summary: 'Set how navigation opens and where each built-in area lives.',
   compactWidgets: 'Compact widgets',
-  compactWidgetsHint: 'New registrations start enabled. Changes apply when you save.',
+  compactWidgetsHint: 'New registrations start enabled. Widgets that do not fit the rail are not shown; order them by priority. Changes apply when you save.',
   compactWidgetsEmpty: 'No compact widgets are registered or saved.',
   clock: 'Clock',
   registrant: 'Registrant (advisory)',
@@ -14,7 +14,6 @@ const en = {
   widgetNotLoaded: 'Not loaded',
   widgetFailed: 'Failed',
   widgetEnable: 'Enable',
-  widgetEnabled: 'Enabled',
   moveUp: 'Move up',
   moveDown: 'Move down',
   navigationBehavior: 'Navigation behavior',
@@ -57,7 +56,7 @@ const en = {
 const zh = {
   summary: '设置导航展开方式，并为各个区域选择位置。',
   compactWidgets: '收起栏小组件',
-  compactWidgetsHint: '新注册的小组件默认启用；更改会在保存后生效。',
+  compactWidgetsHint: '新注册的小组件默认启用；收起栏放不下的小组件不会显示，请按重要程度排序。更改会在保存后生效。',
   compactWidgetsEmpty: '目前没有已注册或已保存的小组件。',
   clock: '时钟',
   registrant: '来源（仅供参考）',
@@ -67,7 +66,6 @@ const zh = {
   widgetNotLoaded: '未加载',
   widgetFailed: '失败',
   widgetEnable: '启用',
-  widgetEnabled: '已启用',
   moveUp: '上移',
   moveDown: '下移',
   navigationBehavior: '导航行为',

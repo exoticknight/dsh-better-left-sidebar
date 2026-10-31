@@ -1,64 +1,78 @@
-import { createElement as h, useEffect, useState } from 'react'
+import type { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
+import { createElement as h, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import type { CompactFooterOwnerProps } from '../slots.js'
 
-const timeFormat = new Intl.DateTimeFormat(undefined, {
-  hour: '2-digit',
-  minute: '2-digit',
-  hourCycle: 'h23',
-})
-const dateFormat = new Intl.DateTimeFormat(undefined, { month: 'numeric', day: 'numeric' })
-const accessibleFormat = new Intl.DateTimeFormat(undefined, {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-  second: '2-digit',
-  hourCycle: 'h23',
-  timeZoneName: 'long',
-})
+interface ClockFormats {
+  time: Intl.DateTimeFormat
+  date: Intl.DateTimeFormat
+  accessible: Intl.DateTimeFormat
+}
 
-/** A minute-aligned, local clock that sleeps with its compact box or page. */
-export function ClockWidget({ active }: CompactFooterOwnerProps) {
-  const [now, setNow] = useState(() => new Date())
+function clockFormats(locale: string): ClockFormats {
+  const tag = Intl.DateTimeFormat.supportedLocalesOf(locale).length > 0 ? locale : undefined
+  return {
+    time: new Intl.DateTimeFormat(tag, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }),
+    date: new Intl.DateTimeFormat(tag, { month: 'numeric', day: 'numeric' }),
+    accessible: new Intl.DateTimeFormat(tag, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hourCycle: 'h23',
+      timeZoneName: 'long',
+    }),
+  }
+}
 
-  useEffect(() => {
-    if (!active) return
-    let timer = 0
-    const clearTimer = (): void => {
-      if (timer) window.clearTimeout(timer)
-      timer = 0
-    }
-    const refresh = (): void => {
-      clearTimer()
-      const current = new Date()
-      setNow(current)
-      if (!document.hidden) timer = window.setTimeout(refresh, 60_000 - (current.getTime() % 60_000))
-    }
-    const onVisibilityChange = (): void => {
-      if (document.hidden) clearTimer()
-      else refresh()
-    }
+/** A minute-aligned clock in DSH's active language that sleeps with its compact box or page. */
+export function createClockWidget(locale: Pick<LocaleRuntime, 'getSnapshot' | 'subscribe'>) {
+  const subscribe = (listener: () => void): (() => void) => locale.subscribe(listener)
+  const activeLocale = (): string => locale.getSnapshot().active
 
-    document.addEventListener('visibilitychange', onVisibilityChange)
-    if (!document.hidden) refresh()
-    return () => {
-      clearTimer()
-      document.removeEventListener('visibilitychange', onVisibilityChange)
-    }
-  }, [active])
+  return function ClockWidget({ active }: CompactFooterOwnerProps) {
+    const [now, setNow] = useState(() => new Date())
+    const localeId = useSyncExternalStore(subscribe, activeLocale, activeLocale)
+    const formats = useMemo(() => clockFormats(localeId), [localeId])
 
-  const timeParts = timeFormat.formatToParts(now)
-  const hour = timeParts.find((part) => part.type === 'hour')?.value ?? '00'
-  const minute = timeParts.find((part) => part.type === 'minute')?.value ?? '00'
-  const dateParts = dateFormat.formatToParts(now)
-  const month = dateParts.find((part) => part.type === 'month')?.value ?? String(now.getMonth() + 1)
-  const day = dateParts.find((part) => part.type === 'day')?.value ?? String(now.getDate())
+    useEffect(() => {
+      if (!active) return
+      let timer = 0
+      const clearTimer = (): void => {
+        if (timer) window.clearTimeout(timer)
+        timer = 0
+      }
+      const refresh = (): void => {
+        clearTimer()
+        const current = new Date()
+        setNow(current)
+        if (!document.hidden) timer = window.setTimeout(refresh, 60_000 - (current.getTime() % 60_000))
+      }
+      const onVisibilityChange = (): void => {
+        if (document.hidden) clearTimer()
+        else refresh()
+      }
 
-  return h('div', { className: 'dsh-better-left-sidebar-clock' },
-    h('time', { className: 'dsh-better-left-sidebar-clock-time', dateTime: now.toISOString(), 'aria-hidden': 'true' }, `${hour}:${minute}`),
-    h('span', { className: 'dsh-better-left-sidebar-clock-date', 'aria-hidden': 'true' }, `${month}/${day}`),
-    h('span', { className: 'dsh-better-left-sidebar-visually-hidden' }, accessibleFormat.format(now)),
-  )
+      document.addEventListener('visibilitychange', onVisibilityChange)
+      if (!document.hidden) refresh()
+      return () => {
+        clearTimer()
+        document.removeEventListener('visibilitychange', onVisibilityChange)
+      }
+    }, [active])
+
+    const timeParts = formats.time.formatToParts(now)
+    const hour = timeParts.find((part) => part.type === 'hour')?.value ?? '00'
+    const minute = timeParts.find((part) => part.type === 'minute')?.value ?? '00'
+    const dateParts = formats.date.formatToParts(now)
+    const month = dateParts.find((part) => part.type === 'month')?.value ?? String(now.getMonth() + 1)
+    const day = dateParts.find((part) => part.type === 'day')?.value ?? String(now.getDate())
+
+    return h('div', { className: 'dsh-better-left-sidebar-clock' },
+      h('time', { className: 'dsh-better-left-sidebar-clock-time', dateTime: now.toISOString(), 'aria-hidden': 'true' }, `${hour}:${minute}`),
+      h('span', { className: 'dsh-better-left-sidebar-clock-date', 'aria-hidden': 'true' }, `${month}/${day}`),
+      h('span', { className: 'dsh-better-left-sidebar-visually-hidden' }, formats.accessible.format(now)),
+    )
+  }
 }

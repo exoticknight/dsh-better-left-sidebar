@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { DEFAULT_PREFERENCES } from '../src/preferences.ts'
 import { isRailRegionEligible } from '../src/client/rail-region.ts'
+import { fitCompactWidgets } from '../src/client/layout-adapter.ts'
 import {
   orderCompactWidgetEntries,
   validateCompactWidgetPreferences,
@@ -52,6 +53,13 @@ test('saved widgets lead in saved order; unsaved widgets use slot order and regi
     { enabled: true, saved: false },
   ])
   assert.equal(preferences[0].id, 'missing-but-remembered')
+})
+
+test('compact widgets keep whole boxes in order up to the height limit', () => {
+  assert.deepEqual(fitCompactWidgets([33, 44, 20], 4, 112), { visible: 3, height: 105 })
+  assert.deepEqual(fitCompactWidgets([56, 56, 20], 4, 112), { visible: 1, height: 56 })
+  assert.deepEqual(fitCompactWidgets([33], 4, 20), { visible: 0, height: 0 })
+  assert.deepEqual(fitCompactWidgets([], 4, 112), { visible: 0, height: 0 })
 })
 
 test('compact widget region is eligible independent of tools position', () => {

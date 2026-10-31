@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom'
 import type { CompactFooterSlotKey } from '../slots.js'
 import { orderCompactWidgetEntries } from './compact-widget-preferences.js'
 import type { CompactWidgetPreference } from './compact-widget-preferences.js'
-import { ClockWidget } from './clock.js'
+import { createClockWidget } from './clock.js'
 import { NAMESPACE } from './i18n.js'
 
 const SLOT: CompactFooterSlotKey = 'dsh-better-left-sidebar.footer.compact'
@@ -94,10 +94,11 @@ export function connectCompactWidgets(ctx: Context, onChange: SurfaceChange): Co
     return result
   }
   const refreshFailures = (): void => {
+    const registered = new Set(ctx.slots.entries(SLOT))
     const live = new Map(entries().flatMap((entry) => typeof entry.options.id === 'string' ? [[entry.options.id, entry] as const] : []))
     for (const [id, failure] of failures) {
       const replacement = live.get(id)
-      if (replacement && replacement !== failure.entry) failures.delete(id)
+      if (!registered.has(failure.entry) || (replacement && replacement !== failure.entry)) failures.delete(id)
     }
   }
   const getCatalog = (): CompactWidgetCatalogEntry[] => {
@@ -178,7 +179,7 @@ export function connectCompactWidgets(ctx: Context, onChange: SurfaceChange): Co
     id: 'dsh-better-left-sidebar.clock',
     label: () => ctx.locale.bind(NAMESPACE)('clock'),
     order: 100,
-  }, ClockWidget))
+  }, createClockWidget(ctx.locale)))
 
   return {
     container,

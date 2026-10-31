@@ -14,8 +14,8 @@ import type { CompactFooterOwnerProps, CompactFooterSlotKey } from 'dsh-better-l
 
 const compactSlot: CompactFooterSlotKey = 'dsh-better-left-sidebar.footer.compact'
 
-function StatusWidget({ active }: CompactFooterOwnerProps) {
-  return h('span', { 'aria-label': 'Sync status' }, active ? 'Synced' : null)
+function StatusWidget(_props: CompactFooterOwnerProps) {
+  return h('span', null, 'Synced')
 }
 
 ctx.slots.inject(compactSlot, () => ctx.slots.register({
@@ -26,7 +26,7 @@ ctx.slots.inject(compactSlot, () => ctx.slots.register({
 }, StatusWidget))
 ```
 
-The type entry exports declarations only; it does not add a runtime slot constant. The host filters and renders registrations individually, preserving the slot's `id`, `label`, and `order` metadata. The `registrant` shown in settings is advisory metadata, not a verified identity.
+The type entry exports declarations only; it does not add a runtime slot constant. It augments `@deepseek-ai/dsh-client-ui-slots`, so that package must be resolvable in your TypeScript project for the slot types to merge. The host filters and renders registrations individually, preserving the slot's `id`, `label`, and `order` metadata. The `registrant` shown in settings is advisory metadata, not a verified identity.
 
 ## Keep widget content display-only
 
@@ -34,7 +34,11 @@ Widgets report information. Do not render buttons, links, inputs, menus, popover
 
 Use `active` to pause work while the navigation is expanded. The host retains the component instance during temporary or pinned expansion, sets `active` to `false`, and hides the widget list with `hidden` and `inert`. Document visibility is separate: a widget with timers or background work should pause when `document.visibilityState` is not `visible` and refresh when it resumes.
 
-The compact widget list is a navigation region in the rail for both `toolsPosition` settings. In hover mode, hovering or focusing it expands navigation after the normal delay. In click mode, hover does not expand navigation. The list scrolls within its rail allocation above the navigation controls.
+The compact widget list is a navigation region in the rail for both `toolsPosition` settings. In hover mode, hovering or focusing it expands navigation after the normal delay. In click mode, hover does not expand navigation.
+
+## Size and truncation
+
+Each box is 36 px wide and at most 56 px tall; content beyond that is clipped. The list sits above the rail's bottom controls and takes the measured height of its boxes, up to 112 px or the space the rail has left, whichever is smaller. Boxes are kept whole and in order: the first box that would exceed the limit, and every box after it, is not shown. The list does not scroll. Users decide which widgets appear by enabling and ordering them in settings, so keep a widget short and useful at a glance.
 
 The host entry lives in DSH's native `sidebar.footer.action` slot but renders only through a portal into a single plugin-owned container. It adds no DOM at the native footer outlet, leaving expanded footer actions in their DSH position. If DSH replaces the sidebar root, the adapter reattaches that same container rather than creating a new one.
 

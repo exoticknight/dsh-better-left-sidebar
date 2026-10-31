@@ -155,19 +155,7 @@ function SettingsPage(props: BoundPageProps) {
 
   if (props.view === 'summary') return h('p', null, t('summary'))
 
-  return h(SettingsForm, {
-    labels: {
-      unavailable: t('unavailable'),
-      readOnly: t('readOnly'),
-      saveFailed: t('saveFailed'),
-      save: t('save'),
-      saving: t('saving'),
-    },
-    state: view.shell,
-    onSave: actions.save,
-    onDiscard: actions.discard,
-    children: h('div', { className: 'dsh-better-left-sidebar-preferences' },
-      h('section', { className: 'dsh-better-left-sidebar-settings-group dsh-better-left-sidebar-compact-widgets-settings' },
+  const widgetSection = h('section', { className: 'dsh-better-left-sidebar-settings-group dsh-better-left-sidebar-compact-widgets-settings' },
         h('div', { className: 'dsh-better-left-sidebar-settings-heading' },
           h('h3', null, t('compactWidgets'))),
         h('p', { className: 'dsh-better-left-sidebar-compact-widgets-hint' }, t('compactWidgetsHint')),
@@ -197,8 +185,7 @@ function SettingsPage(props: BoundPageProps) {
                   'aria-label': `${t('widgetEnable')} ${row.label}`,
                   onChange: (event: React.ChangeEvent<HTMLInputElement>) => writeWidgetRows(widgetRows.map((item) =>
                     item.id === row.id ? { ...item, enabled: event.currentTarget.checked } : item)),
-                }),
-                h('span', null, row.enabled ? t('widgetEnabled') : t('widgetDisabled'))),
+                })),
               h('div', { className: 'dsh-better-left-sidebar-widget-order' },
                 h('button', {
                   type: 'button',
@@ -211,7 +198,20 @@ function SettingsPage(props: BoundPageProps) {
                   disabled: disabled || index === widgetRows.length - 1,
                   'aria-label': `${t('moveDown')} ${row.label}`,
                   onClick: () => writeWidgetRows(moveWidgetRow(widgetRows, index, 1)),
-                }, '↓'))))))),
+                }, '↓')))))))
+
+  return h(SettingsForm, {
+    labels: {
+      unavailable: t('unavailable'),
+      readOnly: t('readOnly'),
+      saveFailed: t('saveFailed'),
+      save: t('save'),
+      saving: t('saving'),
+    },
+    state: view.shell,
+    onSave: actions.save,
+    onDiscard: actions.discard,
+    children: h('div', { className: 'dsh-better-left-sidebar-preferences' },
       h('section', { className: 'dsh-better-left-sidebar-settings-group' },
         h('h3', null, t('navigationBehavior')),
         h(ChoiceRow, {
@@ -270,7 +270,8 @@ function SettingsPage(props: BoundPageProps) {
           className: 'dsh-better-left-sidebar-layout-cancel',
           disabled: view.shell.saving,
           onClick: actions.discard,
-        }, t('cancel')) : null)),
+        }, t('cancel')) : null),
+      widgetSection),
   })
 }
 
