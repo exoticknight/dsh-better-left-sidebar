@@ -1,6 +1,6 @@
 {
   "name": "dsh-better-left-sidebar",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A cleaner, better-organized DeepSeek Harness sidebar with support for multiple plugin-defined widgets.",
   "icon": "./icon.svg",
   "license": "Apache-2.0",
