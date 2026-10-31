@@ -60,6 +60,7 @@ test('compact widgets keep whole boxes in order up to the height limit', () => {
   assert.deepEqual(fitCompactWidgets([56, 56, 20], 4, 112), { visible: 1, height: 56 })
   assert.deepEqual(fitCompactWidgets([33], 4, 20), { visible: 0, height: 0 })
   assert.deepEqual(fitCompactWidgets([], 4, 112), { visible: 0, height: 0 })
+  assert.deepEqual(fitCompactWidgets([37, 0, 33], 4, 112), { visible: 3, height: 74 })
 })
 
 test('compact widget region is eligible independent of tools position', () => {

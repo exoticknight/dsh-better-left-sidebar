@@ -68,11 +68,17 @@ const CLIPPED_MARK = 'data-dsh-better-left-sidebar-compact-widget-clipped'
 export function fitCompactWidgets(heights: readonly number[], gap: number, limit: number): { visible: number; height: number } {
   let height = 0
   let visible = 0
+  let rendered = 0
   for (const boxHeight of heights) {
-    const next = height + (visible > 0 ? gap : 0) + Math.max(0, boxHeight)
+    if (boxHeight <= 0) {
+      visible += 1
+      continue
+    }
+    const next = height + (rendered > 0 ? gap : 0) + boxHeight
     if (next > limit) break
     height = next
     visible += 1
+    rendered += 1
   }
   return { visible, height }
 }

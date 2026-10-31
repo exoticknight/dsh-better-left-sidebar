@@ -26,7 +26,7 @@ ctx.slots.inject(compactSlot, () => ctx.slots.register({
 }, StatusWidget))
 ```
 
-The type entry exports declarations only; it does not add a runtime slot constant. It augments `@deepseek-ai/dsh-client-ui-slots`, so that package must be resolvable in your TypeScript project for the slot types to merge. The host filters and renders registrations individually, preserving the slot's `id`, `label`, and `order` metadata. The `registrant` shown in settings is advisory metadata, not a verified identity.
+The type entry exports declarations only; it does not add a runtime slot constant. It augments `@deepseek-ai/dsh-client-ui-slots`, so that package must be resolvable in your TypeScript project for the slot types to merge. The host filters and renders registrations individually, preserving the slot's `id`, `label`, and `order` metadata. Settings lists each widget by `label` and `id`. DSH `0.2.1-rc.3` does not attribute a registration made inside an `inject` callback to the registering plugin, so prefix the `id` with your plugin name; that is how users tell widgets apart.
 
 ## Keep widget content display-only
 
@@ -38,7 +38,7 @@ The compact widget list is a navigation region in the rail for both `toolsPositi
 
 ## Size and truncation
 
-Each box is 36 px wide and at most 56 px tall; content beyond that is clipped. The list sits above the rail's bottom controls and takes the measured height of its boxes, up to 112 px or the space the rail has left, whichever is smaller. Boxes are kept whole and in order: the first box that would exceed the limit, and every box after it, is not shown. The list does not scroll. Users decide which widgets appear by enabling and ordering them in settings, so keep a widget short and useful at a glance.
+Each box is 36 px wide and at most 56 px tall; content beyond that is clipped. The list sits above the rail's bottom controls and takes the measured height of its boxes, up to 112 px or the space the rail has left, whichever is smaller. Boxes are kept whole and in order: the first box that would exceed the limit, and every box after it, is not shown. The list does not scroll. A widget that renders nothing takes no space, so return `null` when there is nothing to report. Users decide which widgets appear by enabling and ordering them in settings, so keep a widget short and useful at a glance.
 
 The host entry lives in DSH's native `sidebar.footer.action` slot but renders only through a portal into a single plugin-owned container. It adds no DOM at the native footer outlet, leaving expanded footer actions in their DSH position. If DSH replaces the sidebar root, the adapter reattaches that same container rather than creating a new one.
 

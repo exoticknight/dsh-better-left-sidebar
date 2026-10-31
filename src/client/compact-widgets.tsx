@@ -33,7 +33,6 @@ export interface CompactWidgetCatalogEntry {
   id: string
   label: string
   order: number
-  registrant?: string
   error?: string
   registrationIndex: number
 }
@@ -89,7 +88,6 @@ export function connectCompactWidgets(ctx: Context, onChange: SurfaceChange): Co
       order: typeof entry.options.order === 'number' && Number.isFinite(entry.options.order) ? entry.options.order : 0,
       registrationIndex,
     }
-    if (typeof entry.registrant === 'string') result.registrant = entry.registrant
     if (error !== undefined) result.error = error
     return result
   }

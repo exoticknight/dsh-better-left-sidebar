@@ -277,6 +277,11 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   pointer-events: none;
 }
 
+/* A widget that renders nothing must not take a flex gap. */
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] .dsh-better-left-sidebar-compact-widget-box:not(:has(> [data-slot] > *)) {
+  display: none;
+}
+
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] .dsh-better-left-sidebar-clock {
   display: flex;
   min-width: 0;

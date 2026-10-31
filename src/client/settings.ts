@@ -169,8 +169,7 @@ function SettingsPage(props: BoundPageProps) {
             },
             h('div', { className: 'dsh-better-left-sidebar-compact-widget-info' },
               h('div', { className: 'dsh-better-left-sidebar-compact-widget-name' }, row.label),
-              h('div', { className: 'dsh-better-left-sidebar-compact-widget-source' },
-                `${t('registrant')}: ${row.registrant || t('unknownSource')}`),
+              row.label === row.id ? null : h('code', { className: 'dsh-better-left-sidebar-compact-widget-source' }, row.id),
               h('div', {
                 className: `dsh-better-left-sidebar-compact-widget-status is-${row.status}`,
                 'aria-live': 'polite',
@@ -286,7 +285,6 @@ type WidgetStatus = 'shown' | 'disabled' | 'notLoaded' | 'failed'
 interface CompactWidgetRow {
   id: string
   label: string
-  registrant?: string
   enabled: boolean
   status: WidgetStatus
   error?: string
@@ -336,7 +334,6 @@ function buildWidgetRows(
       enabled,
       status,
     }
-    if (registration?.registrant) row.registrant = registration.registrant
     if (registration?.error !== undefined) row.error = registration.error
     return row
   })
