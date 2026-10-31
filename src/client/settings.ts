@@ -1,5 +1,5 @@
 import type { Context } from '@deepseek-ai/cordis'
-import { SettingsForm, SettingsFormModel } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, SettingsForm, SettingsFormModel, Switch } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SettingsFieldSpec, SettingsFormScope } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PluginConfigViewProps } from '@deepseek-ai/dsh-client-ui-plugin-manager/client'
 import type { Translate } from '@deepseek-ai/dsh-client-ui-slots'
@@ -156,9 +156,16 @@ function SettingsPage(props: BoundPageProps) {
   if (props.view === 'summary') return h('p', null, t('summary'))
 
   const widgetSection = h('section', { className: 'dsh-better-left-sidebar-settings-group dsh-better-left-sidebar-compact-widgets-settings' },
-        h('div', { className: 'dsh-better-left-sidebar-settings-heading' },
-          h('h3', null, t('compactWidgets'))),
-        h('p', { className: 'dsh-better-left-sidebar-compact-widgets-hint' }, t('compactWidgetsHint')),
+        h('div', { className: 'dsh-better-left-sidebar-compact-widgets-intro' },
+          h('h3', null, t('compactWidgets')),
+          h('p', { className: 'dsh-better-left-sidebar-compact-widgets-hint' },
+            t('compactWidgetsHint'),
+            h('a', {
+              className: 'dsh-better-left-sidebar-compact-widgets-link',
+              href: t('compactWidgetsDocsUrl'),
+              target: '_blank',
+              rel: 'noopener noreferrer',
+            }, t('compactWidgetsDocs')))),
         widgetRows.length === 0
           ? h('p', { className: 'dsh-better-left-sidebar-compact-widgets-empty' }, t('compactWidgetsEmpty'))
           : h('div', { className: 'dsh-better-left-sidebar-compact-widgets-list' },
@@ -175,25 +182,26 @@ function SettingsPage(props: BoundPageProps) {
                 'aria-live': 'polite',
               }, row.status === 'failed' ? `${t('widgetFailed')}: ${row.error}` : t(widgetStatusKey(row.status)))),
             h('div', { className: 'dsh-better-left-sidebar-compact-widget-controls' },
-              h('label', { className: 'dsh-better-left-sidebar-widget-switch' },
-                h('input', {
-                  type: 'checkbox',
-                  role: 'switch',
-                  checked: row.enabled,
-                  disabled,
-                  'aria-label': `${t('widgetEnable')} ${row.label}`,
-                  onChange: (event: React.ChangeEvent<HTMLInputElement>) => writeWidgetRows(widgetRows.map((item) =>
-                    item.id === row.id ? { ...item, enabled: event.currentTarget.checked } : item)),
-                })),
+              h(Switch, {
+                checked: row.enabled,
+                disabled,
+                label: `${t('widgetEnable')} ${row.label}`,
+                onChange: (checked) => writeWidgetRows(widgetRows.map((item) =>
+                  item.id === row.id ? { ...item, enabled: checked } : item)),
+              }),
               h('div', { className: 'dsh-better-left-sidebar-widget-order' },
-                h('button', {
+                h(Button, {
                   type: 'button',
+                  variant: 'outline',
+                  size: 'sm',
                   disabled: disabled || index === 0,
                   'aria-label': `${t('moveUp')} ${row.label}`,
                   onClick: () => writeWidgetRows(moveWidgetRow(widgetRows, index, -1)),
                 }, '↑'),
-                h('button', {
+                h(Button, {
                   type: 'button',
+                  variant: 'outline',
+                  size: 'sm',
                   disabled: disabled || index === widgetRows.length - 1,
                   'aria-label': `${t('moveDown')} ${row.label}`,
                   onClick: () => writeWidgetRows(moveWidgetRow(widgetRows, index, 1)),
@@ -210,7 +218,8 @@ function SettingsPage(props: BoundPageProps) {
     state: view.shell,
     onSave: actions.save,
     onDiscard: actions.discard,
-    children: h('div', { className: 'dsh-better-left-sidebar-preferences' },
+    children: [
+      h('div', { className: 'dsh-better-left-sidebar-preferences' },
       h('section', { className: 'dsh-better-left-sidebar-settings-group' },
         h('h3', null, t('navigationBehavior')),
         h(ChoiceRow, {
@@ -263,14 +272,15 @@ function SettingsPage(props: BoundPageProps) {
           view.shell.dirty
             ? h(LayoutPreview, { title: t('applied'), preferences: savedPreferences, t })
             : null,
-          h(LayoutPreview, { title: view.shell.dirty ? t('preview') : t('applied'), preferences: draft, t })),
-        view.shell.dirty ? h('button', {
-          type: 'button',
-          className: 'dsh-better-left-sidebar-layout-cancel',
-          disabled: view.shell.saving,
-          onClick: actions.discard,
-        }, t('cancel')) : null),
+          h(LayoutPreview, { title: view.shell.dirty ? t('preview') : t('applied'), preferences: draft, t }))),
       widgetSection),
+    view.shell.dirty ? h('button', {
+      type: 'button',
+      className: 'dsh-better-left-sidebar-layout-cancel',
+      disabled: view.shell.saving,
+      onClick: actions.discard,
+    }, t('cancel')) : null,
+    ],
   })
 }
 

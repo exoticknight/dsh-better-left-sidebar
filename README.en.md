@@ -77,7 +77,7 @@ pnpm dev
 1. When enabled, the workspace and conversation list stay open; the far-left rail holds the DSH brand, global panels, and tools.
 2. In the default mode, hover over the rail or keyboard-focus a navigation item to reveal the full navigation. It closes after you leave it. Choose click mode in the plugin settings to pin or close the rail with the toggle button.
 3. Open **Plugins** in the sidebar, then **Better Left Sidebar** to configure expansion, animation, and region placement. Review the preview and select **Save settings** to apply changes. Copy follows DSH's active language; switch between Chinese and English in **Settings → General**.
-4. Use **Compact widgets** on the same settings page to manage the clock and compatible widgets. New registrations are enabled by default, and their order and enablement are saved in the current profile.
+4. Use **[Compact widgets](docs/compact-widgets.md)** on the same settings page to manage the clock and compatible widgets. New registrations are enabled by default, and their order and enablement are saved in the current profile.
 
 ### Adapt your plugin to the compact rail
 
@@ -94,7 +94,7 @@ After you select **Save settings**, layout preferences are stored in the current
 | Brand | `navigation-top` | Place the brand at the top of the rail, at the top of the conversation pane, or hide it. |
 | Global navigation | `rail` | Keep global navigation in the rail or move it above conversations. |
 | Tools and status | `rail-bottom` | Keep tools at the bottom of the rail or move them below conversations. |
-| Compact widgets | Clock and new registrations enabled | Enable, disable, and reorder widgets in plugin settings; preferences are saved in the current DSH profile. |
+| [Compact widgets](docs/compact-widgets.md) | Clock and new registrations enabled | Enable, disable, and reorder widgets in plugin settings; preferences are saved in the current DSH profile. |
 
 ## Update, roll back, remove
 
