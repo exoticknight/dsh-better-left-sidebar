@@ -1,6 +1,7 @@
 import type { ExpansionMode, SidebarPreferences } from '../preferences.js'
 import { createNavigationToggle } from './footer.js'
 import { fallbackTranslate } from './i18n.js'
+import { isRailRegionEligible } from './rail-region.js'
 
 const NAV_REGION = '[data-dsh-better-left-sidebar-region="brand"], [data-dsh-better-left-sidebar-region="global-navigation"], [data-dsh-better-left-sidebar-region="tools"], [data-dsh-better-left-sidebar-region="compact-widgets"]'
 const POPUP_SELECTOR = '[role="menu"], [role="listbox"], [role="dialog"], [data-menu-material]'
@@ -48,10 +49,7 @@ export function connectInteraction(): SidebarInteraction {
     if (!root || !(target instanceof Element) || !root.contains(target)) return false
     const region = target.closest<HTMLElement>(NAV_REGION)
     if (!region) return false
-    if (region.dataset.dshBetterLeftSidebarRegion === 'brand') return preferences?.brandPosition === 'navigation-top'
-    if (region.dataset.dshBetterLeftSidebarRegion === 'global-navigation') return preferences?.globalNavigationPosition === 'rail'
-    if (region.dataset.dshBetterLeftSidebarRegion === 'compact-widgets') return true
-    return preferences?.toolsPosition === 'rail-bottom'
+    return isRailRegionEligible(region.dataset.dshBetterLeftSidebarRegion ?? '', preferences)
   }
 
   const isPopupTarget = (target: EventTarget | null): boolean => {
