@@ -1,5 +1,6 @@
 import type { Context as ClientContext } from '@deepseek-ai/cordis'
 import css from './sidebar.css'
+import { normalizeClockDisplay } from '../clock-display.js'
 import { DEFAULT_PREFERENCES, normalizePreferences } from '../preferences.js'
 import type { SidebarPreferences } from '../preferences.js'
 import { connectInteraction } from './interaction.js'
@@ -36,6 +37,7 @@ export function apply(ctx: ClientContext): void {
       preferences = normalizePreferences(value)
       const config = value && typeof value === 'object' ? value as Record<string, unknown> : {}
       compactWidgets.setPreferences(validateCompactWidgetPreferences(config.compactWidgets))
+      compactWidgets.setClock(normalizeClockDisplay(config.clock))
       layout.update(preferences)
       interaction.setPreferences(preferences)
     }

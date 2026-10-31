@@ -23,14 +23,14 @@ You need a cleaner DeepSeek Harness sidebar: keep workspaces and conversations i
 
 ## Features
 
-> This page describes the current source. Short-window navigation improvements are available through the local preview below and have not been published to npm `0.1.0`.
+> `0.1.1` adds compact rail widgets, a configurable clock, grouped settings, and short-window navigation improvements.
 
 - **Keep conversations in the foreground**: workspaces and conversations stay in a dedicated wide pane; expanded navigation overlays it instead of squeezing the conversation area.
 - **Tuck global entry points out of the way**: place the brand, panels, and tools along a narrow left rail to leave more room for browsing sessions.
 - **Choose the interaction that fits**: hover or keyboard focus expands the rail by default; click mode pins it open and closes on another click, Escape, or an outside click.
-- **Shape the sidebar around your workflow**: reposition the brand, global navigation, and tools, then compare the saved layout with an unsaved preview before applying it.
+- **Shape the sidebar around your workflow**: reposition the brand, global navigation, and tools, then review the layout preview before applying it.
 - **Keep DSH's native actions**: New Session, panels, workspaces, settings, and footer tools keep their DSH entry points and behavior.
-- **See widgets in the compact rail**: the clock and widgets you choose sit at the bottom of the rail; enable, disable, and reorder them in settings.
+- **See widgets in the compact rail**: the clock and widgets you choose sit at the bottom of the rail. In settings you can enable, disable, and reorder them, and change the clock's hour cycle, month/day, weekday, and time color.
 
 ## Install
 
@@ -38,20 +38,20 @@ The current source was verified on DSH `0.2.1-rc.3` in the `web` profile. See th
 
 ### Everyday users: npm release
 
-The current npm release is `0.1.0`. Install that exact version:
+Install the exact version:
 
 ```sh
-dsh plugin --profile web add dsh-better-left-sidebar@0.1.0
+dsh plugin --profile web add dsh-better-left-sidebar@0.1.1
 ```
 
 Restart DSH after installing.
 
-### Try the GitHub main preview
+### Install from GitHub
 
-You can also install the rolling preview from the public `main` branch. It does not update automatically; reinstall it to get the branch's current contents.
+You can also install the matching GitHub Release:
 
 ```sh
-dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#main
+dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#v0.1.1
 ```
 
 Restart DSH after installing.
@@ -77,7 +77,7 @@ pnpm dev
 1. When enabled, the workspace and conversation list stay open; the far-left rail holds the DSH brand, global panels, and tools.
 2. In the default mode, hover over the rail or keyboard-focus a navigation item to reveal the full navigation. It closes after you leave it. Choose click mode in the plugin settings to pin or close the rail with the toggle button.
 3. Open **Plugins** in the sidebar, then **Better Left Sidebar** to configure expansion, animation, and region placement. Review the preview and select **Save settings** to apply changes. Copy follows DSH's active language; switch between Chinese and English in **Settings → General**.
-4. Use **[Compact widgets](docs/compact-widgets.md)** on the same settings page to manage the clock and compatible widgets. New registrations are enabled by default, and their order and enablement are saved in the current profile.
+4. Use **[Compact widgets](docs/compact-widgets.md)** on the same settings page to manage the clock and compatible widgets. Expand **Display settings** under the clock to change its hour cycle, date, weekday, and time color. Date and Weekday can both be checked, and the **Effect preview** uses the same width as the rail. A widget that does not fit is marked **Hidden: not enough space**. New registrations are enabled by default, and their order and enablement are saved in the current profile.
 
 ### Adapt your plugin to the compact rail
 
@@ -95,20 +95,21 @@ After you select **Save settings**, layout preferences are stored in the current
 | Global navigation | `rail` | Keep global navigation in the rail or move it above conversations. |
 | Tools and status | `rail-bottom` | Keep tools at the bottom of the rail or move them below conversations. |
 | [Compact widgets](docs/compact-widgets.md) | Clock and new registrations enabled | Enable, disable, and reorder widgets in plugin settings; preferences are saved in the current DSH profile. |
+| Clock | 24-hour, month/day, primary color | 12-hour mode adds P or A after the time. Date and Weekday can both be checked. Choose Follow theme or Custom color; custom colors stay fixed across themes. The preview follows the draft, and the rail updates when you save. |
 
 ## Update, roll back, remove
 
-To refresh the main preview, remove it and reinstall with the command above. To switch to or reinstall the current npm release, `0.1.0`:
+To update to or reinstall `0.1.1`, remove the plugin and install the exact version:
 
 ```sh
 dsh plugin --profile web remove dsh-better-left-sidebar
 ```
 
 ```sh
-dsh plugin --profile web add dsh-better-left-sidebar@0.1.0
+dsh plugin --profile web add dsh-better-left-sidebar@0.1.1
 ```
 
-The only stable npm release is currently `0.1.0`, so there is no earlier formal version to roll back to. [View GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases).
+To roll back, replace the version in the install command with `0.1.0`. [View GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases).
 
 Removing the plugin uninstalls its package; conversations and other plugins in the DSH profile remain.
 
@@ -120,7 +121,7 @@ pnpm dev:dsh --profile web plugin remove dsh-better-left-sidebar
 
 ## Privacy and data
 
-The plugin rearranges DSH's existing sidebar and uses DSH's built-in configuration service to save layout preferences you explicitly submit. It makes no direct network requests, reads no conversation content, writes no workspace files, stores no credentials, and collects no telemetry. DSH manages the profile's configuration storage and sync.
+The plugin rearranges DSH's existing sidebar and uses DSH's built-in configuration service to save the layout, widget order and enablement, and clock display preferences you explicitly submit. It makes no direct network requests, reads no conversation content, writes no workspace files, stores no credentials, and collects no telemetry. DSH manages the profile's configuration storage and sync.
 
 ## Compatibility
 

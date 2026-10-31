@@ -1,16 +1,19 @@
 import type { Context } from '@deepseek-ai/cordis'
-import { Button, SettingsForm, SettingsFormModel, Switch } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, Checkbox, SettingsForm, SettingsFormModel, Switch } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { SettingsFieldSpec, SettingsFormScope } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PluginConfigViewProps } from '@deepseek-ai/dsh-client-ui-plugin-manager/client'
 import type { Translate } from '@deepseek-ai/dsh-client-ui-slots'
-import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import { createElement as h, useCallback, useEffect, useMemo, useSyncExternalStore } from 'react'
+import { CLOCK_WIDGET_ID, clockLines, normalizeClockDisplay, toClockConfig } from '../clock-display.js'
+import type { ClockDisplay } from '../clock-display.js'
+import { ClockFace, useMinuteClock } from './clock.js'
 import { DEFAULT_PREFERENCES, normalizePreferences } from '../preferences.js'
 import type { BrandPosition, GlobalNavigationPosition, SidebarPreferences, ToolsPosition } from '../preferences.js'
-import type { CompactWidgetCatalogEntry, CompactWidgetSurface } from './compact-widgets.js'
+import type { CompactWidgetCatalogEntry, CompactWidgetPresentation, CompactWidgetSurface } from './compact-widgets.js'
 import { orderCompactWidgetEntries, validateCompactWidgetPreferences } from './compact-widget-preferences.js'
 import type { CompactWidgetPreference } from './compact-widget-preferences.js'
 import { messages, NAMESPACE } from './i18n.js'
@@ -27,7 +30,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 type Copy = Translate<MessageKey>
 type ConfigValues = Record<string, unknown>
 type PageProps = PluginConfigViewProps & { t: Copy }
-type BoundPageProps = PageProps & { ctx: Context; compactWidgets: CompactWidgetSurface }
+type LocaleSource = Pick<LocaleRuntime, 'getSnapshot' | 'subscribe'>
+type BoundPageProps = PageProps & { ctx: Context; compactWidgets: CompactWidgetSurface; locale: LocaleSource }
 type FieldStates = Record<string, ReturnType<SettingsFormModel<ConfigValues>['field']>>
 type FormView = { shell: ReturnType<SettingsFormModel<ConfigValues>['shell']>; fields: FieldStates }
 
@@ -43,6 +47,7 @@ const fields = [
   choiceField('globalNavigationPosition', globalValues),
   choiceField('toolsPosition', toolsValues),
   compactWidgetField(),
+  clockField(),
   {
     field: 'layoutVersion',
     format: (value: unknown) => value === 1 ? '1' : '',
@@ -67,6 +72,20 @@ function compactWidgetField(): SettingsFieldSpec {
         return typeof record.id !== 'string' || typeof record.enabled !== 'boolean'
       })) return undefined
       return { kind: 'set', value: validateCompactWidgetPreferences(value) }
+    },
+  }
+}
+
+function clockField(): SettingsFieldSpec {
+  return {
+    field: 'clock',
+    format: (value) => JSON.stringify(toClockConfig(value)),
+    parse: (text) => {
+      try {
+        return { kind: 'set', value: toClockConfig(JSON.parse(text)) }
+      } catch {
+        return undefined
+      }
     },
   }
 }
@@ -104,7 +123,7 @@ export function connectSettings(
     settingsCtx.effect(
       () => settingsCtx.slots.inject('plugins.bundle.config', () => settingsCtx.slots.register(
         { name: 'plugins.bundle.config', key: PACKAGE, locale: NAMESPACE },
-        (props: PageProps) => h(SettingsPage, { ...props, ctx: settingsCtx, compactWidgets }),
+        (props: PageProps) => h(SettingsPage, { ...props, ctx: settingsCtx, compactWidgets, locale: settingsCtx.locale }),
       )),
       'better-left-sidebar: settings page',
     )
@@ -130,7 +149,6 @@ function SettingsPage(props: BoundPageProps) {
   const actions = useMemo(() => model.actions(), [model])
   const disabled = !view.shell.writable || view.shell.saving
   const savedSnapshot = scope.getSnapshot()
-  const savedPreferences = normalizePreferences(savedSnapshot.value)
   const draft = normalizePreferences({
     ...savedSnapshot.value,
     animation: view.fields.animation?.text,
@@ -147,10 +165,14 @@ function SettingsPage(props: BoundPageProps) {
     actions.edit('layoutVersion', '1')
   }
   const savedWidgets = readWidgetDraft(view.fields.compactWidgets?.text)
-  const widgetRows = buildWidgetRows(savedWidgets, props.compactWidgets.getCatalog())
+  const widgetRows = buildWidgetRows(savedWidgets, props.compactWidgets.getCatalog(), validateCompactWidgetPreferences(savedSnapshot.value?.compactWidgets))
   const writeWidgetRows = (rows: readonly CompactWidgetRow[]): void => {
     const next: CompactWidgetPreference[] = rows.map(({ id, enabled }) => ({ id, enabled }))
     actions.edit('compactWidgets', JSON.stringify(next, null, 2))
+  }
+  const clockDraft = readClockDraft(view.fields.clock?.text)
+  const writeClock = (next: ClockDisplay): void => {
+    actions.edit('clock', JSON.stringify(toClockConfig(next)))
   }
 
   if (props.view === 'summary') return h('p', null, t('summary'))
@@ -158,14 +180,7 @@ function SettingsPage(props: BoundPageProps) {
   const widgetSection = h('section', { className: 'dsh-better-left-sidebar-settings-group dsh-better-left-sidebar-compact-widgets-settings' },
         h('div', { className: 'dsh-better-left-sidebar-compact-widgets-intro' },
           h('h3', null, t('compactWidgets')),
-          h('p', { className: 'dsh-better-left-sidebar-compact-widgets-hint' },
-            t('compactWidgetsHint'),
-            h('a', {
-              className: 'dsh-better-left-sidebar-compact-widgets-link',
-              href: t('compactWidgetsDocsUrl'),
-              target: '_blank',
-              rel: 'noopener noreferrer',
-            }, t('compactWidgetsDocs')))),
+          h('p', { className: 'dsh-better-left-sidebar-compact-widgets-hint' }, t('compactWidgetsHint'))),
         widgetRows.length === 0
           ? h('p', { className: 'dsh-better-left-sidebar-compact-widgets-empty' }, t('compactWidgetsEmpty'))
           : h('div', { className: 'dsh-better-left-sidebar-compact-widgets-list' },
@@ -176,7 +191,6 @@ function SettingsPage(props: BoundPageProps) {
             },
             h('div', { className: 'dsh-better-left-sidebar-compact-widget-info' },
               h('div', { className: 'dsh-better-left-sidebar-compact-widget-name' }, row.label),
-              row.label === row.id ? null : h('code', { className: 'dsh-better-left-sidebar-compact-widget-source' }, row.id),
               h('div', {
                 className: `dsh-better-left-sidebar-compact-widget-status is-${row.status}`,
                 'aria-live': 'polite',
@@ -189,7 +203,7 @@ function SettingsPage(props: BoundPageProps) {
                 onChange: (checked) => writeWidgetRows(widgetRows.map((item) =>
                   item.id === row.id ? { ...item, enabled: checked } : item)),
               }),
-              h('div', { className: 'dsh-better-left-sidebar-widget-order' },
+              widgetRows.length > 1 ? h('div', { className: 'dsh-better-left-sidebar-widget-order' },
                 h(Button, {
                   type: 'button',
                   variant: 'outline',
@@ -205,7 +219,22 @@ function SettingsPage(props: BoundPageProps) {
                   disabled: disabled || index === widgetRows.length - 1,
                   'aria-label': `${t('moveDown')} ${row.label}`,
                   onClick: () => writeWidgetRows(moveWidgetRow(widgetRows, index, 1)),
-                }, '↓')))))))
+                }, '↓')) : null),
+            row.id === CLOCK_WIDGET_ID
+              ? h('details', { className: 'dsh-better-left-sidebar-widget-options', open: true },
+                h('summary', null, t('widgetSettings')),
+                h(ClockOptions, {
+                  t, disabled, display: clockDraft, caption: t('effectPreview'),
+                  locale: props.locale, onChange: writeClock,
+                }))
+              : null))),
+        h('details', { className: 'dsh-better-left-sidebar-widget-reference' },
+          h('summary', null, t('widgetInformation')),
+          h('dl', null, ...widgetRows.flatMap((row) => [
+            h('dt', { key: `${row.id}-label` }, row.label),
+            h('dd', { key: row.id }, h('code', null, row.id)),
+          ])),
+          h('a', { href: t('compactWidgetsDocsUrl'), target: '_blank', rel: 'noopener noreferrer' }, t('compactWidgetsDocs'))))
 
   return h(SettingsForm, {
     labels: {
@@ -220,25 +249,7 @@ function SettingsPage(props: BoundPageProps) {
     onDiscard: actions.discard,
     children: [
       h('div', { className: 'dsh-better-left-sidebar-preferences' },
-      h('section', { className: 'dsh-better-left-sidebar-settings-group' },
-        h('h3', null, t('navigationBehavior')),
-        h(ChoiceRow, {
-          name: 'dsh-better-left-sidebar-expansion',
-          label: t('expansion'),
-          value: view.fields.expansion!.text,
-          disabled,
-          options: expansionValues.map((value) => ({ value, label: t(value) })),
-          onChange: (value: string) => actions.edit('expansion', value),
-        }),
-        h(ChoiceRow, {
-          name: 'dsh-better-left-sidebar-animation',
-          label: t('animation'),
-          value: view.fields.animation!.text,
-          disabled,
-          options: animationValues.map((value) => ({ value, label: t(value) })),
-          onChange: (value: string) => actions.edit('animation', value),
-        })),
-      h('section', { className: 'dsh-better-left-sidebar-settings-group' },
+      h('section', { className: 'dsh-better-left-sidebar-settings-group dsh-better-left-sidebar-layout-settings' },
         h('div', { className: 'dsh-better-left-sidebar-settings-heading' },
           h('h3', null, t('contentLayout')),
           h('button', {
@@ -268,11 +279,25 @@ function SettingsPage(props: BoundPageProps) {
             options: toolsValues.map((value) => ({ value, label: toolsLabel(t, value) })),
             onChange: (value: string) => setChoice('toolsPosition', value as ToolsPosition),
           })),
-        h('div', { className: 'dsh-better-left-sidebar-layout-previews', 'aria-live': 'polite' },
-          view.shell.dirty
-            ? h(LayoutPreview, { title: t('applied'), preferences: savedPreferences, t })
-            : null,
-          h(LayoutPreview, { title: view.shell.dirty ? t('preview') : t('applied'), preferences: draft, t }))),
+        h(LayoutPreview, { title: t('effectPreview'), preferences: draft, t })),
+      h('section', { className: 'dsh-better-left-sidebar-settings-group' },
+        h('h3', null, t('navigationBehavior')),
+        h(ChoiceRow, {
+          name: 'dsh-better-left-sidebar-expansion',
+          label: t('expansion'),
+          value: view.fields.expansion!.text,
+          disabled,
+          options: expansionValues.map((value) => ({ value, label: t(value) })),
+          onChange: (value: string) => actions.edit('expansion', value),
+        }),
+        h(ChoiceRow, {
+          name: 'dsh-better-left-sidebar-animation',
+          label: t('animation'),
+          value: view.fields.animation!.text,
+          disabled,
+          options: animationValues.map((value) => ({ value, label: t(value) })),
+          onChange: (value: string) => actions.edit('animation', value),
+        })),
       widgetSection),
     view.shell.dirty ? h('button', {
       type: 'button',
@@ -290,7 +315,7 @@ function sameLayout(a: SidebarPreferences, b: SidebarPreferences): boolean {
     && a.toolsPosition === b.toolsPosition
 }
 
-type WidgetStatus = 'shown' | 'disabled' | 'notLoaded' | 'failed'
+type WidgetStatus = CompactWidgetPresentation | 'notLoaded' | 'failed' | 'pendingEnable' | 'pendingDisable'
 
 interface CompactWidgetRow {
   id: string
@@ -312,6 +337,7 @@ function readWidgetDraft(text: string | undefined): CompactWidgetPreference[] {
 function buildWidgetRows(
   preferences: readonly CompactWidgetPreference[],
   catalog: readonly CompactWidgetCatalogEntry[],
+  applied: readonly CompactWidgetPreference[],
 ): CompactWidgetRow[] {
   const preferred = new Map<string, CompactWidgetPreference>()
   for (const preference of preferences) if (!preferred.has(preference.id)) preferred.set(preference.id, preference)
@@ -337,7 +363,9 @@ function buildWidgetRows(
       ? 'failed'
       : !registration
         ? 'notLoaded'
-        : enabled ? 'shown' : 'disabled'
+        : enabled !== (applied.find((item) => item.id === id)?.enabled ?? true)
+          ? enabled ? 'pendingEnable' : 'pendingDisable'
+          : registration.presentation
     const row: CompactWidgetRow = {
       id,
       label: registration?.label ?? id,
@@ -352,6 +380,12 @@ function buildWidgetRows(
 function widgetStatusKey(status: WidgetStatus): MessageKey {
   switch (status) {
     case 'shown': return 'widgetShown'
+    case 'enabled': return 'widgetEnabled'
+    case 'clipped': return 'widgetClipped'
+    case 'inactive': return 'widgetInactive'
+    case 'empty': return 'widgetEmpty'
+    case 'pendingEnable': return 'widgetPendingEnable'
+    case 'pendingDisable': return 'widgetPendingDisable'
     case 'disabled': return 'widgetDisabled'
     case 'notLoaded': return 'widgetNotLoaded'
     case 'failed': return 'widgetFailed'
@@ -366,6 +400,89 @@ function moveWidgetRow(rows: readonly CompactWidgetRow[], index: number, delta: 
   return next
 }
 
+const clockHourCycles = ['h23', 'h12'] as const
+
+function ClockOptions(props: {
+  t: Copy
+  disabled: boolean
+  display: ClockDisplay
+  caption: string
+  locale: LocaleSource
+  onChange(next: ClockDisplay): void
+}) {
+  const { t, disabled, display, onChange } = props
+  return h('div', { className: 'dsh-better-left-sidebar-clock-options' },
+    h('div', { className: 'dsh-better-left-sidebar-clock-option-fields' },
+      h(ChoiceRow, {
+        name: 'dsh-better-left-sidebar-clock-hour',
+        label: t('clockHourCycle'),
+        value: display.hourCycle,
+        disabled,
+        options: clockHourCycles.map((value) => ({ value, label: t(value === 'h23' ? 'clock24' : 'clock12') })),
+        onChange: (value: string) => onChange({ ...display, hourCycle: value === 'h12' ? 'h12' : 'h23' }),
+      }),
+      h(SettingsRow, { label: t('clockContents'), disabled },
+        h('div', { className: 'dsh-better-left-sidebar-clock-modules' },
+          h(Checkbox, {
+            checked: display.monthDay, disabled, label: t('clockMonthDay'),
+            onChange: (checked) => onChange({ ...display, monthDay: checked }),
+          }),
+          h(Checkbox, {
+            checked: display.weekday, disabled, label: t('clockWeekday'),
+            onChange: (checked) => onChange({ ...display, weekday: checked }),
+          }))),
+      h(ChoiceRow, {
+        name: 'dsh-better-left-sidebar-clock-color-mode',
+        label: t('clockColor'),
+        value: display.color ? 'custom' : 'theme', disabled,
+        options: [{ value: 'theme', label: t('clockColorDefault') }, { value: 'custom', label: t('clockColorCustom') }],
+        onChange: (value: string) => onChange({ ...display, color: value === 'theme' ? null : '#767676' }),
+      }),
+      display.color ? h(SettingsRow, { label: t('clockColorCustom'), disabled },
+        h('div', { className: 'dsh-better-left-sidebar-clock-color-controls' },
+          h('label', { className: 'dsh-better-left-sidebar-clock-color-picker' },
+            h('span', {
+              className: 'dsh-better-left-sidebar-clock-color-swatch',
+              style: { backgroundColor: display.color }, 'aria-hidden': 'true',
+            }),
+            h('input', {
+              type: 'color', className: 'dsh-better-left-sidebar-clock-color-input',
+              value: display.color, disabled, 'aria-label': t('clockColorCustom'),
+              onChange: (event: { currentTarget: { value: string } }) => onChange({ ...display, color: event.currentTarget.value }),
+            })),
+          h('code', null, display.color)),
+        h('p', { className: 'dsh-better-left-sidebar-clock-color-hint' }, t('clockColorHint'))) : null),
+    h(ClockPreview, { display, caption: props.caption, locale: props.locale }))
+}
+
+function ClockPreview(props: { display: ClockDisplay; caption: string; locale: LocaleSource }) {
+  const now = useMinuteClock(true)
+  const localeId = useSyncExternalStore(
+    (listener) => props.locale.subscribe(listener),
+    () => props.locale.getSnapshot().active,
+    () => props.locale.getSnapshot().active,
+  )
+  return h('figure', { className: 'dsh-better-left-sidebar-clock-preview' },
+    h('figcaption', null, props.caption),
+    h('div', { className: 'dsh-better-left-sidebar-clock-preview-rail' },
+      h(ClockFace, { now, lines: clockLines(now, localeId, props.display), color: props.display.color })))
+}
+
+function readClockDraft(text: string | undefined): ClockDisplay {
+  if (!text) return normalizeClockDisplay(undefined)
+  try {
+    return normalizeClockDisplay(JSON.parse(text))
+  } catch {
+    return normalizeClockDisplay(undefined)
+  }
+}
+
+function SettingsRow(props: { label: string; disabled?: boolean; children?: React.ReactNode }) {
+  return h('fieldset', { className: 'dsh-better-left-sidebar-settings-row', disabled: props.disabled },
+    h('legend', null, props.label),
+    h('div', { className: 'dsh-better-left-sidebar-setting-control' }, props.children))
+}
+
 function ChoiceRow(props: {
   name: string
   label: string
@@ -374,8 +491,7 @@ function ChoiceRow(props: {
   options: readonly { value: string; label: string }[]
   onChange(value: string): void
 }) {
-  return h('fieldset', { className: 'dsh-better-left-sidebar-choice-row', disabled: props.disabled },
-    h('legend', null, props.label),
+  return h(SettingsRow, { label: props.label, disabled: props.disabled },
     h('div', { className: 'dsh-better-left-sidebar-choice-options' },
       ...props.options.map((option) => h('label', {
         key: option.value,

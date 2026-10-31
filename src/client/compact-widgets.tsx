@@ -5,6 +5,8 @@ import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import { createElement as h, Fragment, useSyncExternalStore } from 'react'
 import { createPortal } from 'react-dom'
+import { CLOCK_WIDGET_ID, DEFAULT_CLOCK_DISPLAY, normalizeClockDisplay } from '../clock-display.js'
+import type { ClockDisplay } from '../clock-display.js'
 import type { CompactFooterSlotKey } from '../slots.js'
 import { orderCompactWidgetEntries } from './compact-widget-preferences.js'
 import type { CompactWidgetPreference } from './compact-widget-preferences.js'
@@ -23,13 +25,17 @@ export interface CompactWidgetSurface {
   readonly active: boolean
   setActive(active: boolean): void
   setPreferences(preferences: readonly CompactWidgetPreference[]): void
+  setClock(display: ClockDisplay): void
   subscribeCatalog(listener: () => void): () => void
   getCatalogVersion(): number
   getCatalog(): CompactWidgetCatalogEntry[]
   dispose(): void
 }
 
+export type CompactWidgetPresentation = 'shown' | 'clipped' | 'inactive' | 'empty' | 'enabled' | 'disabled'
+
 export interface CompactWidgetCatalogEntry {
+  presentation: CompactWidgetPresentation
   id: string
   label: string
   order: number
@@ -46,6 +52,7 @@ export function connectCompactWidgets(ctx: Context, onChange: SurfaceChange): Co
   let active = true
   let count = 0
   let preferences: readonly CompactWidgetPreference[] = []
+  let clockDisplay: ClockDisplay = DEFAULT_CLOCK_DISPLAY
   let surfaceVersion = 0
   let disposed = false
   const surfaceListeners = new Set<() => void>()
@@ -82,7 +89,16 @@ export function connectCompactWidgets(ctx: Context, onChange: SurfaceChange): Co
     } catch {
       // A label is advisory metadata; keep the item identifiable by id.
     }
+    // Read only our own box geometry/markers, never a registrant's content.
+    const box = [...container.children].find((child) => child.getAttribute('data-dsh-better-left-sidebar-compact-widget') === id)
+    const enabled = preferences.find((item) => item.id === id)?.enabled ?? true
+    const presentation: CompactWidgetPresentation = !enabled ? 'disabled'
+      : !active ? 'inactive'
+      : !box ? 'enabled'
+      : box.getBoundingClientRect().height === 0 ? 'empty'
+      : box.hasAttribute('data-dsh-better-left-sidebar-compact-widget-clipped') ? 'clipped' : 'shown'
     const result: CompactWidgetCatalogEntry = {
+      presentation,
       id,
       label,
       order: typeof entry.options.order === 'number' && Number.isFinite(entry.options.order) ? entry.options.order : 0,
@@ -116,6 +132,20 @@ export function connectCompactWidgets(ctx: Context, onChange: SurfaceChange): Co
     })
     return [...visible, ...failed].sort((a, b) => a.registrationIndex - b.registrationIndex)
   }
+  let presentationSnapshot = ''
+  const publishPresentation = (): void => {
+    const next = JSON.stringify(getCatalog().map(({ id, presentation }) => [id, presentation]))
+    if (next === presentationSnapshot) return
+    presentationSnapshot = next
+    publishSurface()
+  }
+  const presentationObserver = new MutationObserver(publishPresentation)
+  const presentationResize = new ResizeObserver(publishPresentation)
+  presentationResize.observe(container)
+  presentationObserver.observe(container, {
+    childList: true, subtree: true, attributes: true,
+    attributeFilter: ['data-dsh-better-left-sidebar-compact-widget-clipped'],
+  })
   const getCatalogVersion = (): number => surfaceVersion
   const orderedEntries = () => orderCompactWidgetEntries(
     entries().flatMap((entry) => typeof entry.options.id === 'string'
@@ -174,10 +204,13 @@ export function connectCompactWidgets(ctx: Context, onChange: SurfaceChange): Co
   }, CompactHost))
   const stopClock = ctx.slots.inject(SLOT, () => ctx.slots.register({
     name: SLOT,
-    id: 'dsh-better-left-sidebar.clock',
+    id: CLOCK_WIDGET_ID,
     label: () => ctx.locale.bind(NAMESPACE)('clock'),
     order: 100,
-  }, createClockWidget(ctx.locale)))
+  }, createClockWidget(ctx.locale, {
+    subscribe: subscribeSurface,
+    getSnapshot: () => clockDisplay,
+  })))
 
   return {
     container,
@@ -190,12 +223,24 @@ export function connectCompactWidgets(ctx: Context, onChange: SurfaceChange): Co
       publishSurface()
       publishCount()
     },
+    setClock(next) {
+      if (disposed) return
+      const normalized = normalizeClockDisplay(next)
+      if (normalized.hourCycle === clockDisplay.hourCycle
+        && normalized.monthDay === clockDisplay.monthDay
+        && normalized.weekday === clockDisplay.weekday
+        && normalized.color === clockDisplay.color) return
+      clockDisplay = normalized
+      publishSurface()
+    },
     subscribeCatalog: subscribeSurface,
     getCatalogVersion,
     getCatalog,
     dispose() {
       if (disposed) return
       disposed = true
+      presentationObserver.disconnect()
+      presentationResize.disconnect()
       stopClock()
       stopHost()
       unsubscribeEntries()

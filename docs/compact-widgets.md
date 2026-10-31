@@ -26,7 +26,7 @@ ctx.slots.inject(compactSlot, () => ctx.slots.register({
 }, StatusWidget))
 ```
 
-The type entry exports declarations only; it does not add a runtime slot constant. It augments `@deepseek-ai/dsh-client-ui-slots`, so that package must be resolvable in your TypeScript project for the slot types to merge. The host filters and renders registrations individually, preserving the slot's `id`, `label`, and `order` metadata. Settings lists each widget by `label` and `id`. DSH `0.2.1-rc.3` does not attribute a registration made inside an `inject` callback to the registering plugin, so prefix the `id` with your plugin name; that is how users tell widgets apart.
+The type entry exports declarations only; it does not add a runtime slot constant. It augments `@deepseek-ai/dsh-client-ui-slots`, so that package must be resolvable in your TypeScript project for the slot types to merge. The host filters and renders registrations individually, preserving the slot's `id`, `label`, and `order` metadata. Settings shows each widget by `label`; the secondary **Widget information and developer guide** disclosure lists its `id`. DSH `0.2.1-rc.3` does not attribute a registration made inside an `inject` callback to the registering plugin, so prefix the `id` with your plugin name; that is how users tell widgets apart.
 
 ## Keep widget content display-only
 
@@ -36,9 +36,19 @@ Use `active` to pause work while the navigation is expanded. The host retains th
 
 The compact widget list is a navigation region in the rail for both `toolsPosition` settings. In hover mode, hovering or focusing it expands navigation after the normal delay. In click mode, hover does not expand navigation.
 
-## Size and truncation
+## Widget box
 
-Each box is 36 px wide and at most 56 px tall; content beyond that is clipped. The list sits above the rail's bottom controls and takes the measured height of its boxes, up to 112 px or the space the rail has left, whichever is smaller. Boxes are kept whole and in order: the first box that would exceed the limit, and every box after it, is not shown. The list does not scroll. A widget that renders nothing takes no space, so return `null` when there is nothing to report. Users decide which widgets appear by enabling and ordering them in settings, so keep a widget short and useful at a glance.
+This is the box contract. It is separate from the sidebar's layout preferences.
+
+The host gives every widget the full width of the collapsed left rail. That rail is 56 px wide. A widget may use all of it.
+
+The host does not assign a height. The widget's own content sets the box height.
+
+The host does not add padding or a border, and it does not require the widget to draw either. There is no default inner inset and no default outer frame.
+
+The list still has to sit above the rail's bottom controls. The host measures the boxes and keeps them whole, in the user's order, while they fit in the space that remains. The first box that does not fit, and every box after it, is not shown. The list does not scroll. A widget that renders nothing takes no space, so return `null` when there is nothing to report. Users choose which widgets appear by enabling and ordering them in settings. The settings row distinguishes **Hidden: not enough space** from a disabled widget; changing the draft order or enablement takes effect in the rail only after saving.
+
+The built-in clock (`dsh-better-left-sidebar.clock`) is one widget under this contract. Users set its hour cycle, month/day, weekday, and time color in settings. Month/day and weekday are independent. Its preview uses the same full rail width, with no extra inset.
 
 The host entry lives in DSH's native `sidebar.footer.action` slot but renders only through a portal into a single plugin-owned container. It adds no DOM at the native footer outlet, leaving expanded footer actions in their DSH position. If DSH replaces the sidebar root, the adapter reattaches that same container rather than creating a new one.
 

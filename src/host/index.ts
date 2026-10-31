@@ -14,6 +14,7 @@ export interface Config {
   toolsPosition: Volatile<'rail-bottom' | 'conversation-bottom'>
   layoutVersion: Volatile<1 | undefined>
   compactWidgets: Volatile<{ id: string; enabled: boolean }[]>
+  clock: Volatile<{ hourCycle: 'h23' | 'h12'; monthDay: boolean; weekday: boolean; color: string }>
 }
 
 export const Config = z.object({
@@ -44,6 +45,12 @@ export const Config = z.object({
     id: z.string(),
     enabled: z.boolean(),
   })).default([]).volatile().description('Compact footer widget order and enablement.'),
+  clock: z.object({
+    hourCycle: z.union([z.const('h23'), z.const('h12')]).default('h23'),
+    monthDay: z.boolean().default(true),
+    weekday: z.boolean().default(false),
+    color: z.string().default(''),
+  }).default({}).volatile().description('Built-in clock face. Month/day and weekday are independent. An empty color uses the theme primary label.'),
 })
 
 // Services this plugin cannot start without. Prefer ctx.inject([...], fn)
