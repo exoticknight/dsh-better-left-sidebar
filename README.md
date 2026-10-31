@@ -8,7 +8,7 @@
 
 <!-- Listing badges: add a row here only after each listing is confirmed. See playbooks/reference/badges.md. -->
 
-你需要更清爽的左侧栏：让工作区与会话列表留在原位，完整导航只在需要时展开。
+更清爽、更合理的 DeepSeek Harness 左边栏，支持插件自定义多个小组件。
 
 <!-- client:start -->
 
@@ -38,10 +38,10 @@
 
 ### 普通用户：npm 发布版
 
-安装精确版本：
+安装 npm 上的最新发布版：
 
 ```sh
-dsh plugin --profile web add dsh-better-left-sidebar@0.1.1
+dsh plugin --profile web add dsh-better-left-sidebar
 ```
 
 安装后重启 DSH。

@@ -14,7 +14,7 @@ Directories copy the README description and install command, so check the README
 
 ## 1. Prepare the facts once
 
-Write them into a local tracker `.research/listings.md` (RED Research, ignored by Git). Every submission reuses them word for word:
+Write them into a local RED Research tracker in `.research/` (ignored by Git). Use the next available Research ID and a matching filename, such as `.research/R-3-directory-listings.md`. Every submission reuses them word for word:
 
 - Repository URL and npm package name
 - One factual sentence in English and in Chinese: what the plugin does, no marketing

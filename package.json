@@ -1,7 +1,7 @@
 {
   "name": "dsh-better-left-sidebar",
   "version": "0.1.1",
-  "description": "You need a cleaner DeepSeek Harness sidebar: keep workspaces and conversations in place, and expand full navigation only when you need it.",
+  "description": "A cleaner, better-organized DeepSeek Harness sidebar with support for multiple plugin-defined widgets.",
   "icon": "./icon.svg",
   "license": "Apache-2.0",
   "author": "exoticknight",
@@ -9,9 +9,17 @@
     "deepseek-harness",
     "dsh",
     "dsh-plugin",
+    "dsh-bundle",
     "sidebar",
+    "left-sidebar",
+    "sidebar-customization",
     "navigation",
-    "conversation"
+    "conversation",
+    "widgets",
+    "compact-rail",
+    "compact-widgets",
+    "custom-widgets",
+    "plugin-widgets"
   ],
   "repository": {
     "type": "git",

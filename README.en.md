@@ -8,7 +8,7 @@
 
 <!-- Listing badges: add a row here only after each listing is confirmed. See playbooks/reference/badges.md. -->
 
-You need a cleaner DeepSeek Harness sidebar: keep workspaces and conversations in place, and expand full navigation only when you need it.
+A cleaner, better-organized DeepSeek Harness sidebar with support for multiple plugin-defined widgets.
 
 <!-- client:start -->
 
@@ -38,10 +38,10 @@ The current source was verified on DSH `0.2.1-rc.3` in the `web` profile. See th
 
 ### Everyday users: npm release
 
-Install the exact version:
+Install the latest npm release:
 
 ```sh
-dsh plugin --profile web add dsh-better-left-sidebar@0.1.1
+dsh plugin --profile web add dsh-better-left-sidebar
 ```
 
 Restart DSH after installing.
