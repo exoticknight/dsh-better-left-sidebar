@@ -56,7 +56,7 @@ if (pkg.dsh?.client) {
     target: 'es2020',
     jsx: 'automatic',
     plugins: [normalizeTextNewlines],
-    external: ['react', 'react/jsx-runtime', '@deepseek-ai/*'],
+    external: ['react', 'react-dom', 'react/jsx-runtime', '@deepseek-ai/*'],
     write: false,
     logLevel: 'info',
   })
