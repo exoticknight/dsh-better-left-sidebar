@@ -572,6 +572,150 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-settings-group h3 {
   line-height: 24px;
 }
 
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-hint,
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-empty {
+  margin: -8px 0 0;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 19px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-setting {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 0;
+  border-top: 1px solid var(--dsw-alias-border-l3);
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-info {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-name {
+  overflow-wrap: anywhere;
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 19px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-source,
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-status {
+  overflow-wrap: anywhere;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 17px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-status.is-failed {
+  color: var(--dsw-alias-state-danger, #b54736);
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-switch {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  gap: 7px;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-switch input {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  flex: none;
+  appearance: none;
+  margin: 0;
+  border: 1px solid var(--dsw-alias-border-l3);
+  border-radius: 999px;
+  background: var(--dsw-alias-bg-base);
+  cursor: inherit;
+  transition: background-color var(--dsh-better-left-sidebar-motion-quick) ease, border-color var(--dsh-better-left-sidebar-motion-quick) ease;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-switch input::after {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--dsw-alias-label-secondary);
+  content: '';
+  transition: transform var(--dsh-better-left-sidebar-motion-quick) ease, background-color var(--dsh-better-left-sidebar-motion-quick) ease;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-switch input:checked {
+  border-color: var(--dsw-alias-state-business-primary);
+  background: var(--dsw-alias-state-business-primary);
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-switch input:checked::after {
+  transform: translateX(14px);
+  background: var(--dsw-alias-label-primary-inverted, #fff);
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-switch input:focus-visible,
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-order button:focus-visible {
+  outline: 2px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
+  outline-offset: 2px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-switch input:disabled,
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-order button:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-order {
+  display: flex;
+  gap: 4px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-order button {
+  display: inline-grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--dsw-alias-border-l3);
+  border-radius: var(--dsw-radius-sm, 6px);
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-order button:hover:not(:disabled) {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-order button:disabled {
+  opacity: .4;
+  cursor: default;
+}
+
 html.dsh-better-left-sidebar .dsh-better-left-sidebar-choice-row {
   display: grid;
   grid-template-columns: minmax(100px, 150px) minmax(0, 1fr);

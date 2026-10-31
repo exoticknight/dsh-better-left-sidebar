@@ -47,7 +47,7 @@ export function apply(ctx: ClientContext): void {
     applyPreferences(DEFAULT_PREFERENCES)
     interaction.setTranslate(translate)
     const disposeNavigation = connectNavigation(ctx)
-    connectSettings(ctx, applyPreferences, applyTranslate)
+    connectSettings(ctx, compactWidgets, applyPreferences, applyTranslate)
 
     return () => {
       disposeNavigation()

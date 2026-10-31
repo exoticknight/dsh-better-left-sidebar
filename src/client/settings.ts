@@ -10,6 +10,9 @@ import type {} from '@deepseek-ai/dsh-client-ui-slots'
 import { createElement as h, useCallback, useEffect, useMemo, useSyncExternalStore } from 'react'
 import { DEFAULT_PREFERENCES, normalizePreferences } from '../preferences.js'
 import type { BrandPosition, GlobalNavigationPosition, SidebarPreferences, ToolsPosition } from '../preferences.js'
+import type { CompactWidgetCatalogEntry, CompactWidgetSurface } from './compact-widgets.js'
+import { orderCompactWidgetEntries, validateCompactWidgetPreferences } from './compact-widget-preferences.js'
+import type { CompactWidgetPreference } from './compact-widget-preferences.js'
 import { messages, NAMESPACE } from './i18n.js'
 import type { MessageKey } from './i18n.js'
 
@@ -24,7 +27,7 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
 type Copy = Translate<MessageKey>
 type ConfigValues = Record<string, unknown>
 type PageProps = PluginConfigViewProps & { t: Copy }
-type BoundPageProps = PageProps & { ctx: Context }
+type BoundPageProps = PageProps & { ctx: Context; compactWidgets: CompactWidgetSurface }
 type FieldStates = Record<string, ReturnType<SettingsFormModel<ConfigValues>['field']>>
 type FormView = { shell: ReturnType<SettingsFormModel<ConfigValues>['shell']>; fields: FieldStates }
 
@@ -39,12 +42,34 @@ const fields = [
   choiceField('brandPosition', brandValues),
   choiceField('globalNavigationPosition', globalValues),
   choiceField('toolsPosition', toolsValues),
+  compactWidgetField(),
   {
     field: 'layoutVersion',
     format: (value: unknown) => value === 1 ? '1' : '',
     parse: (text: string) => text === '1' ? { kind: 'set' as const, value: 1 } : text === '' ? { kind: 'clear' as const } : undefined,
   },
 ] satisfies SettingsFieldSpec[]
+
+function compactWidgetField(): SettingsFieldSpec {
+  return {
+    field: 'compactWidgets',
+    format: (value) => JSON.stringify(validateCompactWidgetPreferences(value), null, 2),
+    parse: (text) => {
+      let value: unknown
+      try {
+        value = JSON.parse(text)
+      } catch {
+        return undefined
+      }
+      if (!Array.isArray(value) || value.some((item) => {
+        if (!item || typeof item !== 'object' || Array.isArray(item)) return true
+        const record = item as Record<string, unknown>
+        return typeof record.id !== 'string' || typeof record.enabled !== 'boolean'
+      })) return undefined
+      return { kind: 'set', value: validateCompactWidgetPreferences(value) }
+    },
+  }
+}
 
 function choiceField(field: string, values: readonly string[]): SettingsFieldSpec {
   return {
@@ -56,6 +81,7 @@ function choiceField(field: string, values: readonly string[]): SettingsFieldSpe
 
 export function connectSettings(
   ctx: Context,
+  compactWidgets: CompactWidgetSurface,
   onPreferences: (value: unknown) => void,
   onTranslate: (translate: (key: string) => string) => void,
 ): void {
@@ -78,7 +104,7 @@ export function connectSettings(
     settingsCtx.effect(
       () => settingsCtx.slots.inject('plugins.bundle.config', () => settingsCtx.slots.register(
         { name: 'plugins.bundle.config', key: PACKAGE, locale: NAMESPACE },
-        (props: PageProps) => h(SettingsPage, { ...props, ctx: settingsCtx }),
+        (props: PageProps) => h(SettingsPage, { ...props, ctx: settingsCtx, compactWidgets }),
       )),
       'better-left-sidebar: settings page',
     )
@@ -100,6 +126,7 @@ function SettingsPage(props: BoundPageProps) {
   const subscribe = useCallback((listener: () => void) => store.subscribe(listener), [store])
   const getSnapshot = useCallback(() => store.getSnapshot(), [store])
   const view = useSyncExternalStore(subscribe, getSnapshot, getSnapshot) as FormView
+  useSyncExternalStore(props.compactWidgets.subscribeCatalog, props.compactWidgets.getCatalogVersion, props.compactWidgets.getCatalogVersion)
   const actions = useMemo(() => model.actions(), [model])
   const disabled = !view.shell.writable || view.shell.saving
   const savedSnapshot = scope.getSnapshot()
@@ -119,6 +146,12 @@ function SettingsPage(props: BoundPageProps) {
     actions.edit(field, value)
     actions.edit('layoutVersion', '1')
   }
+  const savedWidgets = readWidgetDraft(view.fields.compactWidgets?.text)
+  const widgetRows = buildWidgetRows(savedWidgets, props.compactWidgets.getCatalog())
+  const writeWidgetRows = (rows: readonly CompactWidgetRow[]): void => {
+    const next: CompactWidgetPreference[] = rows.map(({ id, enabled }) => ({ id, enabled }))
+    actions.edit('compactWidgets', JSON.stringify(next, null, 2))
+  }
 
   if (props.view === 'summary') return h('p', null, t('summary'))
 
@@ -134,6 +167,51 @@ function SettingsPage(props: BoundPageProps) {
     onSave: actions.save,
     onDiscard: actions.discard,
     children: h('div', { className: 'dsh-better-left-sidebar-preferences' },
+      h('section', { className: 'dsh-better-left-sidebar-settings-group dsh-better-left-sidebar-compact-widgets-settings' },
+        h('div', { className: 'dsh-better-left-sidebar-settings-heading' },
+          h('h3', null, t('compactWidgets'))),
+        h('p', { className: 'dsh-better-left-sidebar-compact-widgets-hint' }, t('compactWidgetsHint')),
+        widgetRows.length === 0
+          ? h('p', { className: 'dsh-better-left-sidebar-compact-widgets-empty' }, t('compactWidgetsEmpty'))
+          : h('div', { className: 'dsh-better-left-sidebar-compact-widgets-list' },
+            ...widgetRows.map((row, index) => h('div', {
+              key: row.id,
+              className: 'dsh-better-left-sidebar-compact-widget-setting',
+              'data-dsh-better-left-sidebar-widget-setting': row.id,
+            },
+            h('div', { className: 'dsh-better-left-sidebar-compact-widget-info' },
+              h('div', { className: 'dsh-better-left-sidebar-compact-widget-name' }, row.label),
+              h('div', { className: 'dsh-better-left-sidebar-compact-widget-source' },
+                `${t('registrant')}: ${row.registrant || t('unknownSource')}`),
+              h('div', {
+                className: `dsh-better-left-sidebar-compact-widget-status is-${row.status}`,
+                'aria-live': 'polite',
+              }, row.status === 'failed' ? `${t('widgetFailed')}: ${row.error}` : t(widgetStatusKey(row.status)))),
+            h('div', { className: 'dsh-better-left-sidebar-compact-widget-controls' },
+              h('label', { className: 'dsh-better-left-sidebar-widget-switch' },
+                h('input', {
+                  type: 'checkbox',
+                  role: 'switch',
+                  checked: row.enabled,
+                  disabled,
+                  'aria-label': `${t('widgetEnable')} ${row.label}`,
+                  onChange: (event: React.ChangeEvent<HTMLInputElement>) => writeWidgetRows(widgetRows.map((item) =>
+                    item.id === row.id ? { ...item, enabled: event.currentTarget.checked } : item)),
+                }),
+                h('span', null, row.enabled ? t('widgetEnabled') : t('widgetDisabled'))),
+              h('div', { className: 'dsh-better-left-sidebar-widget-order' },
+                h('button', {
+                  type: 'button',
+                  disabled: disabled || index === 0,
+                  'aria-label': `${t('moveUp')} ${row.label}`,
+                  onClick: () => writeWidgetRows(moveWidgetRow(widgetRows, index, -1)),
+                }, '↑'),
+                h('button', {
+                  type: 'button',
+                  disabled: disabled || index === widgetRows.length - 1,
+                  'aria-label': `${t('moveDown')} ${row.label}`,
+                  onClick: () => writeWidgetRows(moveWidgetRow(widgetRows, index, 1)),
+                }, '↓'))))))),
       h('section', { className: 'dsh-better-left-sidebar-settings-group' },
         h('h3', null, t('navigationBehavior')),
         h(ChoiceRow, {
@@ -200,6 +278,84 @@ function sameLayout(a: SidebarPreferences, b: SidebarPreferences): boolean {
   return a.brandPosition === b.brandPosition
     && a.globalNavigationPosition === b.globalNavigationPosition
     && a.toolsPosition === b.toolsPosition
+}
+
+type WidgetStatus = 'shown' | 'disabled' | 'notLoaded' | 'failed'
+
+interface CompactWidgetRow {
+  id: string
+  label: string
+  registrant?: string
+  enabled: boolean
+  status: WidgetStatus
+  error?: string
+}
+
+function readWidgetDraft(text: string | undefined): CompactWidgetPreference[] {
+  if (text === undefined) return []
+  try {
+    return validateCompactWidgetPreferences(JSON.parse(text))
+  } catch {
+    return []
+  }
+}
+
+function buildWidgetRows(
+  preferences: readonly CompactWidgetPreference[],
+  catalog: readonly CompactWidgetCatalogEntry[],
+): CompactWidgetRow[] {
+  const preferred = new Map<string, CompactWidgetPreference>()
+  for (const preference of preferences) if (!preferred.has(preference.id)) preferred.set(preference.id, preference)
+  const byId = new Map(catalog.map((entry) => [entry.id, entry]))
+  const ordered = orderCompactWidgetEntries(catalog, preferences)
+  const ids: string[] = []
+  const seen = new Set<string>()
+  for (const preference of preferences) {
+    if (seen.has(preference.id)) continue
+    seen.add(preference.id)
+    ids.push(preference.id)
+  }
+  for (const item of ordered) {
+    if (seen.has(item.entry.id)) continue
+    seen.add(item.entry.id)
+    ids.push(item.entry.id)
+  }
+
+  return ids.map((id) => {
+    const registration = byId.get(id)
+    const enabled = preferred.get(id)?.enabled ?? true
+    const status: WidgetStatus = registration?.error !== undefined
+      ? 'failed'
+      : !registration
+        ? 'notLoaded'
+        : enabled ? 'shown' : 'disabled'
+    const row: CompactWidgetRow = {
+      id,
+      label: registration?.label ?? id,
+      enabled,
+      status,
+    }
+    if (registration?.registrant) row.registrant = registration.registrant
+    if (registration?.error !== undefined) row.error = registration.error
+    return row
+  })
+}
+
+function widgetStatusKey(status: WidgetStatus): MessageKey {
+  switch (status) {
+    case 'shown': return 'widgetShown'
+    case 'disabled': return 'widgetDisabled'
+    case 'notLoaded': return 'widgetNotLoaded'
+    case 'failed': return 'widgetFailed'
+  }
+}
+
+function moveWidgetRow(rows: readonly CompactWidgetRow[], index: number, delta: -1 | 1): CompactWidgetRow[] {
+  const next = [...rows]
+  const target = index + delta
+  if (target < 0 || target >= next.length) return next
+  ;[next[index], next[target]] = [next[target]!, next[index]!]
+  return next
 }
 
 function ChoiceRow(props: {
