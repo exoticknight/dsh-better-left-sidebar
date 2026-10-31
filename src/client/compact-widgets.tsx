@@ -8,6 +8,8 @@ import { createPortal } from 'react-dom'
 import type { CompactFooterSlotKey } from '../slots.js'
 import { orderCompactWidgetEntries } from './compact-widget-preferences.js'
 import type { CompactWidgetPreference } from './compact-widget-preferences.js'
+import { ClockWidget } from './clock.js'
+import { NAMESPACE } from './i18n.js'
 
 const SLOT: CompactFooterSlotKey = 'dsh-better-left-sidebar.footer.compact'
 const HOST_ID = 'dsh-better-left-sidebar.compact-host'
@@ -171,6 +173,12 @@ export function connectCompactWidgets(ctx: Context, onChange: SurfaceChange): Co
       [SLOT]: { kind: 'list', scope: 'root' },
     },
   }, CompactHost))
+  const stopClock = ctx.slots.inject(SLOT, () => ctx.slots.register({
+    name: SLOT,
+    id: 'dsh-better-left-sidebar.clock',
+    label: () => ctx.locale.bind(NAMESPACE)('clock'),
+    order: 100,
+  }, ClockWidget))
 
   return {
     container,
@@ -189,6 +197,7 @@ export function connectCompactWidgets(ctx: Context, onChange: SurfaceChange): Co
     dispose() {
       if (disposed) return
       disposed = true
+      stopClock()
       stopHost()
       unsubscribeEntries()
       unsubscribeErrors()
