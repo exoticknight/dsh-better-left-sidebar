@@ -37,6 +37,7 @@ export interface LayoutAnchors {
 
 export interface LayoutAdapter {
   update(preferences: SidebarPreferences): void
+  setCompactWidgets(count: number, active: boolean): void
   dispose(): void
 }
 
@@ -60,8 +61,13 @@ export function sizeConversationNavigation(
 }
 
 /** The only module that knows DSH's version-specific sidebar DOM classes. */
-export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined, anchorsChanged?: boolean) => void): LayoutAdapter {
+export function connectLayoutAdapter(
+  onRoot: (root: HTMLElement | undefined, anchorsChanged?: boolean) => void,
+  compactWidgets: HTMLElement,
+): LayoutAdapter {
   let preferences: SidebarPreferences | undefined
+  let compactWidgetCount = 0
+  let compactWidgetsActive = true
   let current: LayoutAnchors | undefined
   let candidateRoot: HTMLElement | undefined
   let observedSidebar: HTMLElement | undefined
@@ -145,6 +151,16 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined, anc
     const conversationTop = conversationNavigation ? conversationSizing.conversationTop : conversationGlobalTop
     const navBottomReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
     const toggleReserve = preferences?.expansion === 'click' ? 44 : 0
+    const footerReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
+    const widgetContentReserve = compactWidgetsActive && compactWidgetCount > 0
+      ? Math.min(compactWidgetCount * 56 + (compactWidgetCount - 1) * 4, 112)
+      : 0
+    const widgetAvailable = Math.max(0, anchors.root.getBoundingClientRect().height - railGlobalTop - footerReserve - toggleReserve - 16)
+    const widgetHeight = Math.min(widgetContentReserve, widgetAvailable)
+    const widgetBottom = footerReserve + toggleReserve + 8
+    const railBottomReserve = widgetHeight > 0
+      ? footerReserve + toggleReserve + widgetHeight + 16
+      : navBottomReserve + toggleReserve
 
     anchors.root.style.setProperty('--dsh-better-left-sidebar-chrome', `${chrome}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-brand-height', `${brandHeight}px`)
@@ -155,7 +171,9 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined, anc
     anchors.root.style.setProperty('--dsh-better-left-sidebar-tools-height', `${toolsHeight}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-conversation-top', `${conversationTop}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-conversation-bottom', `${bottomPad}px`)
-    anchors.root.style.setProperty('--dsh-better-left-sidebar-nav-bottom-reserve', `${navBottomReserve + toggleReserve}px`)
+    anchors.root.style.setProperty('--dsh-better-left-sidebar-nav-bottom-reserve', `${railBottomReserve}px`)
+    anchors.root.style.setProperty('--dsh-better-left-sidebar-compact-widgets-height', `${widgetHeight}px`)
+    anchors.root.style.setProperty('--dsh-better-left-sidebar-compact-widgets-bottom', `${widgetBottom}px`)
   }
 
   const scheduleMeasure = (): void => {
@@ -167,7 +185,7 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined, anc
     resizeObserver?.disconnect()
     measurementObserver?.disconnect()
     resizeObserver = new ResizeObserver(scheduleMeasure)
-    for (const element of [anchors.root, anchors.brand, anchors.newSession, anchors.panelList, anchors.tools]) resizeObserver.observe(element)
+    for (const element of [anchors.root, anchors.brand, anchors.newSession, anchors.panelList, anchors.tools, compactWidgets]) resizeObserver.observe(element)
     measurementObserver = new MutationObserver(scheduleMeasure)
     measurementObserver.observe(anchors.panelList, { childList: true, subtree: true })
     measurementObserver.observe(anchors.tools, { childList: true, subtree: true })
@@ -238,6 +256,7 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined, anc
     if (measureFrame) window.cancelAnimationFrame(measureFrame)
     measureFrame = 0
     if (current) {
+      if (compactWidgets.parentElement === current.root) compactWidgets.remove()
       current.root.removeAttribute(ROOT_MARK)
       current.root.removeAttribute('data-dsh-better-left-sidebar-brand-position')
       current.root.removeAttribute('data-dsh-better-left-sidebar-global-position')
@@ -251,7 +270,8 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined, anc
         '--dsh-better-left-sidebar-chrome', '--dsh-better-left-sidebar-brand-height', '--dsh-better-left-sidebar-session-top',
         '--dsh-better-left-sidebar-rail-global-top', '--dsh-better-left-sidebar-conversation-global-top', '--dsh-better-left-sidebar-global-height',
         '--dsh-better-left-sidebar-tools-height', '--dsh-better-left-sidebar-conversation-top', '--dsh-better-left-sidebar-conversation-bottom',
-        '--dsh-better-left-sidebar-nav-bottom-reserve',
+        '--dsh-better-left-sidebar-nav-bottom-reserve', '--dsh-better-left-sidebar-compact-widgets-height',
+        '--dsh-better-left-sidebar-compact-widgets-bottom',
       ]) current.root.style.removeProperty(custom)
       current.brand.querySelector<HTMLElement>(DSH.brandButton)?.removeAttribute('inert')
       current.root.querySelectorAll(`[${ROW_MARK}], [${GLYPH_MARK}], [${TITLE_MARK}], [data-dsh-better-left-sidebar-brand-mark], [data-dsh-better-left-sidebar-brand-name], [data-dsh-better-left-sidebar-session-label], [data-dsh-better-left-sidebar-obsolete-collapse]`).forEach((element) => {
@@ -317,11 +337,13 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined, anc
         return false
       }
       if (sameAnchors(current, refreshed)) {
+        if (compactWidgets.parentElement !== root) root.append(compactWidgets)
         if (preferences) apply(refreshed, preferences)
         return true
       }
       releaseStaleAnchors(current, refreshed)
       current = refreshed
+      root.append(compactWidgets)
       observeAnchors(refreshed)
       if (preferences) apply(refreshed, preferences)
       onRoot(root, true)
@@ -334,6 +356,7 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined, anc
       return false
     }
     current = anchors
+    root.append(compactWidgets)
     if (preferences) apply(anchors, preferences)
     onRoot(root)
     if (root.classList.contains('hHd-Xa_collapsed')) root.querySelector<HTMLButtonElement>(DSH.collapse)?.click()
@@ -357,6 +380,11 @@ export function connectLayoutAdapter(onRoot: (root: HTMLElement | undefined, anc
     update(next) {
       preferences = next
       if (current) apply(current, next)
+    },
+    setCompactWidgets(count, active) {
+      compactWidgetCount = Math.max(0, Math.floor(count))
+      compactWidgetsActive = active
+      if (current && preferences) scheduleMeasure()
     },
     dispose() {
       hostObserver?.disconnect()

@@ -7,6 +7,8 @@ import { fallbackTranslate } from './i18n.js'
 import { connectLayoutAdapter } from './layout-adapter.js'
 import { connectNavigation } from './navigation.js'
 import { connectSettings } from './settings.js'
+import { connectCompactWidgets } from './compact-widgets.js'
+import type { LayoutAdapter } from './layout-adapter.js'
 
 /** Adapt DSH-owned navigation surfaces without replacing their slot owners. */
 export const inject: string[] = ['slots', 'locale', 'configForms']
@@ -24,7 +26,10 @@ export function apply(ctx: ClientContext): void {
     html.classList.add('dsh-better-left-sidebar')
 
     const interaction = connectInteraction()
-    const layout = connectLayoutAdapter((root, anchorsChanged) => interaction.setRoot(root, anchorsChanged))
+    let layout: LayoutAdapter | undefined
+    const compactWidgets = connectCompactWidgets(ctx, (count, active) => layout?.setCompactWidgets(count, active))
+    layout = connectLayoutAdapter((root, anchorsChanged) => interaction.setRoot(root, anchorsChanged), compactWidgets.container)
+    layout.setCompactWidgets(compactWidgets.count, compactWidgets.active)
     const applyPreferences = (value: unknown): void => {
       preferences = normalizePreferences(value)
       layout.update(preferences)
@@ -43,6 +48,7 @@ export function apply(ctx: ClientContext): void {
     return () => {
       disposeNavigation()
       layout.dispose()
+      compactWidgets.dispose()
       interaction.dispose()
       html.classList.remove('dsh-better-left-sidebar')
       style.remove()

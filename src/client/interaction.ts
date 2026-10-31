@@ -2,7 +2,7 @@ import type { ExpansionMode, SidebarPreferences } from '../preferences.js'
 import { createNavigationToggle } from './footer.js'
 import { fallbackTranslate } from './i18n.js'
 
-const NAV_REGION = '[data-dsh-better-left-sidebar-region="brand"], [data-dsh-better-left-sidebar-region="global-navigation"], [data-dsh-better-left-sidebar-region="tools"]'
+const NAV_REGION = '[data-dsh-better-left-sidebar-region="brand"], [data-dsh-better-left-sidebar-region="global-navigation"], [data-dsh-better-left-sidebar-region="tools"], [data-dsh-better-left-sidebar-region="compact-widgets"]'
 const POPUP_SELECTOR = '[role="menu"], [role="listbox"], [role="dialog"], [data-menu-material]'
 const ENTER_DELAY = 160
 const CLOSE_DELAY = 210
@@ -48,6 +48,7 @@ export function connectInteraction(): SidebarInteraction {
     if (!region) return false
     if (region.dataset.dshBetterLeftSidebarRegion === 'brand') return preferences?.brandPosition === 'navigation-top'
     if (region.dataset.dshBetterLeftSidebarRegion === 'global-navigation') return preferences?.globalNavigationPosition === 'rail'
+    if (region.dataset.dshBetterLeftSidebarRegion === 'compact-widgets') return true
     return preferences?.toolsPosition === 'rail-bottom'
   }
 
