@@ -45,6 +45,7 @@ const host = await build({
   logLevel: 'info',
 })
 fs.writeFileSync(path.join(lib, 'index.js'), host.outputFiles[0].text)
+fs.copyFileSync(path.join(root, 'src/slots.d.ts'), path.join(lib, 'slots.d.ts'))
 
 if (pkg.dsh?.client) {
   const client = await build({

@@ -36,12 +36,16 @@
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
+    "./slots": {
+      "types": "./lib/slots.d.ts"
+    },
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
   },
   "files": [
     "lib/index.js",
     "lib/client.js",
+    "lib/slots.d.ts",
     "icon.svg",
     "cordis.patch.yml",
     "locale/*.json",
