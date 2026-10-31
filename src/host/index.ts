@@ -13,6 +13,7 @@ export interface Config {
   globalNavigationPosition: Volatile<'rail' | 'conversation-top'>
   toolsPosition: Volatile<'rail-bottom' | 'conversation-bottom'>
   layoutVersion: Volatile<1 | undefined>
+  compactWidgets: Volatile<{ id: string; enabled: boolean }[]>
 }
 
 export const Config = z.object({
@@ -39,6 +40,10 @@ export const Config = z.object({
     z.const('conversation-bottom'),
   ]).default('rail-bottom').volatile().description('Where tools and status content appear.'),
   layoutVersion: z.const(1).volatile().description('Marks an explicitly selected semantic layout.'),
+  compactWidgets: z.array(z.object({
+    id: z.string(),
+    enabled: z.boolean(),
+  })).default([]).volatile().description('Compact footer widget order and enablement.'),
 })
 
 // Services this plugin cannot start without. Prefer ctx.inject([...], fn)

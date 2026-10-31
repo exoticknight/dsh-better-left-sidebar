@@ -9,6 +9,7 @@ import { connectNavigation } from './navigation.js'
 import { connectSettings } from './settings.js'
 import { connectCompactWidgets } from './compact-widgets.js'
 import type { LayoutAdapter } from './layout-adapter.js'
+import { validateCompactWidgetPreferences } from './compact-widget-preferences.js'
 
 /** Adapt DSH-owned navigation surfaces without replacing their slot owners. */
 export const inject: string[] = ['slots', 'locale', 'configForms']
@@ -33,6 +34,8 @@ export function apply(ctx: ClientContext): void {
     layout.setCompactWidgets(compactWidgets.count, compactWidgets.active)
     const applyPreferences = (value: unknown): void => {
       preferences = normalizePreferences(value)
+      const config = value && typeof value === 'object' ? value as Record<string, unknown> : {}
+      compactWidgets.setPreferences(validateCompactWidgetPreferences(config.compactWidgets))
       layout.update(preferences)
       interaction.setPreferences(preferences)
     }
