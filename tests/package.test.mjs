@@ -28,6 +28,9 @@ test('package metadata points at the bundle patch and entries', () => {
   assert.ok(pkg.keywords.includes('deepseek-harness'))
   assert.equal(pkg.exports['.'], './lib/index.js')
   if (pkg.dsh.client) assert.equal(pkg.exports['./client'], './lib/client.js')
+  assert.deepEqual(pkg.exports['./slots'], { types: './lib/slots.d.ts' })
+  assert.ok(pkg.files.includes('lib/slots.d.ts'))
+  assert.match(fs.readFileSync('lib/slots.d.ts', 'utf8'), /export type CompactFooterSlotKey\s*=/)
 })
 
 test('Chinese and English plugin metadata is exported with the package', () => {

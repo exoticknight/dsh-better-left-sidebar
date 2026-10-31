@@ -1,8 +1,9 @@
 import type { ExpansionMode, SidebarPreferences } from '../preferences.js'
 import { createNavigationToggle } from './footer.js'
 import { fallbackTranslate } from './i18n.js'
+import { isRailRegionEligible } from './rail-region.js'
 
-const NAV_REGION = '[data-dsh-better-left-sidebar-region="brand"], [data-dsh-better-left-sidebar-region="global-navigation"], [data-dsh-better-left-sidebar-region="tools"]'
+const NAV_REGION = '[data-dsh-better-left-sidebar-region="brand"], [data-dsh-better-left-sidebar-region="global-navigation"], [data-dsh-better-left-sidebar-region="tools"], [data-dsh-better-left-sidebar-region="compact-widgets"]'
 const POPUP_SELECTOR = '[role="menu"], [role="listbox"], [role="dialog"], [data-menu-material]'
 const ENTER_DELAY = 160
 const CLOSE_DELAY = 210
@@ -13,6 +14,7 @@ type Translate = (key: string) => string
 export interface SidebarInteraction {
   setRoot(root: HTMLElement | undefined, refreshAnchors?: boolean): void
   setPreferences(preferences: SidebarPreferences): void
+  setCompactWidgetsActive(setActive: (active: boolean) => void): void
   setTranslate(translate: Translate): void
   dispose(): void
 }
@@ -36,6 +38,7 @@ export function connectInteraction(): SidebarInteraction {
   let associatedPopups = new Set<Element>()
   let popupPending = false
   let toggle: HTMLButtonElement | undefined
+  let setCompactWidgetsActive: ((active: boolean) => void) | undefined
   let resizeObserver: ResizeObserver | undefined
   let rootIdOwned = false
   let documentCleanup: (() => void) | undefined
@@ -46,9 +49,7 @@ export function connectInteraction(): SidebarInteraction {
     if (!root || !(target instanceof Element) || !root.contains(target)) return false
     const region = target.closest<HTMLElement>(NAV_REGION)
     if (!region) return false
-    if (region.dataset.dshBetterLeftSidebarRegion === 'brand') return preferences?.brandPosition === 'navigation-top'
-    if (region.dataset.dshBetterLeftSidebarRegion === 'global-navigation') return preferences?.globalNavigationPosition === 'rail'
-    return preferences?.toolsPosition === 'rail-bottom'
+    return isRailRegionEligible(region.dataset.dshBetterLeftSidebarRegion ?? '', preferences)
   }
 
   const isPopupTarget = (target: EventTarget | null): boolean => {
@@ -66,6 +67,7 @@ export function connectInteraction(): SidebarInteraction {
     mode = next
     classRoot.classList.toggle('dsh-better-left-sidebar-expanded', next !== 'compact')
     classRoot.classList.toggle('dsh-better-left-sidebar-pinned', next === 'pinned')
+    setCompactWidgetsActive?.(next === 'compact')
     syncToggle()
   }
 
@@ -409,6 +411,10 @@ export function connectInteraction(): SidebarInteraction {
       if (next.expansion === 'click') createToggle()
       else removeToggle()
       syncToggle()
+    },
+    setCompactWidgetsActive(setActive) {
+      setCompactWidgetsActive = setActive
+      setActive(mode === 'compact')
     },
     setTranslate(next) {
       translate = next

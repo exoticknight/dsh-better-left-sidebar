@@ -23,6 +23,7 @@ const required = [
   'LICENSE',
 ]
 if (pkg.dsh?.client) required.push('lib/client.js')
+if (pkg.exports?.['./slots']) required.push('lib/slots.d.ts')
 if (pkg.exports?.['./locale/*.json']) required.push('locale/en.json', 'locale/zh.json')
 const missing = required.filter((file) => !packed.has(file))
 const leaked = [...packed].filter((file) =>

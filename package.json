@@ -1,6 +1,6 @@
 {
   "name": "dsh-better-left-sidebar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "You need a cleaner DeepSeek Harness sidebar: keep workspaces and conversations in place, and expand full navigation only when you need it.",
   "icon": "./icon.svg",
   "license": "Apache-2.0",
@@ -36,12 +36,16 @@
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
+    "./slots": {
+      "types": "./lib/slots.d.ts"
+    },
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
   },
   "files": [
     "lib/index.js",
     "lib/client.js",
+    "lib/slots.d.ts",
     "icon.svg",
     "cordis.patch.yml",
     "locale/*.json",
@@ -94,9 +98,11 @@
     "@deepseek-ai/dsh-client-ui-primitives": "0.2.1-rc.3",
     "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-rc.3",
     "@deepseek-ai/dsh-client-ui-settings": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-client-ui-sidebar": "0.2.1-rc.3",
     "@deepseek-ai/dsh-client-ui-slots": "0.2.1-rc.3",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "esbuild": "^0.28.2",
     "react": "19.3.1",
     "semver": "^7.8.5",

@@ -55,7 +55,8 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="brand"],
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="new-session"],
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="global-navigation"],
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="tools"] {
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="tools"],
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="compact-widgets"] {
   box-sizing: border-box;
   min-width: 0;
   margin: 0;
@@ -242,6 +243,94 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;
+}
+
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="compact-widgets"] {
+  position: absolute;
+  z-index: 2;
+  bottom: var(--dsh-better-left-sidebar-compact-widgets-bottom, 16px);
+  left: 0;
+  display: flex;
+  width: 56px;
+  max-height: var(--dsh-better-left-sidebar-compact-widgets-height, 0px);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  box-sizing: border-box;
+  padding: 0;
+  overflow: hidden;
+}
+
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-compact-widget-clipped] {
+  visibility: hidden;
+}
+
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="compact-widgets"][hidden] {
+  display: none !important;
+}
+
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] .dsh-better-left-sidebar-compact-widget-box {
+  width: 100%;
+  flex: none;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* A widget that renders nothing must not take a flex gap. */
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] .dsh-better-left-sidebar-compact-widget-box:not(:has(> [data-slot] > *)) {
+  display: none;
+}
+
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] .dsh-better-left-sidebar-clock,
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-preview .dsh-better-left-sidebar-clock {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  overflow: hidden;
+  color: var(--dsw-alias-label-secondary);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] .dsh-better-left-sidebar-clock-time,
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-preview .dsh-better-left-sidebar-clock-time {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] .dsh-better-left-sidebar-clock-period,
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-preview .dsh-better-left-sidebar-clock-period {
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 16px;
+}
+
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] .dsh-better-left-sidebar-clock-date,
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-preview .dsh-better-left-sidebar-clock-date {
+  font-size: 11px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-dsh-better-left-sidebar-region="tools"] {
@@ -507,12 +596,18 @@ html.dsh-better-left-sidebar[data-dsh-better-left-sidebar-animation="off"] {
   }
 }
 
-/* DSH-native profile settings: compact controls, a real location preview, and readable states. */
+/* DSH-native staged settings. Keep field controls and previews within one reading width. */
+html.dsh-better-left-sidebar div:has(> .dsh-better-left-sidebar-preferences) {
+  width: 100%;
+  max-width: 780px;
+  box-sizing: border-box;
+}
 html.dsh-better-left-sidebar .dsh-better-left-sidebar-preferences {
   display: flex;
   min-width: 0;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
+  container-type: inline-size;
   color: var(--dsw-alias-label-primary);
 }
 
@@ -536,9 +631,228 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-settings-group h3 {
   line-height: 24px;
 }
 
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-choice-row {
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-intro {
   display: grid;
-  grid-template-columns: minmax(100px, 150px) minmax(0, 1fr);
+  gap: 6px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-hint,
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-empty {
+  margin: 0;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-link {
+  color: var(--dsw-alias-link);
+  text-decoration: none;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-link:hover {
+  text-decoration: underline;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-list {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-setting {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--dsw-alias-border-l3);
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-options {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-options > summary,
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference > summary {
+  width: fit-content;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 24px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference dl {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference dt {
+  margin-top: 6px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference a {
+  color: var(--dsw-alias-link);
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-options {
+  display: grid;
+  grid-template-columns: minmax(0, 420px) 104px;
+  max-width: 548px;
+  align-items: start;
+  gap: 24px;
+  margin-top: 12px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-option-fields {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-modules {
+  display: flex;
+  min-height: 32px;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-color-controls {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-color-picker {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  cursor: pointer;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-color-swatch {
+  display: block;
+  width: 28px;
+  height: 28px;
+  box-sizing: border-box;
+  border: 1px solid var(--dsw-alias-border-l3);
+  border-radius: 6px;
+  background: var(--dsw-alias-label-primary);
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-color-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-color-picker:focus-within {
+  outline: 2px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
+  outline-offset: 2px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-color-value {
+  color: var(--dsw-alias-label-primary);
+  font-size: 13px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-color-hint {
+  margin: 6px 0 0;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-preview {
+  width: 104px;
+  min-width: 56px;
+  margin: 0;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-preview figcaption {
+  margin: 0 0 8px;
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-align: center;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-preview-rail {
+  display: flex;
+  box-sizing: border-box;
+  width: 56px;
+  min-height: 80px;
+  margin-inline: auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: var(--dsw-specific-sidebar-fill, var(--dsw-alias-bg-base));
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-info {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-name {
+  overflow-wrap: anywhere;
+  color: var(--dsw-alias-label-primary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 19px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-source,
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-status {
+  overflow-wrap: anywhere;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 17px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-status.is-failed {
+  color: var(--dsw-alias-state-danger, #b54736);
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-order {
+  display: flex;
+  gap: 4px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-settings-row {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -547,7 +861,7 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-choice-row {
   border: 0;
 }
 
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-choice-row legend {
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-settings-row legend {
   float: left;
   width: 100%;
   padding: 0;
@@ -563,10 +877,10 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-choice-options {
 
 html.dsh-better-left-sidebar .dsh-better-left-sidebar-choice-option {
   display: inline-flex;
-  min-height: 36px;
+  min-height: 32px;
   align-items: center;
   gap: 7px;
-  padding: 0 11px;
+  padding: 0 9px;
   border: 1px solid var(--dsw-alias-border-l3);
   border-radius: var(--dsw-radius-md);
   background: var(--dsw-alias-bg-base);
@@ -639,7 +953,7 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-position-controls {
 
 html.dsh-better-left-sidebar .dsh-better-left-sidebar-position {
   display: grid;
-  grid-template-columns: minmax(130px, 1fr) minmax(180px, 1.2fr);
+  grid-template-columns: 108px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   min-width: 0;
@@ -660,10 +974,18 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-position select {
   font-size: 13px;
 }
 
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-layout-previews {
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-layout-settings {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 16px 24px;
+  align-items: start;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-layout-settings > .dsh-better-left-sidebar-settings-heading {
+  grid-column: 1 / -1;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-setting-control {
   min-width: 0;
 }
 
@@ -776,18 +1098,77 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-preview-hidden {
   font-style: italic;
 }
 
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-layout-cancel {
-  align-self: flex-start;
+/* Sit beside the settings form's save control. The form is the parent of the preferences block. */
+html.dsh-better-left-sidebar div:has(> .dsh-better-left-sidebar-preferences):has(> .dsh-better-left-sidebar-layout-cancel) {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 16px;
+}
+
+html.dsh-better-left-sidebar div:has(> .dsh-better-left-sidebar-layout-cancel) > .dsh-better-left-sidebar-preferences,
+html.dsh-better-left-sidebar div:has(> .dsh-better-left-sidebar-layout-cancel) > p {
+  grid-column: 1 / -1;
+}
+
+html.dsh-better-left-sidebar div:has(> .dsh-better-left-sidebar-layout-cancel) > :last-child {
+  padding-top: 0;
+}
+
+@container (max-width: 620px) {
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-layout-settings {
+    grid-template-columns: 1fr;
+  }
+
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-layout-preview {
+    max-width: 320px;
+  }
+}
+
+@container (max-width: 480px) {
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-options {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-preview {
+    display: flex;
+    width: auto;
+    align-items: center;
+    gap: 16px;
+  }
+
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-preview-rail {
+    min-height: 64px;
+    margin: 0;
+  }
+
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-preview figcaption {
+    margin: 0;
+  }
+
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-settings-row,
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-position {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-settings-row legend {
+    float: none;
+    width: auto;
+    margin-bottom: 6px;
+  }
 }
 
 /* Keep sessions open behind a full-width editor, instead of squeezing a form into 287px. */
 @media (max-width: 760px) {
-  html.dsh-better-left-sidebar .dsh-better-left-sidebar-choice-row {
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-settings-row {
     grid-template-columns: 1fr;
     gap: 7px;
   }
 
-  html.dsh-better-left-sidebar .dsh-better-left-sidebar-choice-row legend {
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-settings-row legend {
     float: none;
     width: auto;
   }
@@ -800,6 +1181,15 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-layout-cancel {
   html.dsh-better-left-sidebar .dsh-better-left-sidebar-choice-options {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-options,
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-color {
+    grid-template-columns: 1fr;
+  }
+
+  html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-color-hint {
+    grid-column: 1;
   }
 
   html.dsh-better-left-sidebar [data-slot='main'] > section:has(> div > aside) {
