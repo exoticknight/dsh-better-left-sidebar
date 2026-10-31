@@ -13,6 +13,7 @@ type Translate = (key: string) => string
 export interface SidebarInteraction {
   setRoot(root: HTMLElement | undefined, refreshAnchors?: boolean): void
   setPreferences(preferences: SidebarPreferences): void
+  setCompactWidgetsActive(setActive: (active: boolean) => void): void
   setTranslate(translate: Translate): void
   dispose(): void
 }
@@ -36,6 +37,7 @@ export function connectInteraction(): SidebarInteraction {
   let associatedPopups = new Set<Element>()
   let popupPending = false
   let toggle: HTMLButtonElement | undefined
+  let setCompactWidgetsActive: ((active: boolean) => void) | undefined
   let resizeObserver: ResizeObserver | undefined
   let rootIdOwned = false
   let documentCleanup: (() => void) | undefined
@@ -67,6 +69,7 @@ export function connectInteraction(): SidebarInteraction {
     mode = next
     classRoot.classList.toggle('dsh-better-left-sidebar-expanded', next !== 'compact')
     classRoot.classList.toggle('dsh-better-left-sidebar-pinned', next === 'pinned')
+    setCompactWidgetsActive?.(next === 'compact')
     syncToggle()
   }
 
@@ -410,6 +413,10 @@ export function connectInteraction(): SidebarInteraction {
       if (next.expansion === 'click') createToggle()
       else removeToggle()
       syncToggle()
+    },
+    setCompactWidgetsActive(setActive) {
+      setCompactWidgetsActive = setActive
+      setActive(mode === 'compact')
     },
     setTranslate(next) {
       translate = next

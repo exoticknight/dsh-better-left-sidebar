@@ -28,6 +28,7 @@ export function apply(ctx: ClientContext): void {
     const interaction = connectInteraction()
     let layout: LayoutAdapter | undefined
     const compactWidgets = connectCompactWidgets(ctx, (count, active) => layout?.setCompactWidgets(count, active))
+    interaction.setCompactWidgetsActive(compactWidgets.setActive)
     layout = connectLayoutAdapter((root, anchorsChanged) => interaction.setRoot(root, anchorsChanged), compactWidgets.container)
     layout.setCompactWidgets(compactWidgets.count, compactWidgets.active)
     const applyPreferences = (value: unknown): void => {
