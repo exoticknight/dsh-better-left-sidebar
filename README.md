@@ -8,6 +8,8 @@
 
 <!-- Listing badges: add a row here only after each listing is confirmed. See playbooks/reference/badges.md. -->
 
+[![dsh.pub registry status](https://dsh.pub/api/badges/exoticknight/dsh-better-left-sidebar.svg)](https://dsh.pub/en/plugins/?q=exoticknight%2Fdsh-better-left-sidebar) [![Listed on DSH Market](https://raw.githubusercontent.com/2BingLing/dsh-market/master/assets/readme/badge-listed-en.svg)](https://dsh.market/?q=exoticknight%2Fdsh-better-left-sidebar)
+
 更清爽、更合理的 DeepSeek Harness 左边栏，支持插件自定义多个小组件。
 
 <!-- client:start -->
