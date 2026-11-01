@@ -58,6 +58,9 @@ export function connectInteraction(): SidebarInteraction {
     return false
   }
 
+  const isKeyboardFocused = (target: EventTarget | null): boolean =>
+    target instanceof HTMLElement && target.matches(':focus-visible')
+
   const visiblePopups = (): Element[] => [...document.querySelectorAll<Element>(POPUP_SELECTOR)].filter((popup) => {
     const node = popup as HTMLElement
     return !node.hidden && node.getAttribute('aria-hidden') !== 'true' && node.getClientRects().length > 0
@@ -298,11 +301,19 @@ export function connectInteraction(): SidebarInteraction {
   }
 
   const onFocusIn = (event: FocusEvent): void => {
-    focusTarget = event.target
     if (isNavTarget(event.target) || isPopupTarget(event.target)) {
+      if (!isKeyboardFocused(event.target)) {
+        // Pointer focus (especially a touch tap) must not hold the hover flyout open.
+        focusTarget = null
+        focusInside = false
+        requestClose()
+        return
+      }
+      focusTarget = event.target
       focusInside = true
       expandTemporarily()
     } else {
+      focusTarget = event.target
       focusInside = false
       requestClose()
     }
