@@ -51,7 +51,7 @@ Restart DSH after installing.
 You can also install the matching GitHub Release:
 
 ```sh
-dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#v0.1.2
+dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#v0.1.3
 ```
 
 Restart DSH after installing.
