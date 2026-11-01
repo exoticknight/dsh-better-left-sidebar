@@ -174,6 +174,16 @@ export function connectInteraction(): SidebarInteraction {
     closeTimer = 0
   }
 
+  const collapseNavigation = (): void => {
+    clearEntryTimer()
+    clearCloseTimer()
+    pointerInside = false
+    focusInside = false
+    pointerTarget = null
+    focusTarget = null
+    setMode('compact')
+  }
+
   const expandTemporarily = (): void => {
     clearCloseTimer()
     if (mode !== 'pinned') setMode('temporary')
@@ -277,15 +287,7 @@ export function connectInteraction(): SidebarInteraction {
       createToggle()
       return
     }
-    if (mode === 'pinned') {
-      clearEntryTimer()
-      clearCloseTimer()
-      pointerInside = false
-      focusInside = false
-      pointerTarget = null
-      focusTarget = null
-      setMode('compact')
-    }
+    if (mode === 'pinned') collapseNavigation()
     removeToggle()
   }
 
@@ -293,11 +295,7 @@ export function connectInteraction(): SidebarInteraction {
 
   const onToggleClick = (): void => {
     if (mode === 'pinned') {
-      clearEntryTimer()
-      clearCloseTimer()
-      pointerInside = false
-      focusInside = false
-      setMode('compact')
+      collapseNavigation()
       return
     }
     clearEntryTimer()
@@ -372,13 +370,7 @@ export function connectInteraction(): SidebarInteraction {
     if (trigger && popupTriggerInScope(trigger)) return
     const item = target.closest<HTMLElement>('a[href], button, [role="link"], [role="menuitem"]')
     if (!item || (!isNavTarget(item) && !isPopupTarget(item))) return
-    pointerInside = false
-    focusInside = false
-    pointerTarget = null
-    focusTarget = null
-    clearEntryTimer()
-    clearCloseTimer()
-    setMode('compact')
+    collapseNavigation()
   }
 
   const onClickCapture = (event: MouseEvent): void => {
@@ -392,25 +384,14 @@ export function connectInteraction(): SidebarInteraction {
 
   const onDocumentPointerDown = (event: PointerEvent): void => {
     if (mode !== 'pinned' || toggle?.contains(event.target as Node) || isNavTarget(event.target) || isPopupTarget(event.target)) return
-    pointerInside = false
-    focusInside = false
-    focusTarget = null
-    clearEntryTimer()
-    clearCloseTimer()
-    setMode('compact')
+    collapseNavigation()
   }
 
   const onDocumentKeyDown = (event: KeyboardEvent): void => {
     if (event.key !== 'Escape' || mode === 'compact' || event.defaultPrevented) return
     if (popupOwnsInteraction()) return
     const restoreToggleFocus = mode === 'pinned'
-    clearEntryTimer()
-    clearCloseTimer()
-    pointerInside = false
-    focusInside = false
-    pointerTarget = null
-    focusTarget = null
-    setMode('compact')
+    collapseNavigation()
     if (restoreToggleFocus) toggle?.focus()
   }
 
