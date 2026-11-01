@@ -27,8 +27,8 @@ export function apply(ctx: ClientContext): void {
     document.head.append(style)
     html.classList.add('dsh-better-left-sidebar')
 
-    const interaction = connectInteraction()
     let layout: LayoutAdapter | undefined
+    const interaction = connectInteraction((reserve) => layout?.setNavigationToggleReserve(reserve))
     const compactWidgets = connectCompactWidgets(ctx, (count, active) => layout?.setCompactWidgets(count, active))
     interaction.setCompactWidgetsActive(compactWidgets.setActive)
     layout = connectLayoutAdapter((root, anchorsChanged) => interaction.setRoot(root, anchorsChanged), compactWidgets.container)

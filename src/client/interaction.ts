@@ -1,7 +1,13 @@
 import type { ExpansionMode, SidebarPreferences } from '../preferences.js'
 import { createNavigationToggle } from './footer.js'
 import { fallbackTranslate } from './i18n.js'
-import { isHoverPointer, shouldShowNavigationToggle } from './pointer-intent.js'
+import {
+  getNavigationToggleReserve,
+  isHoverPointer,
+  NAVIGATION_TOGGLE_GAP,
+  NAVIGATION_TOGGLE_SIZE,
+  shouldShowNavigationToggle,
+} from './pointer-intent.js'
 import { isRailRegionEligible } from './rail-region.js'
 
 const NAV_REGION = '[data-dsh-better-left-sidebar-region="brand"], [data-dsh-better-left-sidebar-region="global-navigation"], [data-dsh-better-left-sidebar-region="tools"], [data-dsh-better-left-sidebar-region="compact-widgets"]'
@@ -21,7 +27,7 @@ export interface SidebarInteraction {
 }
 
 /** Owns all temporary/pinned interaction state; layout code only changes intent. */
-export function connectInteraction(): SidebarInteraction {
+export function connectInteraction(onToggleReserveChange: (reserve: number) => void): SidebarInteraction {
   let root: HTMLElement | undefined
   let preferences: SidebarPreferences | undefined
   let expansion: ExpansionMode = 'hover'
@@ -43,10 +49,20 @@ export function connectInteraction(): SidebarInteraction {
   let resizeObserver: ResizeObserver | undefined
   let rootIdOwned = false
   let documentCleanup: (() => void) | undefined
+  let publishedToggleReserve = 0
 
   const classRoot = document.documentElement
   const hoverPointer = window.matchMedia('(any-hover: hover)')
   const coarsePointer = window.matchMedia('(any-pointer: coarse)')
+
+  const syncToggleReserve = (): void => {
+    const next = root && preferences
+      ? getNavigationToggleReserve(preferences.expansion, coarsePointer.matches, hoverPointer.matches)
+      : 0
+    if (publishedToggleReserve === next) return
+    publishedToggleReserve = next
+    onToggleReserveChange(next)
+  }
 
   const isNavTarget = (target: EventTarget | null): boolean => {
     if (!root || !(target instanceof Element) || !root.contains(target)) return false
@@ -222,7 +238,7 @@ export function connectInteraction(): SidebarInteraction {
     const tools = root.querySelector<HTMLElement>('[data-dsh-better-left-sidebar-region="tools"]')
     const toolReserve = preferences?.toolsPosition === 'rail-bottom' && tools ? Math.max(tools.getBoundingClientRect().height, tools.scrollHeight) + 8 : 0
     toggle.style.left = `${Math.round(rect.left + 10)}px`
-    toggle.style.top = `${Math.max(rect.top + 8, Math.round(rect.bottom - 8 - 36 - toolReserve))}px`
+    toggle.style.top = `${Math.max(rect.top + 8, Math.round(rect.bottom - NAVIGATION_TOGGLE_GAP - NAVIGATION_TOGGLE_SIZE - toolReserve))}px`
   }
 
   const syncToggle = (): void => {
@@ -282,13 +298,18 @@ export function connectInteraction(): SidebarInteraction {
   }
 
   const refreshToggleAvailability = (): void => {
-    if (!root || !preferences) return
+    if (!root || !preferences) {
+      syncToggleReserve()
+      return
+    }
     if (shouldShowNavigationToggle(preferences.expansion, coarsePointer.matches, hoverPointer.matches)) {
       createToggle()
+      syncToggleReserve()
       return
     }
     if (mode === 'pinned') collapseNavigation()
     removeToggle()
+    syncToggleReserve()
   }
 
   const onPointerCapabilitiesChange = (): void => refreshToggleAvailability()
@@ -437,7 +458,10 @@ export function connectInteraction(): SidebarInteraction {
     focusTarget = null
     stopPopupTracking()
     setMode('compact')
-    if (!root) return
+    if (!root) {
+      syncToggleReserve()
+      return
+    }
     if (!root.id) {
       root.id = 'dsh-better-left-sidebar-navigation'
       rootIdOwned = true

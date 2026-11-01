@@ -38,6 +38,7 @@ export interface LayoutAnchors {
 export interface LayoutAdapter {
   update(preferences: SidebarPreferences): void
   setCompactWidgets(count: number, active: boolean): void
+  setNavigationToggleReserve(reserve: number): void
   dispose(): void
 }
 
@@ -101,6 +102,7 @@ export function connectLayoutAdapter(
   let resizeObserver: ResizeObserver | undefined
   let measureFrame = 0
   let warnedFor = new WeakSet<HTMLElement>()
+  let navigationToggleReserve = 0
 
   const readAnchors = (root: HTMLElement): LayoutAnchors | undefined => {
     const brand = root.querySelector<HTMLElement>(DSH.brand)
@@ -173,7 +175,7 @@ export function connectLayoutAdapter(
     const panelHeight = conversationNavigation ? conversationSizing.panelHeight : panelContentHeight
     const conversationTop = conversationNavigation ? conversationSizing.conversationTop : conversationGlobalTop
     const navBottomReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
-    const toggleReserve = preferences?.expansion === 'click' ? 44 : 0
+    const toggleReserve = navigationToggleReserve
     const footerReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
     const widgetBoxes = [...compactWidgets.children].filter((child): child is HTMLElement => child instanceof HTMLElement)
     for (const box of widgetBoxes) resizeObserver?.observe(box)
@@ -412,6 +414,12 @@ export function connectLayoutAdapter(
     setCompactWidgets(count, active) {
       compactWidgetCount = Math.max(0, Math.floor(count))
       compactWidgetsActive = active
+      if (current && preferences) scheduleMeasure()
+    },
+    setNavigationToggleReserve(reserve) {
+      const next = Math.max(0, Math.ceil(reserve))
+      if (navigationToggleReserve === next) return
+      navigationToggleReserve = next
       if (current && preferences) scheduleMeasure()
     },
     dispose() {
