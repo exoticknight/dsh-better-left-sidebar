@@ -51,7 +51,7 @@ dsh plugin --profile web add dsh-better-left-sidebar
 也可以安装对应版本的 GitHub Release：
 
 ```sh
-dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#v0.1.2
+dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#v0.1.3
 ```
 
 安装后重启 DSH。
