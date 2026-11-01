@@ -23,11 +23,11 @@ A cleaner, better-organized DeepSeek Harness sidebar with support for multiple p
 
 ## Features
 
-> `0.1.1` adds compact rail widgets, a configurable clock, grouped settings, and short-window navigation improvements.
+> `0.1.4` makes touch navigation explicit and fixes the overlap between the toggle and compact rail widgets.
 
 - **Keep conversations in the foreground**: workspaces and conversations stay in a dedicated wide pane; expanded navigation overlays it instead of squeezing the conversation area.
 - **Tuck global entry points out of the way**: place the brand, panels, and tools along a narrow left rail to leave more room for browsing sessions.
-- **Choose the interaction that fits**: hover or keyboard focus expands the rail by default; click mode pins it open and closes on another click, Escape, or an outside click.
+- **Use navigation comfortably on desktop and touch**: desktop hover or keyboard focus expands by default; touch devices always get an explicit toggle that stays open after a tap and closes on an outside tap, item selection, Escape, or another tap.
 - **Shape the sidebar around your workflow**: reposition the brand, global navigation, and tools, then review the layout preview before applying it.
 - **Keep DSH's native actions**: New Session, panels, workspaces, settings, and footer tools keep their DSH entry points and behavior.
 - **See widgets in the compact rail**: the clock and widgets you choose sit at the bottom of the rail. In settings you can enable, disable, and reorder them, and change the clock's hour cycle, month/day, weekday, and time color.
@@ -51,7 +51,7 @@ Restart DSH after installing.
 You can also install the matching GitHub Release:
 
 ```sh
-dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#v0.1.3
+dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#v0.1.4
 ```
 
 Restart DSH after installing.
@@ -75,7 +75,7 @@ pnpm dev
 ## Usage
 
 1. When enabled, the workspace and conversation list stay open; the far-left rail holds the DSH brand, global panels, and tools.
-2. In the default mode, hover over the rail or keyboard-focus a navigation item to reveal the full navigation. It closes after you leave it. Choose click mode in the plugin settings to pin or close the rail with the toggle button.
+2. On desktop, hover over the rail or keyboard-focus a navigation item to reveal the full navigation. On touch devices, tap the navigation toggle; it stays open after release and closes when you tap outside, select an item, or press Escape. Click mode is also available in plugin settings.
 3. Open **Plugins** in the sidebar, then **Better Left Sidebar** to configure expansion, animation, and region placement. Review the preview and select **Save settings** to apply changes. Copy follows DSH's active language; switch between Chinese and English in **Settings → General**.
 4. Use **[Compact widgets](docs/compact-widgets.md)** on the same settings page to manage the clock and compatible widgets. Expand **Display settings** under the clock to change its hour cycle, date, weekday, and time color. Date and Weekday can both be checked, and the **Effect preview** uses the same width as the rail. A widget that does not fit is marked **Hidden: not enough space**. New registrations are enabled by default, and their order and enablement are saved in the current profile.
 
@@ -89,7 +89,7 @@ After you select **Save settings**, layout preferences are stored in the current
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| Expansion | `hover` | Expand on hover or keyboard focus; `click` pins the rail open with a toggle. |
+| Expansion | `hover` | Expand on desktop hover or keyboard focus; touch devices always show a navigation toggle. `click` pins the rail open with the toggle. |
 | Animation | `standard` | Choose soft, fast, or no animation. |
 | Brand | `navigation-top` | Place the brand at the top of the rail, at the top of the conversation pane, or hide it. |
 | Global navigation | `rail` | Keep global navigation in the rail or move it above conversations. |
@@ -99,17 +99,17 @@ After you select **Save settings**, layout preferences are stored in the current
 
 ## Update, roll back, remove
 
-To update to or reinstall `0.1.2`, remove the plugin and install the exact version:
+To update to or reinstall `0.1.4`, remove the plugin and install the exact version:
 
 ```sh
 dsh plugin --profile web remove dsh-better-left-sidebar
 ```
 
 ```sh
-dsh plugin --profile web add dsh-better-left-sidebar@0.1.2
+dsh plugin --profile web add dsh-better-left-sidebar@0.1.4
 ```
 
-To roll back, replace the version in the install command with `0.1.1`. [View GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases).
+To roll back, replace the version in the install command with `0.1.3`. [View GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases).
 
 Removing the plugin uninstalls its package; conversations and other plugins in the DSH profile remain.
 
