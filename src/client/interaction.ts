@@ -1,6 +1,7 @@
 import type { ExpansionMode, SidebarPreferences } from '../preferences.js'
 import { createNavigationToggle } from './footer.js'
 import { fallbackTranslate } from './i18n.js'
+import { isHoverPointer, shouldShowNavigationToggle } from './pointer-intent.js'
 import { isRailRegionEligible } from './rail-region.js'
 
 const NAV_REGION = '[data-dsh-better-left-sidebar-region="brand"], [data-dsh-better-left-sidebar-region="global-navigation"], [data-dsh-better-left-sidebar-region="tools"], [data-dsh-better-left-sidebar-region="compact-widgets"]'
@@ -44,6 +45,8 @@ export function connectInteraction(): SidebarInteraction {
   let documentCleanup: (() => void) | undefined
 
   const classRoot = document.documentElement
+  const hoverPointer = window.matchMedia('(any-hover: hover)')
+  const coarsePointer = window.matchMedia('(any-pointer: coarse)')
 
   const isNavTarget = (target: EventTarget | null): boolean => {
     if (!root || !(target instanceof Element) || !root.contains(target)) return false
@@ -219,6 +222,7 @@ export function connectInteraction(): SidebarInteraction {
     const label = translate(pinned ? 'closeNavigation' : 'expandNavigation')
     toggle.setAttribute('aria-label', label)
     toggle.title = label
+    if (root?.id) toggle.setAttribute('aria-controls', root.id)
     toggle.setAttribute('aria-expanded', String(expanded))
     toggle.setAttribute('aria-pressed', String(pinned))
     toggle.querySelector<SVGPathElement>('[data-dsh-better-left-sidebar-toggle-chevron]')?.setAttribute(
@@ -241,8 +245,14 @@ export function connectInteraction(): SidebarInteraction {
   }
 
   const createToggle = (): void => {
-    if (!root || preferences?.expansion !== 'click' || toggle) return
+    if (
+      !root
+      || !preferences
+      || !shouldShowNavigationToggle(preferences.expansion, coarsePointer.matches, hoverPointer.matches)
+      || toggle
+    ) return
     toggle = createNavigationToggle(onToggleClick)
+    toggle.setAttribute('aria-controls', root.id)
     document.body.append(toggle)
     refreshToggleObservation()
     window.addEventListener('resize', updateTogglePosition)
@@ -261,6 +271,26 @@ export function connectInteraction(): SidebarInteraction {
     window.removeEventListener('scroll', updateTogglePosition, true)
   }
 
+  const refreshToggleAvailability = (): void => {
+    if (!root || !preferences) return
+    if (shouldShowNavigationToggle(preferences.expansion, coarsePointer.matches, hoverPointer.matches)) {
+      createToggle()
+      return
+    }
+    if (mode === 'pinned') {
+      clearEntryTimer()
+      clearCloseTimer()
+      pointerInside = false
+      focusInside = false
+      pointerTarget = null
+      focusTarget = null
+      setMode('compact')
+    }
+    removeToggle()
+  }
+
+  const onPointerCapabilitiesChange = (): void => refreshToggleAvailability()
+
   const onToggleClick = (): void => {
     if (mode === 'pinned') {
       clearEntryTimer()
@@ -276,6 +306,7 @@ export function connectInteraction(): SidebarInteraction {
   }
 
   const onPointerOver = (event: PointerEvent): void => {
+    if (!isHoverPointer(event.pointerType, hoverPointer.matches)) return
     const wasInside = pointerInside
     pointerTarget = event.target
     if (isNavTarget(event.target)) {
@@ -291,6 +322,7 @@ export function connectInteraction(): SidebarInteraction {
   }
 
   const onPointerOut = (event: PointerEvent): void => {
+    if (!isHoverPointer(event.pointerType, hoverPointer.matches)) return
     const nextTarget = event.relatedTarget
     const entersNavigation = !pointerInside && isNavTarget(nextTarget)
     pointerTarget = nextTarget
@@ -332,7 +364,28 @@ export function connectInteraction(): SidebarInteraction {
     startPopupTracking(trigger)
   }
 
-  const onClickCapture = (event: MouseEvent): void => onTriggerIntent(event)
+  const onNavigationSelection = (event: MouseEvent): void => {
+    if (mode !== 'pinned' || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !(event.target instanceof Element)) return
+    const target = event.target
+    if (!isNavTarget(target) && !isPopupTarget(target)) return
+    const trigger = target.closest<HTMLElement>('[aria-haspopup], [aria-controls], [aria-expanded]')
+    if (trigger && popupTriggerInScope(trigger)) return
+    const item = target.closest<HTMLElement>('a[href], button, [role="link"], [role="menuitem"]')
+    if (!item || (!isNavTarget(item) && !isPopupTarget(item))) return
+    pointerInside = false
+    focusInside = false
+    pointerTarget = null
+    focusTarget = null
+    clearEntryTimer()
+    clearCloseTimer()
+    setMode('compact')
+  }
+
+  const onClickCapture = (event: MouseEvent): void => {
+    onTriggerIntent(event)
+    if (mode === 'pinned') queueMicrotask(() => onNavigationSelection(event))
+  }
+
   const onKeyDownCapture = (event: KeyboardEvent): void => {
     if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') onTriggerIntent(event)
   }
@@ -350,12 +403,15 @@ export function connectInteraction(): SidebarInteraction {
   const onDocumentKeyDown = (event: KeyboardEvent): void => {
     if (event.key !== 'Escape' || mode === 'compact' || event.defaultPrevented) return
     if (popupOwnsInteraction()) return
+    const restoreToggleFocus = mode === 'pinned'
     clearEntryTimer()
     clearCloseTimer()
     pointerInside = false
     focusInside = false
+    pointerTarget = null
     focusTarget = null
     setMode('compact')
+    if (restoreToggleFocus) toggle?.focus()
   }
 
   const attachDocumentListeners = (): (() => void) => {
@@ -367,6 +423,8 @@ export function connectInteraction(): SidebarInteraction {
     document.addEventListener('keydown', onKeyDownCapture, true)
     document.addEventListener('pointerdown', onDocumentPointerDown, true)
     document.addEventListener('keydown', onDocumentKeyDown)
+    hoverPointer.addEventListener('change', onPointerCapabilitiesChange)
+    coarsePointer.addEventListener('change', onPointerCapabilitiesChange)
     return () => {
       document.removeEventListener('pointerover', onPointerOver, true)
       document.removeEventListener('pointerout', onPointerOut, true)
@@ -376,6 +434,8 @@ export function connectInteraction(): SidebarInteraction {
       document.removeEventListener('keydown', onKeyDownCapture, true)
       document.removeEventListener('pointerdown', onDocumentPointerDown, true)
       document.removeEventListener('keydown', onDocumentKeyDown)
+      hoverPointer.removeEventListener('change', onPointerCapabilitiesChange)
+      coarsePointer.removeEventListener('change', onPointerCapabilitiesChange)
     }
   }
 
@@ -401,7 +461,7 @@ export function connectInteraction(): SidebarInteraction {
       root.id = 'dsh-better-left-sidebar-navigation'
       rootIdOwned = true
     }
-    createToggle()
+    refreshToggleAvailability()
   }
 
   return {
@@ -419,8 +479,7 @@ export function connectInteraction(): SidebarInteraction {
       } else {
         refreshStateFromTargets()
       }
-      if (next.expansion === 'click') createToggle()
-      else removeToggle()
+      refreshToggleAvailability()
       syncToggle()
     },
     setCompactWidgetsActive(setActive) {
