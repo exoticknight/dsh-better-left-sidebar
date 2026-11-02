@@ -450,6 +450,8 @@ export function connectInteraction(onToggleReserveChange: (reserve: number) => v
     }
     if (root && rootIdOwned && root.id === 'dsh-better-left-sidebar-navigation') root.removeAttribute('id')
     rootIdOwned = false
+    clearEntryTimer()
+    clearCloseTimer()
     removeToggle()
     root = next
     pointerInside = false

@@ -97,7 +97,6 @@ export function connectLayoutAdapter(
   let observedSidebar: HTMLElement | undefined
   let childrenObserver: MutationObserver | undefined
   let measurementObserver: MutationObserver | undefined
-  let collapseObserver: MutationObserver | undefined
   let hostObserver: MutationObserver | undefined
   let resizeObserver: ResizeObserver | undefined
   let measureFrame = 0
@@ -277,11 +276,9 @@ export function connectLayoutAdapter(
   const detach = (): void => {
     childrenObserver?.disconnect()
     measurementObserver?.disconnect()
-    collapseObserver?.disconnect()
     resizeObserver?.disconnect()
     childrenObserver = undefined
     measurementObserver = undefined
-    collapseObserver = undefined
     resizeObserver = undefined
     if (measureFrame) window.cancelAnimationFrame(measureFrame)
     measureFrame = 0
@@ -327,6 +324,7 @@ export function connectLayoutAdapter(
       const targetRoot = current?.root ?? candidateRoot
       const relevant = records.some((record) => {
         const target = record.target
+        if (record.attributeName === 'data-sidebar-collapsed' && target instanceof Element && observedSidebar && target.contains(observedSidebar)) return true
         if (target === observedSidebar) return true
         if (target === targetRoot) return !current || record.type !== 'childList'
         if (target instanceof Element && (target.matches(DSH.sidebarSlot) || target.matches(DSH.root))) return true
@@ -341,7 +339,7 @@ export function connectLayoutAdapter(
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['class', 'data-slot'],
+      attributeFilter: ['class', 'data-slot', 'data-sidebar-collapsed'],
     })
   }
 
@@ -359,6 +357,15 @@ export function connectLayoutAdapter(
     }
     observedSidebar = sidebar
     candidateRoot = root
+    // Overall collapse belongs to DSH. Release our layout before its wide
+    // contents unmount; the host observer stays alive to restore it on reopen.
+    if (root.closest('[data-sidebar-collapsed="true"]') || root.classList.contains('hHd-Xa_collapsed')) {
+      if (current) {
+        detach()
+        onRoot(undefined)
+      }
+      return false
+    }
     if (current?.root === root) {
       const refreshed = readAnchors(root)
       if (!refreshed) {
@@ -389,16 +396,11 @@ export function connectLayoutAdapter(
     root.append(compactWidgets)
     if (preferences) apply(anchors, preferences)
     onRoot(root)
-    if (root.classList.contains('hHd-Xa_collapsed')) root.querySelector<HTMLButtonElement>(DSH.collapse)?.click()
     childrenObserver = new MutationObserver(() => {
       if (!current || current.root !== root) return
       attach()
     })
     childrenObserver.observe(root, { childList: true, subtree: true })
-    collapseObserver = new MutationObserver(() => {
-      if (root.classList.contains('hHd-Xa_collapsed')) root.querySelector<HTMLButtonElement>(DSH.collapse)?.click()
-    })
-    collapseObserver.observe(root, { attributes: true, attributeFilter: ['class'] })
     observeAnchors(anchors)
     return true
   }
