@@ -46,6 +46,11 @@ const fields = [
   choiceField('brandPosition', brandValues),
   choiceField('globalNavigationPosition', globalValues),
   choiceField('toolsPosition', toolsValues),
+  {
+    field: 'showCompactPluginStatus',
+    format: (value: unknown) => String(value === true),
+    parse: (text: string) => text === 'true' || text === 'false' ? { kind: 'set' as const, value: text === 'true' } : undefined,
+  },
   compactWidgetField(),
   clockField(),
   {
@@ -275,6 +280,15 @@ function SettingsPage(props: BoundPageProps) {
         h(LayoutPreview, { title: t('effectPreview'), preferences: draft, t })),
       h('section', { className: 'dsh-better-left-sidebar-settings-group' },
         h('h3', null, t('navigationBehavior')),
+        h(SettingsRow, { label: t('compactPluginStatus'), disabled: disabled || draft.toolsPosition !== 'rail-bottom' },
+          h('div', null,
+            h(Switch, {
+              checked: view.fields.showCompactPluginStatus!.text === 'true',
+              disabled: disabled || draft.toolsPosition !== 'rail-bottom',
+              label: t('compactPluginStatus'),
+              onChange: (checked) => actions.edit('showCompactPluginStatus', String(checked)),
+            }),
+            h('p', { className: 'dsh-better-left-sidebar-compact-widgets-hint' }, t('compactPluginStatusHint')))),
         h(ChoiceRow, {
           name: 'dsh-better-left-sidebar-expansion',
           label: t('expansion'),

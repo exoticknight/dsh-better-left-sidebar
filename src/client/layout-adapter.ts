@@ -258,6 +258,7 @@ export function connectLayoutAdapter(
     root.dataset.dshBetterLeftSidebarBrandPosition = next.brandPosition
     root.dataset.dshBetterLeftSidebarGlobalPosition = next.globalNavigationPosition
     root.dataset.dshBetterLeftSidebarToolsPosition = next.toolsPosition
+    root.dataset.dshBetterLeftSidebarPluginStatus = String(next.showCompactPluginStatus)
     writeRegion(brand, 'brand')
     writeRegion(newSession, 'new-session')
     writeRegion(panelList, 'global-navigation')
@@ -298,6 +299,7 @@ export function connectLayoutAdapter(
       current.root.removeAttribute('data-dsh-better-left-sidebar-brand-position')
       current.root.removeAttribute('data-dsh-better-left-sidebar-global-position')
       current.root.removeAttribute('data-dsh-better-left-sidebar-tools-position')
+      current.root.removeAttribute('data-dsh-better-left-sidebar-plugin-status')
       for (const element of [current.brand, current.newSession, current.panelList, current.conversation, current.tools]) {
         element.removeAttribute(REGION_MARK)
       }

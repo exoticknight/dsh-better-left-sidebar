@@ -18,6 +18,7 @@ test('legacy hidden-area settings are ignored while navigation preferences survi
   assert.equal(normalized.globalNavigationPosition, DEFAULT_PREFERENCES.globalNavigationPosition)
   assert.equal(normalized.toolsPosition, DEFAULT_PREFERENCES.toolsPosition)
   assert.equal(normalized.layoutVersion, undefined)
+  assert.equal(normalized.showCompactPluginStatus, false)
 })
 
 test('explicit semantic layout values are accepted and invalid values fall back safely', () => {
@@ -26,20 +27,24 @@ test('explicit semantic layout values are accepted and invalid values fall back 
     globalNavigationPosition: 'conversation-top',
     toolsPosition: 'conversation-bottom',
     layoutVersion: 1,
+    showCompactPluginStatus: true,
   })
   assert.equal(configured.brandPosition, 'sidebar-top')
   assert.equal(configured.globalNavigationPosition, 'conversation-top')
   assert.equal(configured.toolsPosition, 'conversation-bottom')
   assert.equal(configured.layoutVersion, 1)
+  assert.equal(configured.showCompactPluginStatus, true)
 
   const invalid = normalizePreferences({
     brandPosition: 'above',
     globalNavigationPosition: 'hidden',
     toolsPosition: 'none',
+    showCompactPluginStatus: 'true',
   })
   assert.equal(invalid.brandPosition, DEFAULT_PREFERENCES.brandPosition)
   assert.equal(invalid.globalNavigationPosition, DEFAULT_PREFERENCES.globalNavigationPosition)
   assert.equal(invalid.toolsPosition, DEFAULT_PREFERENCES.toolsPosition)
+  assert.equal(invalid.showCompactPluginStatus, false)
 })
 
 test('navigation-above preserves conversation space and floors allocations at zero', () => {

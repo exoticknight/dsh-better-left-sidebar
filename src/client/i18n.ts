@@ -3,6 +3,8 @@ export const NAMESPACE = 'dsh-better-left-sidebar'
 
 const en = {
   navigationBehavior: 'Expansion and animation',
+  compactPluginStatus: 'Show compact plugin status',
+  compactPluginStatusHint: 'At navigation bottom, use each plugin’s native compact view when navigation is closed. Apply on save.',
   expansion: 'Expansion',
   expandNavigation: 'Expand navigation',
   closeNavigation: 'Close navigation',
@@ -70,6 +72,8 @@ const en = {
 
 const zh = {
   navigationBehavior: '展开与动画',
+  compactPluginStatus: '收起导航时显示插件状态',
+  compactPluginStatusHint: '工具位于导航栏底部时，使用各插件的原生收起样式。保存后生效。',
   expansion: '展开方式',
   expandNavigation: '展开导航',
   closeNavigation: '收起导航',

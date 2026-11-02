@@ -338,6 +338,14 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   min-width: 0;
 }
 
+html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"][data-dsh-better-left-sidebar-plugin-status="true"] [data-dsh-better-left-sidebar-region="tools"] {
+  width: var(--dsh-better-left-sidebar-rail);
+}
+
+html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"][data-dsh-better-left-sidebar-plugin-status="true"] [data-slot="sidebar.footer.action"] {
+  display: contents !important;
+}
+
 html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-slot="sidebar.footer.action"] {
   display: flex !important;
   flex-direction: column;
