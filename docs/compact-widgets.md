@@ -1,70 +1,31 @@
-# Compact rail widgets
+# Built-in rail widgets
 
-Compact rail widgets let a plugin show a small piece of useful information while the Better Left Sidebar navigation is collapsed. The sidebar plugin owns each widget's box, position, order, and enablement; the registering plugin owns the content inside the box.
+Better Left Sidebar includes a clock and a balance widget in its 56px navigation rail. Open **Plugins → Better Left Sidebar → Widgets** to enable, disable or reorder them. Changes apply when you select **Save settings**; **Discard changes** restores the saved values.
 
-## Register through the public slot
+The widgets belong to the split layout while the whole sidebar is natively expanded. They hide when navigation opens or DSH collapses the whole sidebar, then resume when the compact navigation rail returns.
 
-Install a release of Better Left Sidebar that includes the type-only `dsh-better-left-sidebar/slots` entry. The slot is a root-scoped list named `dsh-better-left-sidebar.footer.compact`. Each registration supplies a stable namespaced `id`, a user-facing `label`, and an optional numeric `order` (default `0`). The owner receives only `{ active: boolean }`.
+## Clock
 
-The host declares the slot when it is available. Use `inject` so registration waits for that declaration and is disposed with the registering plugin's fiber:
+Use **Display settings** to choose 24-hour or 12-hour time, Date, Weekday and a theme-following or custom time color. Date and Weekday are independent. The preview follows the draft; the live rail changes on save.
 
-```ts
-import { createElement as h } from 'react'
-import type { CompactFooterOwnerProps, CompactFooterSlotKey } from 'dsh-better-left-sidebar/slots'
+## Balance
 
-const compactSlot: CompactFooterSlotKey = 'dsh-better-left-sidebar.footer.compact'
+**Wallet currency** selects CNY (default) or USD. The widget shows only that currency. These wallets have separate balances; selecting USD does not convert a CNY balance.
 
-function StatusWidget(_props: CompactFooterOwnerProps) {
-  return h('span', null, 'Synced')
-}
+Queries prefer the signed-in DeepSeek Platform account. If it is unavailable or lacks the selected currency, the Host tries the configured official DeepSeek API key. If neither source provides a valid selected balance, the box is empty and takes no rail space. A genuine zero remains visible. The **API balance** label identifies the API-key source.
 
-ctx.slots.inject(compactSlot, () => ctx.slots.register({
-  name: compactSlot,
-  id: 'example.sync-status',
-  label: () => t('syncStatus'),
-  order: 20,
-}, StatusWidget))
-```
-
-The type entry exports declarations only; it does not add a runtime slot constant. It augments `@deepseek-ai/dsh-client-ui-slots`, so that package must be resolvable in your TypeScript project for the slot types to merge. The host filters and renders registrations individually, preserving the slot's `id`, `label`, and `order` metadata. Settings shows each widget by `label`; the secondary **Widget information and developer guide** disclosure lists its `id`. DSH `0.2.1-rc.3` does not attribute a registration made inside an `inject` callback to the registering plugin, so prefix the `id` with your plugin name; that is how users tell widgets apart.
-
-## Keep widget content display-only
-
-Widgets report information. Do not render buttons, links, inputs, menus, popovers, dialogs, or other focusable or interactive elements. The host sets `pointer-events: none` on the widget box so pointer input reaches the sidebar region instead. Keyboard focusability is a registrant responsibility; the host does not strip focusability from content. Provide readable text or an accessible description for non-text visuals.
-
-Use `active` to pause work while the navigation is expanded. The host retains the component instance during temporary or pinned expansion, sets `active` to `false`, and hides the widget list with `hidden` and `inert`. Document visibility is separate: a widget with timers or background work should pause when `document.visibilityState` is not `visible` and refresh when it resumes.
-
-The compact widget list is a navigation region in the rail for both `toolsPosition` settings. In hover mode, hovering or focusing it expands navigation after the normal delay. In click mode, hover does not expand navigation.
+Active widgets query immediately and refresh about one minute after each query completes. Inactivity or a hidden page pauses subsequent refreshes. Compact or scientific notation keeps long numbers readable; accessible labels retain their exact values. Credential resolution and external requests stay on the Host. See [Privacy and data](../README.en.md#privacy-and-data).
 
 ## Widget box
 
-This is the box contract. It is separate from the sidebar's layout preferences.
+Each box uses the rail's full 56px width. Content supplies its height; the host adds no padding or border. The list keeps complete boxes in saved order while they fit above the native bottom controls. The first box that does not fit and those after it are hidden, without a scrollbar. Settings distinguishes **Hidden: not enough space**, inactive, empty and disabled states.
 
-The host gives every widget the full width of the collapsed left rail. That rail is 56 px wide. A widget may use all of it.
+Built-ins are display-only. Their boxes use `pointer-events: none` so the navigation region retains pointer behavior. Hover expansion and the explicit click/touch toggle remain navigation controls rather than widget controls.
 
-The host does not assign a height. The widget's own content sets the box height.
+`src/client/compact-widgets.tsx` owns the private collection, keyed boxes and subscriptions. Navigation expansion retains widget instances with `active:false`; disabling a widget unmounts it. Changing order keeps keyed instances. Clock timers and balance polling honor both activity and document visibility. The host portals into one plugin-owned container and renders no extra native footer DOM. The layout adapter reattaches that container when DSH replaces the sidebar root.
 
-The host does not add padding or a border, and it does not require the widget to draw either. There is no default inner inset and no default outer frame.
+## Upgrade from the 0.1.x public slot
 
-The list still has to sit above the rail's bottom controls. The host measures the boxes and keeps them whole, in the user's order, while they fit in the space that remains. The first box that does not fit, and every box after it, is not shown. The list does not scroll. A widget that renders nothing takes no space, so return `null` when there is nothing to report. Users choose which widgets appear by enabling and ordering them in settings. The settings row distinguishes **Hidden: not enough space** from a disabled widget; changing the draft order or enablement takes effect in the rail only after saving.
+`0.2.0` removes the `dsh-better-left-sidebar/slots` type entry and the `dsh-better-left-sidebar.footer.compact` public slot. Third-party registrations through that interface are no longer consumed. Remove that integration, or remain on `0.1.4` until the registering plugin is updated. Retired ids do not create unloaded-widget settings rows; saved clock and layout preferences remain usable.
 
-The built-in clock (`dsh-better-left-sidebar.clock`) is one widget under this contract. Users set its hour cycle, month/day, weekday, and time color in settings. Month/day and weekday are independent. Its preview uses the same full rail width, with no extra inset.
-
-The host entry lives in DSH's native `sidebar.footer.action` slot but renders only through a portal into a single plugin-owned container. It adds no DOM at the native footer outlet, leaving expanded footer actions in their DSH position. If DSH replaces the sidebar root, the adapter reattaches that same container rather than creating a new one.
-
-## Registration and instance lifecycle
-
-| Event | Host behavior | Widget consequence |
-| --- | --- | --- |
-| Plugin registers while the compact slot is declared | Adds the live registration to the catalog | Rendered when enabled and compact |
-| A new id appears | Places it after saved ids, sorted by registration `order` (ties keep registration order) | Enabled by default until the user saves a preference |
-| Navigation expands, temporarily or pinned | Sends `active: false`; hides the list with `hidden` and `inert` | Instance remains mounted |
-| Navigation compacts | Shows the list and sends `active: true` | Existing instance resumes |
-| User disables the widget | Stops rendering that id | Instance unmounts; registration remains in settings |
-| User enables it again | Renders that id again | A fresh instance mounts |
-| User changes order | Saves the displayed order and reorders keyed boxes | Existing instances remain mounted |
-| Source plugin unloads | Removes its registration | Item disappears; its saved preference remains as “not loaded” |
-| Source plugin registers again | Restores the live registration | Saved enablement and position apply again |
-| A widget throws during render | DSH reports the entry error and abdicates that registration | Only the failed box disappears; settings shows the failure and reason. It returns when the source re-registers. |
-
-Saved ids stay in their saved order. Registrations without a saved id follow them, sorted by `order` and then registration order. Unsaved registrations are enabled by default, including third-party widgets. The settings page edits this list through the plugin's regular save, discard, and conflict flow.
+Third-party footer plugins continue using DSH's native `sidebar.footer.action` contract. The optional **Show compact plugin status** setting reuses their own compact presentation when tools are at Navigation bottom. It does not register them as built-in widgets. See [the compatibility contracts](compatibility.md#integration-contracts) for the rc.3 render-boundary seam.

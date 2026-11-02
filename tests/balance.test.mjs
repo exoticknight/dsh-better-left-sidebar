@@ -35,6 +35,9 @@ test('account totals include bonus wallets exactly; zero and separate currencies
   })
   assert.deepEqual(apiKeyBalance(api), { source: 'api-key', amounts: [{ currency: 'CNY', amount: '0' }] })
   assert.equal(accountBalance({ ...account, value: [{ currency: 'CNY', balance: 'NaN' }] }), null)
+  assert.deepEqual(accountBalance({
+    status: 'ready', value: [{ currency: 'CNY', balance: '1e-3' }], bonusWallets: [{ currency: 'CNY', balance: '.5' }],
+  }), { source: 'account', amounts: [{ currency: 'CNY', amount: '0.501' }] })
   assert.equal(apiKeyBalance({ is_available: true, balance_infos: [] }), null)
 })
 

@@ -24,7 +24,7 @@ function record(value: unknown): Record<string, unknown> | undefined {
 
 function amount(currency: unknown, value: unknown): BalanceAmount | null {
   if ((currency !== 'CNY' && currency !== 'USD') || typeof value !== 'string'
-    || !/^-?\d+(?:\.\d+)?$/.test(value)) return null
+    || !/^-?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(value)) return null
   return { currency, amount: new Big(value).toFixed() }
 }
 
