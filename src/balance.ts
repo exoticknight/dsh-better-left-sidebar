@@ -10,6 +10,11 @@ export interface BalanceSnapshot {
   amounts: BalanceAmount[]
 }
 
+/** Stable CNY → USD order, independent of each provider's response order. */
+function compareCurrency(left: BalanceAmount, right: BalanceAmount): number {
+  return left.currency.localeCompare(right.currency, 'en')
+}
+
 function record(value: unknown): Record<string, unknown> | undefined {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown> : undefined
@@ -34,7 +39,7 @@ export function accountBalance(value: unknown): BalanceSnapshot | null {
   }
   return totals.size ? {
     source: 'account',
-    amounts: [...totals].map(([currency, total]) => ({ currency, amount: total.toFixed() })),
+    amounts: [...totals].map(([currency, total]) => ({ currency, amount: total.toFixed() })).sort(compareCurrency),
   } : null
 }
 
@@ -49,7 +54,7 @@ export function apiKeyBalance(value: unknown): BalanceSnapshot | null {
     amounts.push(parsed)
   }
   // is_available=false is still a successful query, including a real zero.
-  return { source: 'api-key', amounts }
+  return { source: 'api-key', amounts: amounts.sort(compareCurrency) }
 }
 
 /** A failed or unusable primary result falls back; two failures clear prior data. */

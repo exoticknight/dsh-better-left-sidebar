@@ -29,6 +29,19 @@ test('account succeeds first, every unavailable/failed primary falls back, two f
   assert.equal(await queryBalance(async () => null, async () => { throw Error('offline') }), null)
 })
 
+test('currency order stays CNY then USD when upstream wallet order changes', () => {
+  const reversedAccount = { ...account, value: [...account.value].reverse() }
+  assert.deepEqual(accountBalance(reversedAccount), accountBalance(account))
+  const currencies = [
+    { currency: 'CNY', total_balance: '101.44' },
+    { currency: 'USD', total_balance: '0' },
+  ]
+  assert.deepEqual(
+    apiKeyBalance({ is_available: true, balance_infos: [...currencies].reverse() }),
+    apiKeyBalance({ is_available: true, balance_infos: currencies }),
+  )
+})
+
 test('Host registers an exact route, resolves configured credentials, skips nonofficial origins, and disposes', async (t) => {
   const ctx = new Context()
   let handler
