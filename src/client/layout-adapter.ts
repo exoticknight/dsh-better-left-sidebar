@@ -38,6 +38,7 @@ export interface LayoutAnchors {
 export interface LayoutAdapter {
   update(preferences: SidebarPreferences): void
   setCompactWidgets(count: number, active: boolean): void
+  setNavigationToggleReserve(reserve: number): void
   dispose(): void
 }
 
@@ -98,6 +99,7 @@ export function connectLayoutAdapter(
   let measurementObserver: MutationObserver | undefined
   let hostObserver: MutationObserver | undefined
   let resizeObserver: ResizeObserver | undefined
+  let navigationToggleReserve = 0
   let measureFrame = 0
   let warnedFor = new WeakSet<HTMLElement>()
 
@@ -171,6 +173,7 @@ export function connectLayoutAdapter(
     )
     const panelHeight = conversationNavigation ? conversationSizing.panelHeight : panelContentHeight
     const conversationTop = conversationNavigation ? conversationSizing.conversationTop : conversationGlobalTop
+    const toggleReserve = navigationToggleReserve
     const navBottomReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
     const footerReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
     const widgetBoxes = [...compactWidgets.children].filter((child): child is HTMLElement => child instanceof HTMLElement)
@@ -178,14 +181,14 @@ export function connectLayoutAdapter(
     const widgetBoxHeights = compactWidgetsActive && compactWidgetCount > 0
       ? widgetBoxes.map((box) => Math.ceil(box.getBoundingClientRect().height))
       : []
-    const widgetAvailable = Math.max(0, anchors.root.getBoundingClientRect().height - railGlobalTop - footerReserve - 16)
+    const widgetAvailable = Math.max(0, anchors.root.getBoundingClientRect().height - railGlobalTop - footerReserve - toggleReserve - 16)
     const widgetFit = fitCompactWidgets(widgetBoxHeights, COMPACT_WIDGET_GAP, Math.min(COMPACT_WIDGETS_MAX_HEIGHT, widgetAvailable))
     widgetBoxes.forEach((box, index) => box.toggleAttribute(CLIPPED_MARK, index >= widgetFit.visible))
     const widgetHeight = widgetFit.height
-    const widgetBottom = footerReserve + 8
+    const widgetBottom = footerReserve + toggleReserve + 8
     const railBottomReserve = widgetHeight > 0
-      ? footerReserve + widgetHeight + 16
-      : navBottomReserve
+      ? footerReserve + toggleReserve + widgetHeight + 16
+      : navBottomReserve + toggleReserve
 
     anchors.root.style.setProperty('--dsh-better-left-sidebar-chrome', `${chrome}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-session-top', `${sessionTop}px`)
@@ -410,6 +413,12 @@ export function connectLayoutAdapter(
     setCompactWidgets(count, active) {
       compactWidgetCount = Math.max(0, Math.floor(count))
       compactWidgetsActive = active
+      if (current && preferences) scheduleMeasure()
+    },
+    setNavigationToggleReserve(reserve) {
+      const next = Math.max(0, Math.ceil(reserve))
+      if (navigationToggleReserve === next) return
+      navigationToggleReserve = next
       if (current && preferences) scheduleMeasure()
     },
     dispose() {

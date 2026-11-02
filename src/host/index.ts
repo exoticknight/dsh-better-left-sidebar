@@ -7,6 +7,8 @@ import z from '@deepseek-ai/schemastery'
 export const name = __PLUGIN_NAME__
 
 export interface Config {
+  animation: Volatile<'standard' | 'fast' | 'off'>
+  expansion: Volatile<'hover' | 'click'>
   brandPosition: Volatile<'navigation-top' | 'sidebar-top' | 'hidden'>
   globalNavigationPosition: Volatile<'rail' | 'conversation-top'>
   toolsPosition: Volatile<'rail-bottom' | 'conversation-bottom'>
@@ -16,6 +18,15 @@ export interface Config {
 }
 
 export const Config = z.object({
+  animation: z.union([
+    z.const('standard'),
+    z.const('fast'),
+    z.const('off'),
+  ]).default('standard').volatile().description('Sidebar animation speed.'),
+  expansion: z.union([
+    z.const('hover'),
+    z.const('click'),
+  ]).default('hover').volatile().description('How the navigation flyout opens.'),
   brandPosition: z.union([
     z.const('navigation-top'),
     z.const('sidebar-top'),

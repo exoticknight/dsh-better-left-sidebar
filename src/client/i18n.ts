@@ -2,6 +2,16 @@
 export const NAMESPACE = 'dsh-better-left-sidebar'
 
 const en = {
+  navigationBehavior: 'Expansion and animation',
+  expansion: 'Expansion',
+  expandNavigation: 'Expand navigation',
+  closeNavigation: 'Close navigation',
+  animation: 'Animation',
+  hover: 'Hover to expand',
+  click: 'Click to expand',
+  standard: 'Soft',
+  fast: 'Fast',
+  off: 'Off',
   summary: 'Arrange sidebar regions and built-in widgets.',
   compactWidgets: 'Widgets',
   compactWidgetsHint: 'Order by priority; widgets at the top are shown first when space is limited. Changes apply when you save.',
@@ -11,7 +21,7 @@ const en = {
   clockColorCustom: 'Custom color',
   effectPreview: 'Effect preview',
   widgetClipped: 'Hidden: not enough space',
-  widgetInactive: 'Hidden while the sidebar is collapsed',
+  widgetInactive: 'Hidden while the sidebar is collapsed or navigation is expanded',
   widgetEmpty: 'No content',
   widgetEnabled: 'Enabled',
   widgetPendingEnable: 'Enable on save',
@@ -59,6 +69,16 @@ const en = {
 } as const
 
 const zh = {
+  navigationBehavior: '展开与动画',
+  expansion: '展开方式',
+  expandNavigation: '展开导航',
+  closeNavigation: '收起导航',
+  animation: '动画效果',
+  hover: '悬停展开',
+  click: '点击展开',
+  standard: '柔和',
+  fast: '快速',
+  off: '无动画',
   summary: '设置侧栏分区位置和内置小组件。',
   compactWidgets: '小组件',
   compactWidgetsHint: '按优先级排序，空间不足时优先显示靠前的小组件。更改在保存后生效。',
@@ -68,7 +88,7 @@ const zh = {
   clockColorCustom: '自定义颜色',
   effectPreview: '效果预览',
   widgetClipped: '空间不足，暂未显示',
-  widgetInactive: '侧栏收起时暂不显示',
+  widgetInactive: '侧栏收起或导航展开时暂不显示',
   widgetEmpty: '暂无显示内容',
   widgetEnabled: '已启用',
   widgetPendingEnable: '保存后启用',
@@ -117,3 +137,10 @@ const zh = {
 
 export const messages = { en, zh }
 export type MessageKey = keyof typeof en
+
+/** Chinese copy keeps the click toggle readable before DSH binds its locale. */
+export function fallbackTranslate(key: string): string {
+  if (key === 'closeNavigation') return zh.closeNavigation
+  if (key === 'expandNavigation') return zh.expandNavigation
+  return key
+}

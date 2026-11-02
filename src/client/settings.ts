@@ -35,10 +35,14 @@ type BoundPageProps = PageProps & { ctx: Context; compactWidgets: CompactWidgetS
 type FieldStates = Record<string, ReturnType<SettingsFormModel<ConfigValues>['field']>>
 type FormView = { shell: ReturnType<SettingsFormModel<ConfigValues>['shell']>; fields: FieldStates }
 
+const animationValues = ['standard', 'fast', 'off'] as const
+const expansionValues = ['hover', 'click'] as const
 const brandValues = ['navigation-top', 'sidebar-top', 'hidden'] as const
 const globalValues = ['rail', 'conversation-top'] as const
 const toolsValues = ['rail-bottom', 'conversation-bottom'] as const
 const fields = [
+  choiceField('animation', animationValues),
+  choiceField('expansion', expansionValues),
   choiceField('brandPosition', brandValues),
   choiceField('globalNavigationPosition', globalValues),
   choiceField('toolsPosition', toolsValues),
@@ -98,6 +102,7 @@ export function connectSettings(
   ctx: Context,
   compactWidgets: CompactWidgetSurface,
   onPreferences: (value: unknown) => void,
+  onTranslate: (translate: (key: string) => string) => void,
 ): void {
   ctx.inject(['locale', 'configForms'], (settingsCtx) => {
     const form = settingsCtx.configForms.get<ConfigValues>(PACKAGE)
@@ -110,6 +115,11 @@ export function connectSettings(
       () => settingsCtx.locale.register(NAMESPACE, messages),
       'better-left-sidebar: settings copy',
     )
+    settingsCtx.effect(() => {
+      const sync = (): void => onTranslate(settingsCtx.locale.bind(NAMESPACE) as unknown as (key: string) => string)
+      sync()
+      return settingsCtx.locale.subscribe(sync)
+    }, 'better-left-sidebar: toggle copy')
     settingsCtx.effect(
       () => settingsCtx.slots.inject('plugins.bundle.config', () => settingsCtx.slots.register(
         { name: 'plugins.bundle.config', key: PACKAGE, locale: NAMESPACE },
@@ -141,6 +151,8 @@ function SettingsPage(props: BoundPageProps) {
   const savedSnapshot = scope.getSnapshot()
   const draft = normalizePreferences({
     ...savedSnapshot.value,
+    animation: view.fields.animation?.text,
+    expansion: view.fields.expansion?.text,
     brandPosition: view.fields.brandPosition?.text,
     globalNavigationPosition: view.fields.globalNavigationPosition?.text,
     toolsPosition: view.fields.toolsPosition?.text,
@@ -261,6 +273,24 @@ function SettingsPage(props: BoundPageProps) {
             onChange: (value: string) => setChoice('toolsPosition', value as ToolsPosition),
           })),
         h(LayoutPreview, { title: t('effectPreview'), preferences: draft, t })),
+      h('section', { className: 'dsh-better-left-sidebar-settings-group' },
+        h('h3', null, t('navigationBehavior')),
+        h(ChoiceRow, {
+          name: 'dsh-better-left-sidebar-expansion',
+          label: t('expansion'),
+          value: view.fields.expansion!.text,
+          disabled,
+          options: expansionValues.map((value) => ({ value, label: t(value) })),
+          onChange: (value: string) => actions.edit('expansion', value),
+        }),
+        h(ChoiceRow, {
+          name: 'dsh-better-left-sidebar-animation',
+          label: t('animation'),
+          value: view.fields.animation!.text,
+          disabled,
+          options: animationValues.map((value) => ({ value, label: t(value) })),
+          onChange: (value: string) => actions.edit('animation', value),
+        })),
       widgetSection),
     view.shell.dirty ? h('button', {
       type: 'button',
