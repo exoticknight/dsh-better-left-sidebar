@@ -32,7 +32,7 @@ export function apply(ctx: ClientContext): void {
     const nativeFooter = connectNativeFooterState(ctx)
     const interaction = connectInteraction((reserve) => layout?.setNavigationToggleReserve(reserve))
     const compactWidgets = connectCompactWidgets(ctx, (count, active) => layout?.setCompactWidgets(count, active))
-    interaction.setCompactWidgetsActive((active) => {
+    interaction.setCompactListener((active) => {
       compactWidgets.setActive(active)
       nativeFooter.setCompact(active)
     })
