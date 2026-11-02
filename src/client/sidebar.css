@@ -1219,6 +1219,9 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-balance-label {
 }
 
 html.dsh-better-left-sidebar .dsh-better-left-sidebar-balance-amount {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--dsw-alias-label-primary);
   font-size: 12px;
   font-weight: 600;

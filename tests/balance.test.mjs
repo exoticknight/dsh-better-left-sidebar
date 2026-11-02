@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { Context } from '@deepseek-ai/cordis'
 import { build } from 'esbuild'
-import { normalizeBalanceCurrency, selectBalanceCurrency } from '../src/balance-display.ts'
+import { formatBalanceAmount, normalizeBalanceCurrency, selectBalanceCurrency } from '../src/balance-display.ts'
 import * as plugin from '../lib/index.js'
 
 // Resolve the same .js-to-TypeScript module graph as the production build.
@@ -15,6 +15,19 @@ const account = {
   bonusWallets: [{ currency: 'CNY', balance: '0.2' }],
 }
 const api = { is_available: false, balance_infos: [{ currency: 'CNY', total_balance: '0.00' }] }
+
+test('long and extreme balances stay compact and never become infinity or a fabricated zero', () => {
+  for (const locale of ['zh', 'en']) for (const currency of ['CNY', 'USD']) {
+    for (const amount of ['-9999.99', '123456789012345678901234567890.12', '1' + '0'.repeat(320), '-0.' + '0'.repeat(400) + '1']) {
+      const text = formatBalanceAmount(amount, currency, locale)
+      assert.doesNotMatch(text, /∞|NaN/)
+      assert.ok(text.replace(/[^\u0000-\u00ff]/g, 'xx').length <= 8, `${locale}/${currency}: ${text}`)
+      assert.match(text, /[1-9]/)
+    }
+  }
+  assert.equal(formatBalanceAmount('123.45', 'USD', 'en'), '$123.45')
+  assert.equal(formatBalanceAmount('0', 'USD', 'en'), '$0.00')
+})
 
 test('account totals include bonus wallets exactly; zero and separate currencies remain valid', () => {
   assert.deepEqual(accountBalance(account), {

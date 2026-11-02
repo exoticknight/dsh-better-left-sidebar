@@ -244,7 +244,8 @@ function SettingsPage(props: BoundPageProps) {
                   disabled,
                   options: BALANCE_CURRENCIES.map((value) => ({ value, label: t(value === 'CNY' ? 'balanceCny' : 'balanceUsd') })),
                   onChange: (value: string) => actions.edit('balanceCurrency', value),
-                })) : null))))
+                }),
+                h('p', { className: 'dsh-better-left-sidebar-compact-widgets-hint' }, t('balanceCurrencyHint'))) : null))))
 
   return h(SettingsForm, {
     labels: {

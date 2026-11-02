@@ -1,7 +1,7 @@
 import type { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { createElement as h, useEffect, useState, useSyncExternalStore } from 'react'
 import type { BalanceSnapshot } from '../balance.js'
-import { selectBalanceCurrency } from '../balance-display.js'
+import { formatBalanceAmount, selectBalanceCurrency } from '../balance-display.js'
 import type { BalanceCurrency } from '../balance-display.js'
 import { NAMESPACE } from './i18n.js'
 
@@ -67,16 +67,4 @@ export function createBalanceWidget(locale: LocaleRuntime, read: BalanceReader, 
         'aria-hidden': true,
       }, formatBalanceAmount(amount.amount, amount.currency, localeId)))
   }
-}
-
-/** Keep sub-cent credit distinguishable from zero within the narrow rail. */
-export function formatBalanceAmount(amount: string, currency: string, locale: string): string {
-  const magnitude = Math.abs(Number(amount))
-  const tiny = magnitude > 0 && magnitude < 0.001
-  return new Intl.NumberFormat(locale, {
-    style: 'currency', currency, currencyDisplay: 'narrowSymbol',
-    notation: magnitude >= 10_000 ? 'compact' : tiny ? 'scientific' : 'standard',
-    minimumFractionDigits: tiny ? 0 : 2,
-    maximumFractionDigits: tiny ? 1 : magnitude > 0 && magnitude < 0.01 ? 3 : 2,
-  }).format(Number(amount))
 }
