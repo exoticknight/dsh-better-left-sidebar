@@ -1,0 +1,135 @@
+import assert from 'node:assert/strict'
+import test from 'node:test'
+import { Context } from '@deepseek-ai/cordis'
+import { build } from 'esbuild'
+import { formatBalanceAmount, normalizeBalanceCurrency, selectBalanceCurrency } from '../src/balance-display.ts'
+import * as plugin from '../lib/index.js'
+
+// Resolve the same .js-to-TypeScript module graph as the production build.
+const compiled = await build({ entryPoints: ['src/balance.ts'], bundle: true, platform: 'node', format: 'esm', write: false })
+const { accountBalance, apiKeyBalance, queryBalance } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString('base64')}`)
+
+const account = {
+  status: 'ready',
+  value: [{ currency: 'CNY', balance: '0.1' }, { currency: 'USD', balance: '2' }],
+  bonusWallets: [{ currency: 'CNY', balance: '0.2' }],
+}
+const api = { is_available: false, balance_infos: [{ currency: 'CNY', total_balance: '0.00' }] }
+
+test('long and extreme balances stay compact and never become infinity or a fabricated zero', () => {
+  for (const locale of ['zh', 'en']) for (const currency of ['CNY', 'USD']) {
+    for (const amount of ['-9999.99', '123456789012345678901234567890.12', '1' + '0'.repeat(320), '-0.' + '0'.repeat(400) + '1']) {
+      const text = formatBalanceAmount(amount, currency, locale)
+      assert.doesNotMatch(text, /∞|NaN/)
+      assert.ok(text.replace(/[^\u0000-\u00ff]/g, 'xx').length <= 8, `${locale}/${currency}: ${text}`)
+      assert.match(text, /[1-9]/)
+    }
+  }
+  assert.equal(formatBalanceAmount('123.45', 'USD', 'en'), '$123.45')
+  assert.equal(formatBalanceAmount('0', 'USD', 'en'), '$0.00')
+})
+
+test('account totals include bonus wallets exactly; zero and separate currencies remain valid', () => {
+  assert.deepEqual(accountBalance(account), {
+    source: 'account', amounts: [{ currency: 'CNY', amount: '0.3' }, { currency: 'USD', amount: '2' }],
+  })
+  assert.deepEqual(apiKeyBalance(api), { source: 'api-key', amounts: [{ currency: 'CNY', amount: '0' }] })
+  assert.equal(accountBalance({ ...account, value: [{ currency: 'CNY', balance: 'NaN' }] }), null)
+  assert.equal(apiKeyBalance({ is_available: true, balance_infos: [] }), null)
+})
+
+test('account succeeds first, every unavailable/failed primary falls back, two failures clear the result', async () => {
+  assert.equal((await queryBalance(async () => account, async () => assert.fail('must not query API key'))).source, 'account')
+  for (const primary of [null, { status: 'failed' }, { status: 'ready', value: [], bonusWallets: [] }]) {
+    assert.equal((await queryBalance(async () => primary, async () => api)).source, 'api-key')
+  }
+  assert.equal((await queryBalance(async () => { throw Error('offline') }, async () => api)).source, 'api-key')
+  assert.equal(await queryBalance(async () => null, async () => { throw Error('offline') }), null)
+})
+
+test('currency order stays CNY then USD when upstream wallet order changes', () => {
+  const reversedAccount = { ...account, value: [...account.value].reverse() }
+  assert.deepEqual(accountBalance(reversedAccount), accountBalance(account))
+  const currencies = [
+    { currency: 'CNY', total_balance: '101.44' },
+    { currency: 'USD', total_balance: '0' },
+  ]
+  assert.deepEqual(
+    apiKeyBalance({ is_available: true, balance_infos: [...currencies].reverse() }),
+    apiKeyBalance({ is_available: true, balance_infos: currencies }),
+  )
+})
+
+test('currency preference defaults to CNY and selects only one exact wallet including zero', async () => {
+  assert.equal(normalizeBalanceCurrency(undefined), 'CNY')
+  assert.equal(normalizeBalanceCurrency('EUR'), 'CNY')
+  assert.equal(normalizeBalanceCurrency('USD'), 'USD')
+  assert.deepEqual(selectBalanceCurrency(accountBalance(account), 'USD'), {
+    source: 'account', amounts: [{ currency: 'USD', amount: '2' }],
+  })
+  assert.deepEqual(selectBalanceCurrency(apiKeyBalance(api), 'CNY'), {
+    source: 'api-key', amounts: [{ currency: 'CNY', amount: '0' }],
+  })
+  assert.equal(selectBalanceCurrency(apiKeyBalance(api), 'USD'), null)
+  const usdApi = { is_available: true, balance_infos: [{ currency: 'USD', total_balance: '3.5' }] }
+  assert.deepEqual(await queryBalance(async () => null, async () => usdApi, 'USD'), {
+    source: 'api-key', amounts: [{ currency: 'USD', amount: '3.5' }],
+  })
+  const onlyCny = { ...account, value: account.value.filter(({ currency }) => currency === 'CNY') }
+  assert.equal((await queryBalance(async () => onlyCny, async () => usdApi, 'USD')).source, 'api-key')
+  assert.equal(await queryBalance(async () => onlyCny, async () => api, 'USD'), null)
+})
+
+test('Host registers an exact route, resolves configured credentials, skips nonofficial origins, and disposes', async (t) => {
+  const ctx = new Context()
+  let handler
+  let disposed = false
+  ctx.provide('connection', { fetch: { register(route) {
+    assert.equal(route.path, '/api/betterLeftSidebar/balance')
+    assert.deepEqual(route.methods, ['POST'])
+    assert.equal(route.requestBody, 'buffered')
+    handler = route.fetch
+    return async () => { disposed = true }
+  } } })
+  ctx.provide('deepseekAccount', { getBalance: async () => account })
+  ctx.provide('llm', { listConfigurableProviders: () => [{ provider: 'deepseek-official', settingsNs: 'custom-entry-id', settingsPath: ['profile'] }] })
+  let baseURL = 'https://api.deepseek.com/anthropic'
+  ctx.provide('settings', { describe: () => [{ ns: 'custom-entry-id', value: { profile: { baseURL, apiKeyEnv: 'CUSTOM_KEY_REF' } } }] })
+  let resolved = 0
+  ctx.provide('credentials', { resolve: async (ref) => {
+    resolved++
+    assert.equal(ref, 'CUSTOM_KEY_REF')
+    return { value: 'fixture-key' }
+  } })
+  const fetch = t.mock.method(globalThis, 'fetch', async (url, init) => {
+    assert.equal(url, 'https://api.deepseek.com/user/balance')
+    assert.equal(init.redirect, 'error')
+    assert.equal(init.headers.Authorization, 'Bearer fixture-key')
+    return Response.json(api)
+  })
+  const fiber = await ctx.plugin(plugin, {})
+  t.after(async () => { await fiber.dispose() })
+  const request = (method, currency) => new Request('http://localhost/api/betterLeftSidebar/balance', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'client-request', rpcId: 'balance-test', method, payload: { locale: 'zh', timezoneOffsetSeconds: 28800, currency } }),
+  })
+  const call = async (currency) => {
+    const response = await handler(request('betterLeftSidebar/balance', currency))
+    const message = await response.json()
+    assert.equal(message.rpcId, 'balance-test')
+    return message.result
+  }
+  assert.equal((await call()).value.source, 'account')
+  assert.deepEqual((await call('USD')).value.amounts, [{ currency: 'USD', amount: '2' }])
+  assert.equal(resolved, 0)
+  assert.equal(fetch.mock.callCount(), 0)
+  ctx.set('deepseekAccount', { getBalance: async () => null })
+  assert.deepEqual((await call()).value, apiKeyBalance(api))
+  assert.equal(resolved, 1)
+  baseURL = 'https://gateway.example/anthropic'
+  assert.equal((await call()).value, null)
+  assert.equal(resolved, 1, 'skip credential resolution for unofficial routes')
+  assert.equal((await handler(request('wrong/endpoint'))).status, 400)
+  await fiber.dispose()
+  assert.equal(disposed, true)
+})

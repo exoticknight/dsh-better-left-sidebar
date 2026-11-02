@@ -1201,6 +1201,34 @@ html.dsh-better-left-sidebar div:has(> .dsh-better-left-sidebar-layout-cancel) >
   }
 }
 
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-balance {
+  display: flex;
+  width: 100%;
+  box-sizing: border-box;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 1px;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-balance-label {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  line-height: 14px;
+}
+
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-balance-amount {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
 @media (max-width: 600px) {
   html.dsh-better-left-sidebar .dsh-better-left-sidebar-settings-heading {
     align-items: flex-start;

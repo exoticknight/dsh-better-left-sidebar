@@ -3,6 +3,7 @@
 // requested with ctx.inject so the plugin degrades when one is missing.
 import type { Context, Volatile } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
+import { connectBalance } from './balance.js'
 
 export const name = __PLUGIN_NAME__
 
@@ -16,6 +17,7 @@ export interface Config {
   layoutVersion: Volatile<1 | undefined>
   compactWidgets: Volatile<{ id: string; enabled: boolean }[]>
   clock: Volatile<{ hourCycle: 'h23' | 'h12'; monthDay: boolean; weekday: boolean; color: string }>
+  balanceCurrency: Volatile<'CNY' | 'USD'>
 }
 
 export const Config = z.object({
@@ -47,6 +49,7 @@ export const Config = z.object({
     id: z.string(),
     enabled: z.boolean(),
   })).default([]).volatile().description('Compact footer widget order and enablement.'),
+  balanceCurrency: z.union([z.const('CNY'), z.const('USD')]).default('CNY').volatile().description('Currency shown by the balance widget.'),
   clock: z.object({
     hourCycle: z.union([z.const('h23'), z.const('h12')]).default('h23'),
     monthDay: z.boolean().default(true),
@@ -60,6 +63,7 @@ export const Config = z.object({
 export const inject: string[] = []
 
 export function apply(ctx: Context, _config: Config) {
+  connectBalance(ctx)
   // Everything registered in an effect is disposed when the plugin unloads.
   ctx.effect(() => {
     console.info(`[${name}] ${__PLUGIN_VERSION__} loaded`)

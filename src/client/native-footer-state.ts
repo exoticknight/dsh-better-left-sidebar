@@ -36,8 +36,15 @@ export function connectNativeFooterState(ctx: Context) {
     let stopRefresh: (() => void) | undefined
 
     const refresh = (): void => {
+      const entries = ctx.slots.entries('sidebar')
+      const live = new Set(entries)
+      for (const [entry, value] of wrapped) {
+        if (live.has(entry)) continue
+        if (entry.component === value.wrapper) entry.component = value.original
+        wrapped.delete(entry)
+      }
       let changed = false
-      for (const entry of ctx.slots.entries('sidebar')) {
+      for (const entry of entries) {
         if (!entry.children?.['sidebar.footer.action'] || wrapped.has(entry)) continue
         const Original = entry.component as ComponentType<SidebarRootComponentProps>
         function SidebarWithFooterState(props: SidebarRootComponentProps) {
