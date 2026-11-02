@@ -8,6 +8,7 @@ import { credentialRef } from '@deepseek-ai/dsh-credentials'
 import { launchEnvironmentOf } from '@deepseek-ai/dsh-launch-environment'
 import { APP_IDENTITY } from '@deepseek-ai/dsh-llm'
 import { queryBalance } from '../balance.js'
+import { normalizeBalanceCurrency } from '../balance-display.js'
 
 /** Reuse the configured official route, including its launch-time URL override. */
 export async function queryApiKeyBalance(ctx: Context, signal: AbortSignal): Promise<unknown> {
@@ -65,6 +66,7 @@ export function connectBalance(ctx: Context): void {
             signal.throwIfAborted()
             return queryApiKeyBalance(host, signal)
           },
+          normalizeBalanceCurrency(input.currency),
         )
         return Response.json({ type: 'server-response', rpcId, result: { ok: true, value: result } })
       },

@@ -4,6 +4,7 @@ import { normalizeClockDisplay } from '../clock-display.js'
 import { DEFAULT_PREFERENCES, normalizePreferences } from '../preferences.js'
 import type { SidebarPreferences } from '../preferences.js'
 import type { BalanceSnapshot } from '../balance.js'
+import { normalizeBalanceCurrency } from '../balance-display.js'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
 import { connectInteraction } from './interaction.js'
 import { fallbackTranslate } from './i18n.js'
@@ -33,11 +34,12 @@ export function apply(ctx: ClientContext): void {
     let layout: LayoutAdapter | undefined
     const nativeFooter = connectNativeFooterState(ctx)
     const interaction = connectInteraction((reserve) => layout?.setNavigationToggleReserve(reserve))
-    const compactWidgets = connectCompactWidgets(ctx, (count, active) => layout?.setCompactWidgets(count, active), async (signal) => {
+    const compactWidgets = connectCompactWidgets(ctx, (count, active) => layout?.setCompactWidgets(count, active), async (signal, currency) => {
       const connection = ctx.get('connection') as unknown as ConnectionHandle
       const result = await connection.rpc.call('/api', 'betterLeftSidebar/balance', {
         locale: ctx.locale.getSnapshot().active,
         timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60,
+        currency,
       }, signal)
       return result.ok ? result.value as BalanceSnapshot | null : null
     })
@@ -52,6 +54,7 @@ export function apply(ctx: ClientContext): void {
       const config = value && typeof value === 'object' ? value as Record<string, unknown> : {}
       compactWidgets.setPreferences(validateCompactWidgetPreferences(config.compactWidgets))
       compactWidgets.setClock(normalizeClockDisplay(config.clock))
+      compactWidgets.setBalanceCurrency(normalizeBalanceCurrency(config.balanceCurrency))
       layout.update(preferences)
       nativeFooter.update(preferences)
       interaction.setPreferences(preferences)

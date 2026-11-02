@@ -17,6 +17,7 @@ export interface Config {
   layoutVersion: Volatile<1 | undefined>
   compactWidgets: Volatile<{ id: string; enabled: boolean }[]>
   clock: Volatile<{ hourCycle: 'h23' | 'h12'; monthDay: boolean; weekday: boolean; color: string }>
+  balanceCurrency: Volatile<'CNY' | 'USD'>
 }
 
 export const Config = z.object({
@@ -48,6 +49,7 @@ export const Config = z.object({
     id: z.string(),
     enabled: z.boolean(),
   })).default([]).volatile().description('Compact footer widget order and enablement.'),
+  balanceCurrency: z.union([z.const('CNY'), z.const('USD')]).default('CNY').volatile().description('Currency shown by the balance widget.'),
   clock: z.object({
     hourCycle: z.union([z.const('h23'), z.const('h12')]).default('h23'),
     monthDay: z.boolean().default(true),

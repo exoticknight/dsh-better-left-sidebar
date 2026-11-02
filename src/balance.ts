@@ -1,4 +1,6 @@
 import Big from 'big.js'
+import { selectBalanceCurrency } from './balance-display.js'
+import type { BalanceCurrency } from './balance-display.js'
 
 export interface BalanceAmount {
   currency: 'CNY' | 'USD'
@@ -61,13 +63,16 @@ export function apiKeyBalance(value: unknown): BalanceSnapshot | null {
 export async function queryBalance(
   account: () => Promise<unknown>,
   apiKey: () => Promise<unknown>,
+  currency?: BalanceCurrency,
 ): Promise<BalanceSnapshot | null> {
   try {
-    const result = accountBalance(await account())
+    const snapshot = accountBalance(await account())
+    const result = currency ? selectBalanceCurrency(snapshot, currency) : snapshot
     if (result) return result
   } catch { /* The independent API-key wallet can still be available. */ }
   try {
-    return apiKeyBalance(await apiKey())
+    const snapshot = apiKeyBalance(await apiKey())
+    return currency ? selectBalanceCurrency(snapshot, currency) : snapshot
   } catch {
     return null
   }

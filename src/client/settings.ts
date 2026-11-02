@@ -12,6 +12,7 @@ import { CLOCK_WIDGET_ID, clockLines, normalizeClockDisplay, toClockConfig } fro
 import type { ClockDisplay } from '../clock-display.js'
 import { ClockFace, useMinuteClock } from './clock.js'
 import { BALANCE_WIDGET_ID } from './balance.js'
+import { BALANCE_CURRENCIES } from '../balance-display.js'
 import { DEFAULT_PREFERENCES, normalizePreferences } from '../preferences.js'
 import type { BrandPosition, GlobalNavigationPosition, SidebarPreferences, ToolsPosition } from '../preferences.js'
 import type { CompactWidgetCatalogEntry, CompactWidgetPresentation, CompactWidgetSurface } from './compact-widgets.js'
@@ -54,6 +55,7 @@ const fields = [
   },
   compactWidgetField(),
   clockField(),
+  choiceField('balanceCurrency', BALANCE_CURRENCIES),
   {
     field: 'layoutVersion',
     format: (value: unknown) => value === 1 ? '1' : '',
@@ -234,7 +236,15 @@ function SettingsPage(props: BoundPageProps) {
                   t, disabled, display: clockDraft, caption: t('effectPreview'),
                   locale: props.locale, onChange: writeClock,
                 }))
-              : null))))
+              : row.id === BALANCE_WIDGET_ID ? h('div', { className: 'dsh-better-left-sidebar-widget-options' },
+                h(ChoiceRow, {
+                  name: 'dsh-better-left-sidebar-balance-currency',
+                  label: t('balanceCurrency'),
+                  value: view.fields.balanceCurrency!.text,
+                  disabled,
+                  options: BALANCE_CURRENCIES.map((value) => ({ value, label: t(value === 'CNY' ? 'balanceCny' : 'balanceUsd') })),
+                  onChange: (value: string) => actions.edit('balanceCurrency', value),
+                })) : null))))
 
   return h(SettingsForm, {
     labels: {

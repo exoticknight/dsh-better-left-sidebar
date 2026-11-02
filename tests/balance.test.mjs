@@ -1,8 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { Context } from '@deepseek-ai/cordis'
-import { accountBalance, apiKeyBalance, queryBalance } from '../src/balance.ts'
+import { build } from 'esbuild'
+import { normalizeBalanceCurrency, selectBalanceCurrency } from '../src/balance-display.ts'
 import * as plugin from '../lib/index.js'
+
+// Resolve the same .js-to-TypeScript module graph as the production build.
+const compiled = await build({ entryPoints: ['src/balance.ts'], bundle: true, platform: 'node', format: 'esm', write: false })
+const { accountBalance, apiKeyBalance, queryBalance } = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString('base64')}`)
 
 const account = {
   status: 'ready',
@@ -42,6 +47,26 @@ test('currency order stays CNY then USD when upstream wallet order changes', () 
   )
 })
 
+test('currency preference defaults to CNY and selects only one exact wallet including zero', async () => {
+  assert.equal(normalizeBalanceCurrency(undefined), 'CNY')
+  assert.equal(normalizeBalanceCurrency('EUR'), 'CNY')
+  assert.equal(normalizeBalanceCurrency('USD'), 'USD')
+  assert.deepEqual(selectBalanceCurrency(accountBalance(account), 'USD'), {
+    source: 'account', amounts: [{ currency: 'USD', amount: '2' }],
+  })
+  assert.deepEqual(selectBalanceCurrency(apiKeyBalance(api), 'CNY'), {
+    source: 'api-key', amounts: [{ currency: 'CNY', amount: '0' }],
+  })
+  assert.equal(selectBalanceCurrency(apiKeyBalance(api), 'USD'), null)
+  const usdApi = { is_available: true, balance_infos: [{ currency: 'USD', total_balance: '3.5' }] }
+  assert.deepEqual(await queryBalance(async () => null, async () => usdApi, 'USD'), {
+    source: 'api-key', amounts: [{ currency: 'USD', amount: '3.5' }],
+  })
+  const onlyCny = { ...account, value: account.value.filter(({ currency }) => currency === 'CNY') }
+  assert.equal((await queryBalance(async () => onlyCny, async () => usdApi, 'USD')).source, 'api-key')
+  assert.equal(await queryBalance(async () => onlyCny, async () => api, 'USD'), null)
+})
+
 test('Host registers an exact route, resolves configured credentials, skips nonofficial origins, and disposes', async (t) => {
   const ctx = new Context()
   let handler
@@ -71,17 +96,18 @@ test('Host registers an exact route, resolves configured credentials, skips nono
   })
   const fiber = await ctx.plugin(plugin, {})
   t.after(async () => { await fiber.dispose() })
-  const request = (method) => new Request('http://localhost/api/betterLeftSidebar/balance', {
+  const request = (method, currency) => new Request('http://localhost/api/betterLeftSidebar/balance', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'client-request', rpcId: 'balance-test', method, payload: { locale: 'zh', timezoneOffsetSeconds: 28800 } }),
+    body: JSON.stringify({ type: 'client-request', rpcId: 'balance-test', method, payload: { locale: 'zh', timezoneOffsetSeconds: 28800, currency } }),
   })
-  const call = async () => {
-    const response = await handler(request('betterLeftSidebar/balance'))
+  const call = async (currency) => {
+    const response = await handler(request('betterLeftSidebar/balance', currency))
     const message = await response.json()
     assert.equal(message.rpcId, 'balance-test')
     return message.result
   }
   assert.equal((await call()).value.source, 'account')
+  assert.deepEqual((await call('USD')).value.amounts, [{ currency: 'USD', amount: '2' }])
   assert.equal(resolved, 0)
   assert.equal(fetch.mock.callCount(), 0)
   ctx.set('deepseekAccount', { getBalance: async () => null })

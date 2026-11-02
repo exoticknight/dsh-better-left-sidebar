@@ -10,6 +10,7 @@ import type { CompactWidgetPreference } from './compact-widget-preferences.js'
 import { createClockWidget } from './clock.js'
 import { BALANCE_WIDGET_ID, createBalanceWidget } from './balance.js'
 import type { BalanceReader } from './balance.js'
+import type { BalanceCurrency } from '../balance-display.js'
 import { NAMESPACE } from './i18n.js'
 
 export interface CompactWidgetSurface {
@@ -19,6 +20,7 @@ export interface CompactWidgetSurface {
   setActive(active: boolean): void
   setPreferences(preferences: readonly CompactWidgetPreference[]): void
   setClock(display: ClockDisplay): void
+  setBalanceCurrency(currency: BalanceCurrency): void
   subscribeCatalog(listener: () => void): () => void
   getCatalogVersion(): number
   getCatalog(): CompactWidgetCatalogEntry[]
@@ -42,6 +44,7 @@ export function connectCompactWidgets(ctx: Context, onChange: (count: number, ac
   let active = false
   let preferences: readonly CompactWidgetPreference[] = []
   let clockDisplay: ClockDisplay = DEFAULT_CLOCK_DISPLAY
+  let balanceCurrency: BalanceCurrency = 'CNY'
   let version = 0
   const listeners = new Set<() => void>()
   const subscribe = (listener: () => void): (() => void) => {
@@ -56,7 +59,7 @@ export function connectCompactWidgets(ctx: Context, onChange: (count: number, ac
   }, {
     id: BALANCE_WIDGET_ID,
     label: () => ctx.locale.bind(NAMESPACE)('balance'),
-    render: createBalanceWidget(ctx.locale, readBalance),
+    render: createBalanceWidget(ctx.locale, readBalance, { subscribe, getSnapshot: () => balanceCurrency }),
   }]
   const ordered = () => orderCompactWidgetEntries(widgets, preferences)
   const count = (): number => ordered().filter(({ enabled }) => enabled).length
@@ -124,6 +127,11 @@ export function connectCompactWidgets(ctx: Context, onChange: (count: number, ac
     },
     setClock(next) {
       clockDisplay = normalizeClockDisplay(next)
+      publish()
+    },
+    setBalanceCurrency(next) {
+      if (next === balanceCurrency) return
+      balanceCurrency = next
       publish()
     },
     subscribeCatalog: subscribe,
