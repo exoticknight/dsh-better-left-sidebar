@@ -8,6 +8,8 @@ import type { ClockDisplay } from '../clock-display.js'
 import { orderCompactWidgetEntries } from './compact-widget-preferences.js'
 import type { CompactWidgetPreference } from './compact-widget-preferences.js'
 import { createClockWidget } from './clock.js'
+import { BALANCE_WIDGET_ID, createBalanceWidget } from './balance.js'
+import type { BalanceReader } from './balance.js'
 import { NAMESPACE } from './i18n.js'
 
 export interface CompactWidgetSurface {
@@ -34,7 +36,7 @@ export interface CompactWidgetCatalogEntry {
 }
 
 /** First-party widgets share a private collection, not a public DSH slot. */
-export function connectCompactWidgets(ctx: Context, onChange: (count: number, active: boolean) => void): CompactWidgetSurface {
+export function connectCompactWidgets(ctx: Context, onChange: (count: number, active: boolean) => void, readBalance: BalanceReader): CompactWidgetSurface {
   const container = document.createElement('div')
   container.dataset.dshBetterLeftSidebarRegion = 'compact-widgets'
   let active = false
@@ -51,6 +53,10 @@ export function connectCompactWidgets(ctx: Context, onChange: (count: number, ac
     id: CLOCK_WIDGET_ID,
     label: () => ctx.locale.bind(NAMESPACE)('clock'),
     render: createClockWidget(ctx.locale, { subscribe, getSnapshot: () => clockDisplay }),
+  }, {
+    id: BALANCE_WIDGET_ID,
+    label: () => ctx.locale.bind(NAMESPACE)('balance'),
+    render: createBalanceWidget(ctx.locale, readBalance),
   }]
   const ordered = () => orderCompactWidgetEntries(widgets, preferences)
   const count = (): number => ordered().filter(({ enabled }) => enabled).length

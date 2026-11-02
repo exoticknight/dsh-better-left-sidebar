@@ -3,6 +3,8 @@ import css from './sidebar.css'
 import { normalizeClockDisplay } from '../clock-display.js'
 import { DEFAULT_PREFERENCES, normalizePreferences } from '../preferences.js'
 import type { SidebarPreferences } from '../preferences.js'
+import type { BalanceSnapshot } from '../balance.js'
+import type { ConnectionHandle } from '@deepseek-ai/dsh-client-connection/client'
 import { connectInteraction } from './interaction.js'
 import { fallbackTranslate } from './i18n.js'
 import { connectLayoutAdapter } from './layout-adapter.js'
@@ -14,7 +16,7 @@ import type { LayoutAdapter } from './layout-adapter.js'
 import { validateCompactWidgetPreferences } from './compact-widget-preferences.js'
 
 /** Adapt DSH-owned navigation surfaces without replacing their slot owners. */
-export const inject: string[] = ['slots', 'locale', 'configForms']
+export const inject: string[] = ['slots', 'locale', 'configForms', 'connection']
 
 export function apply(ctx: ClientContext): void {
   let preferences: SidebarPreferences = DEFAULT_PREFERENCES
@@ -31,7 +33,14 @@ export function apply(ctx: ClientContext): void {
     let layout: LayoutAdapter | undefined
     const nativeFooter = connectNativeFooterState(ctx)
     const interaction = connectInteraction((reserve) => layout?.setNavigationToggleReserve(reserve))
-    const compactWidgets = connectCompactWidgets(ctx, (count, active) => layout?.setCompactWidgets(count, active))
+    const compactWidgets = connectCompactWidgets(ctx, (count, active) => layout?.setCompactWidgets(count, active), async (signal) => {
+      const connection = ctx.get('connection') as unknown as ConnectionHandle
+      const result = await connection.rpc.call('/api', 'betterLeftSidebar/balance', {
+        locale: ctx.locale.getSnapshot().active,
+        timezoneOffsetSeconds: -new Date().getTimezoneOffset() * 60,
+      }, signal)
+      return result.ok ? result.value as BalanceSnapshot | null : null
+    })
     interaction.setCompactListener((active) => {
       compactWidgets.setActive(active)
       nativeFooter.setCompact(active)

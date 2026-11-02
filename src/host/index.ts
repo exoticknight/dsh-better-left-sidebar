@@ -3,6 +3,7 @@
 // requested with ctx.inject so the plugin degrades when one is missing.
 import type { Context, Volatile } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
+import { connectBalance } from './balance.js'
 
 export const name = __PLUGIN_NAME__
 
@@ -60,6 +61,7 @@ export const Config = z.object({
 export const inject: string[] = []
 
 export function apply(ctx: Context, _config: Config) {
+  connectBalance(ctx)
   // Everything registered in an effect is disposed when the plugin unloads.
   ctx.effect(() => {
     console.info(`[${name}] ${__PLUGIN_VERSION__} loaded`)

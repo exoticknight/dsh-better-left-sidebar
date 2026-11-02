@@ -11,6 +11,7 @@ import { createElement as h, useCallback, useEffect, useMemo, useSyncExternalSto
 import { CLOCK_WIDGET_ID, clockLines, normalizeClockDisplay, toClockConfig } from '../clock-display.js'
 import type { ClockDisplay } from '../clock-display.js'
 import { ClockFace, useMinuteClock } from './clock.js'
+import { BALANCE_WIDGET_ID } from './balance.js'
 import { DEFAULT_PREFERENCES, normalizePreferences } from '../preferences.js'
 import type { BrandPosition, GlobalNavigationPosition, SidebarPreferences, ToolsPosition } from '../preferences.js'
 import type { CompactWidgetCatalogEntry, CompactWidgetPresentation, CompactWidgetSurface } from './compact-widgets.js'
@@ -199,7 +200,8 @@ function SettingsPage(props: BoundPageProps) {
               h('div', {
                 className: `dsh-better-left-sidebar-compact-widget-status is-${row.status}`,
                 'aria-live': 'polite',
-              }, t(widgetStatusKey(row.status)))),
+              }, t(widgetStatusKey(row.status))),
+              row.id === BALANCE_WIDGET_ID ? h('p', { className: 'dsh-better-left-sidebar-compact-widgets-hint' }, t('balanceHint')) : null),
             h('div', { className: 'dsh-better-left-sidebar-compact-widget-controls' },
               h(Switch, {
                 checked: row.enabled,
