@@ -3,7 +3,7 @@ import test from 'node:test'
 import { DEFAULT_PREFERENCES, normalizePreferences } from '../src/preferences.ts'
 import { sizeConversationNavigation } from '../src/client/layout-adapter.ts'
 
-test('obsolete hidden-area settings are discarded while valid behavior preferences survive', () => {
+test('retired flyout and hidden-area settings do not affect the native layout', () => {
   const old = {
     animation: 'fast',
     expansion: 'click',
@@ -11,8 +11,8 @@ test('obsolete hidden-area settings are discarded while valid behavior preferenc
   }
   const normalized = normalizePreferences(old)
 
-  assert.equal(normalized.animation, 'fast')
-  assert.equal(normalized.expansion, 'click')
+  assert.equal('animation' in normalized, false)
+  assert.equal('expansion' in normalized, false)
   assert.equal('hiddenRegions' in normalized, false)
   assert.equal(normalized.brandPosition, DEFAULT_PREFERENCES.brandPosition)
   assert.equal(normalized.globalNavigationPosition, DEFAULT_PREFERENCES.globalNavigationPosition)

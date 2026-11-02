@@ -1,7 +1,5 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { DEFAULT_PREFERENCES } from '../src/preferences.ts'
-import { isRailRegionEligible } from '../src/client/rail-region.ts'
 import { fitCompactWidgets } from '../src/client/layout-adapter.ts'
 import {
   orderCompactWidgetEntries,
@@ -27,7 +25,7 @@ test('compact widget preferences retain string ids and default malformed enablem
   assert.deepEqual(validateCompactWidgetPreferences({ id: 'not-an-array' }), [])
 })
 
-test('saved widgets lead in saved order; unsaved widgets use slot order and registration order', () => {
+test('saved widgets lead in saved order; new built-ins use default order', () => {
   const entries = [
     { id: 'new-late', order: 20 },
     { id: 'saved-second', order: 100 },
@@ -61,14 +59,4 @@ test('compact widgets keep whole boxes in order up to the height limit', () => {
   assert.deepEqual(fitCompactWidgets([33], 4, 20), { visible: 0, height: 0 })
   assert.deepEqual(fitCompactWidgets([], 4, 112), { visible: 0, height: 0 })
   assert.deepEqual(fitCompactWidgets([37, 0, 33], 4, 112), { visible: 3, height: 74 })
-})
-
-test('compact widget region is eligible independent of tools position', () => {
-  for (const toolsPosition of ['rail-bottom', 'conversation-bottom']) {
-    const preferences = { ...DEFAULT_PREFERENCES, toolsPosition }
-    assert.equal(isRailRegionEligible('compact-widgets', preferences), true)
-    assert.equal(isRailRegionEligible('tools', preferences), toolsPosition === 'rail-bottom')
-  }
-  assert.equal(isRailRegionEligible('compact-widgets', undefined), true)
-  assert.equal(isRailRegionEligible('unknown', DEFAULT_PREFERENCES), false)
 })

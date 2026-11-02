@@ -35,14 +35,10 @@ type BoundPageProps = PageProps & { ctx: Context; compactWidgets: CompactWidgetS
 type FieldStates = Record<string, ReturnType<SettingsFormModel<ConfigValues>['field']>>
 type FormView = { shell: ReturnType<SettingsFormModel<ConfigValues>['shell']>; fields: FieldStates }
 
-const animationValues = ['standard', 'fast', 'off'] as const
-const expansionValues = ['hover', 'click'] as const
 const brandValues = ['navigation-top', 'sidebar-top', 'hidden'] as const
 const globalValues = ['rail', 'conversation-top'] as const
 const toolsValues = ['rail-bottom', 'conversation-bottom'] as const
 const fields = [
-  choiceField('animation', animationValues),
-  choiceField('expansion', expansionValues),
   choiceField('brandPosition', brandValues),
   choiceField('globalNavigationPosition', globalValues),
   choiceField('toolsPosition', toolsValues),
@@ -102,7 +98,6 @@ export function connectSettings(
   ctx: Context,
   compactWidgets: CompactWidgetSurface,
   onPreferences: (value: unknown) => void,
-  onTranslate: (translate: (key: string) => string) => void,
 ): void {
   ctx.inject(['locale', 'configForms'], (settingsCtx) => {
     const form = settingsCtx.configForms.get<ConfigValues>(PACKAGE)
@@ -115,11 +110,6 @@ export function connectSettings(
       () => settingsCtx.locale.register(NAMESPACE, messages),
       'better-left-sidebar: settings copy',
     )
-    settingsCtx.effect(() => {
-      const sync = (): void => onTranslate(settingsCtx.locale.bind(NAMESPACE) as unknown as (key: string) => string)
-      sync()
-      return settingsCtx.locale.subscribe(sync)
-    }, 'better-left-sidebar: toggle copy')
     settingsCtx.effect(
       () => settingsCtx.slots.inject('plugins.bundle.config', () => settingsCtx.slots.register(
         { name: 'plugins.bundle.config', key: PACKAGE, locale: NAMESPACE },
@@ -151,8 +141,6 @@ function SettingsPage(props: BoundPageProps) {
   const savedSnapshot = scope.getSnapshot()
   const draft = normalizePreferences({
     ...savedSnapshot.value,
-    animation: view.fields.animation?.text,
-    expansion: view.fields.expansion?.text,
     brandPosition: view.fields.brandPosition?.text,
     globalNavigationPosition: view.fields.globalNavigationPosition?.text,
     toolsPosition: view.fields.toolsPosition?.text,
@@ -194,7 +182,7 @@ function SettingsPage(props: BoundPageProps) {
               h('div', {
                 className: `dsh-better-left-sidebar-compact-widget-status is-${row.status}`,
                 'aria-live': 'polite',
-              }, row.status === 'failed' ? `${t('widgetFailed')}: ${row.error}` : t(widgetStatusKey(row.status)))),
+              }, t(widgetStatusKey(row.status)))),
             h('div', { className: 'dsh-better-left-sidebar-compact-widget-controls' },
               h(Switch, {
                 checked: row.enabled,
@@ -227,14 +215,7 @@ function SettingsPage(props: BoundPageProps) {
                   t, disabled, display: clockDraft, caption: t('effectPreview'),
                   locale: props.locale, onChange: writeClock,
                 }))
-              : null))),
-        h('details', { className: 'dsh-better-left-sidebar-widget-reference' },
-          h('summary', null, t('widgetInformation')),
-          h('dl', null, ...widgetRows.flatMap((row) => [
-            h('dt', { key: `${row.id}-label` }, row.label),
-            h('dd', { key: row.id }, h('code', null, row.id)),
-          ])),
-          h('a', { href: t('compactWidgetsDocsUrl'), target: '_blank', rel: 'noopener noreferrer' }, t('compactWidgetsDocs'))))
+              : null))))
 
   return h(SettingsForm, {
     labels: {
@@ -280,24 +261,6 @@ function SettingsPage(props: BoundPageProps) {
             onChange: (value: string) => setChoice('toolsPosition', value as ToolsPosition),
           })),
         h(LayoutPreview, { title: t('effectPreview'), preferences: draft, t })),
-      h('section', { className: 'dsh-better-left-sidebar-settings-group' },
-        h('h3', null, t('navigationBehavior')),
-        h(ChoiceRow, {
-          name: 'dsh-better-left-sidebar-expansion',
-          label: t('expansion'),
-          value: view.fields.expansion!.text,
-          disabled,
-          options: expansionValues.map((value) => ({ value, label: t(value) })),
-          onChange: (value: string) => actions.edit('expansion', value),
-        }),
-        h(ChoiceRow, {
-          name: 'dsh-better-left-sidebar-animation',
-          label: t('animation'),
-          value: view.fields.animation!.text,
-          disabled,
-          options: animationValues.map((value) => ({ value, label: t(value) })),
-          onChange: (value: string) => actions.edit('animation', value),
-        })),
       widgetSection),
     view.shell.dirty ? h('button', {
       type: 'button',
@@ -315,14 +278,13 @@ function sameLayout(a: SidebarPreferences, b: SidebarPreferences): boolean {
     && a.toolsPosition === b.toolsPosition
 }
 
-type WidgetStatus = CompactWidgetPresentation | 'notLoaded' | 'failed' | 'pendingEnable' | 'pendingDisable'
+type WidgetStatus = CompactWidgetPresentation | 'pendingEnable' | 'pendingDisable'
 
 interface CompactWidgetRow {
   id: string
   label: string
   enabled: boolean
   status: WidgetStatus
-  error?: string
 }
 
 function readWidgetDraft(text: string | undefined): CompactWidgetPreference[] {
@@ -341,39 +303,14 @@ function buildWidgetRows(
 ): CompactWidgetRow[] {
   const preferred = new Map<string, CompactWidgetPreference>()
   for (const preference of preferences) if (!preferred.has(preference.id)) preferred.set(preference.id, preference)
-  const byId = new Map(catalog.map((entry) => [entry.id, entry]))
   const ordered = orderCompactWidgetEntries(catalog, preferences)
-  const ids: string[] = []
-  const seen = new Set<string>()
-  for (const preference of preferences) {
-    if (seen.has(preference.id)) continue
-    seen.add(preference.id)
-    ids.push(preference.id)
-  }
-  for (const item of ordered) {
-    if (seen.has(item.entry.id)) continue
-    seen.add(item.entry.id)
-    ids.push(item.entry.id)
-  }
-
-  return ids.map((id) => {
-    const registration = byId.get(id)
+  return ordered.map(({ entry: registration }) => {
+    const id = registration.id
     const enabled = preferred.get(id)?.enabled ?? true
-    const status: WidgetStatus = registration?.error !== undefined
-      ? 'failed'
-      : !registration
-        ? 'notLoaded'
-        : enabled !== (applied.find((item) => item.id === id)?.enabled ?? true)
-          ? enabled ? 'pendingEnable' : 'pendingDisable'
-          : registration.presentation
-    const row: CompactWidgetRow = {
-      id,
-      label: registration?.label ?? id,
-      enabled,
-      status,
-    }
-    if (registration?.error !== undefined) row.error = registration.error
-    return row
+    const status: WidgetStatus = enabled !== (applied.find((item) => item.id === id)?.enabled ?? true)
+      ? enabled ? 'pendingEnable' : 'pendingDisable'
+      : registration.presentation
+    return { id, label: registration.label, enabled, status }
   })
 }
 
@@ -387,8 +324,6 @@ function widgetStatusKey(status: WidgetStatus): MessageKey {
     case 'pendingEnable': return 'widgetPendingEnable'
     case 'pendingDisable': return 'widgetPendingDisable'
     case 'disabled': return 'widgetDisabled'
-    case 'notLoaded': return 'widgetNotLoaded'
-    case 'failed': return 'widgetFailed'
   }
 }
 

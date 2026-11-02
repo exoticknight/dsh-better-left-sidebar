@@ -1,12 +1,8 @@
-export type AnimationMode = 'standard' | 'fast' | 'off'
-export type ExpansionMode = 'hover' | 'click'
 export type BrandPosition = 'navigation-top' | 'sidebar-top' | 'hidden'
 export type GlobalNavigationPosition = 'rail' | 'conversation-top'
 export type ToolsPosition = 'rail-bottom' | 'conversation-bottom'
 
 export interface SidebarPreferences {
-  animation: AnimationMode
-  expansion: ExpansionMode
   brandPosition: BrandPosition
   globalNavigationPosition: GlobalNavigationPosition
   toolsPosition: ToolsPosition
@@ -15,8 +11,6 @@ export interface SidebarPreferences {
 }
 
 export const DEFAULT_PREFERENCES: SidebarPreferences = {
-  animation: 'standard',
-  expansion: 'hover',
   brandPosition: 'navigation-top',
   globalNavigationPosition: 'rail',
   toolsPosition: 'rail-bottom',
@@ -29,8 +23,6 @@ const TOOLS_POSITIONS = new Set<ToolsPosition>(['rail-bottom', 'conversation-bot
 
 export function normalizePreferences(value: unknown): SidebarPreferences {
   const input = value && typeof value === 'object' ? value as Record<string, unknown> : {}
-  const animation = input.animation === 'fast' || input.animation === 'off' ? input.animation : 'standard'
-  const expansion = input.expansion === 'click' ? input.expansion : 'hover'
   const brandPosition = isChoice(input.brandPosition, BRAND_POSITIONS) ? input.brandPosition : DEFAULT_PREFERENCES.brandPosition
   const globalNavigationPosition = isChoice(input.globalNavigationPosition, GLOBAL_POSITIONS)
     ? input.globalNavigationPosition
@@ -38,8 +30,6 @@ export function normalizePreferences(value: unknown): SidebarPreferences {
   const toolsPosition = isChoice(input.toolsPosition, TOOLS_POSITIONS) ? input.toolsPosition : DEFAULT_PREFERENCES.toolsPosition
   const layoutVersion = input.layoutVersion === 1 ? 1 : undefined
   return {
-    animation,
-    expansion,
     brandPosition,
     globalNavigationPosition,
     toolsPosition,

@@ -1,13 +1,7 @@
-/* The adapter marks semantic DSH regions; the main pane keeps its native owner and DOM. */
-html.dsh-better-left-sidebar {
-  --dsh-better-left-sidebar-motion: 180ms;
-  --dsh-better-left-sidebar-motion-quick: 120ms;
-  --dsh-better-left-sidebar-ease: cubic-bezier(.2, .75, .25, 1);
-}
-
+/* Native DSH owns collapse. This layout only separates the expanded regions. */
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] {
   --dsh-better-left-sidebar-rail: min(56px, 100%);
-  --dsh-better-left-sidebar-open: 100%;
+  --dsh-better-left-sidebar-open: var(--dsh-better-left-sidebar-rail);
   --dsh-better-left-sidebar-conversation: max(0px, calc(100% - var(--dsh-better-left-sidebar-rail)));
   position: relative !important;
   display: block !important;
@@ -21,27 +15,10 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   padding: 0;
 }
 
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root]::before {
-  position: absolute;
-  z-index: 1;
-  inset: 0 auto 0 0;
-  width: var(--dsh-better-left-sidebar-open);
-  clip-path: inset(0 calc(100% - var(--dsh-better-left-sidebar-rail)) 0 0);
-  border-right: .5px solid var(--dsw-alias-border-l3);
-  background: inherit;
-  box-shadow: none;
-  content: '';
-  pointer-events: none;
-  transition: clip-path var(--dsh-better-left-sidebar-motion) var(--dsh-better-left-sidebar-ease), box-shadow var(--dsh-better-left-sidebar-motion) ease;
-}
-
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="conversation"] {
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="conversation"] {
   position: absolute !important;
   z-index: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: var(--dsh-better-left-sidebar-rail);
+  inset: 0 0 0 var(--dsh-better-left-sidebar-rail);
   width: var(--dsh-better-left-sidebar-conversation);
   min-width: 0;
   min-height: 0;
@@ -52,98 +29,69 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   border-left: .5px solid var(--dsw-alias-border-l3);
 }
 
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="brand"],
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="new-session"],
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="global-navigation"],
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="tools"],
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="compact-widgets"] {
-  box-sizing: border-box;
-  min-width: 0;
-  margin: 0;
+/* Keep the native toggle independent of the brand's chosen placement or visibility. */
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="brand"] {
+  display: contents !important;
 }
 
-/* The logo's native button starts a session too; keep that shortcut in the conversation pane only. */
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-region="brand"] {
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-native-toggle] {
+  position: absolute !important;
+  z-index: 3;
+  top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 10px) !important;
+  left: 10px !important;
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+}
+
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-button] {
   position: absolute;
   z-index: 2;
-  top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 10px);
-  left: 0;
-  display: flex;
-  width: var(--dsh-better-left-sidebar-open);
-  height: 36px;
-  padding: 0 10px;
-  overflow: visible;
-  clip-path: inset(0 calc(100% - var(--dsh-better-left-sidebar-rail)) 0 0);
-  transition: clip-path var(--dsh-better-left-sidebar-motion) var(--dsh-better-left-sidebar-ease);
-}
-
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-region="brand"] {
-  position: absolute;
-  z-index: 0;
-  top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 10px);
-  left: var(--dsh-better-left-sidebar-rail);
-  display: flex;
-  width: var(--dsh-better-left-sidebar-conversation);
-  height: 36px;
-  padding: 0 10px;
-}
-
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="hidden"] [data-dsh-better-left-sidebar-region="brand"] {
-  display: none !important;
-}
-
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-mark] {
+  top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 54px);
+  left: 10px;
   display: flex;
   width: 36px;
+  height: 36px;
+  padding: 0;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-brand-button] {
+  top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 10px);
+  left: calc(var(--dsh-better-left-sidebar-rail) + 14px);
+  width: calc(var(--dsh-better-left-sidebar-conversation) - 28px);
+}
+
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="hidden"] [data-dsh-better-left-sidebar-brand-button] {
+  display: none;
+}
+
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-mark] {
+  display: inline-flex;
   min-width: 36px;
   justify-content: center;
 }
 
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-name] {
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-name] {
+  display: none;
+}
+
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-brand-name] {
   display: inline-flex;
-  max-width: 0;
-  overflow: hidden;
-  opacity: 0;
-  white-space: nowrap;
-  transition: max-width var(--dsh-better-left-sidebar-motion) var(--dsh-better-left-sidebar-ease), opacity var(--dsh-better-left-sidebar-motion-quick) ease;
 }
 
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-region="brand"] [data-dsh-better-left-sidebar-brand-name] {
-  max-width: 0;
-  visibility: hidden;
-}
-
-/* The host centers its full-width logo row; pin its mark inside the clipped 56px rail while compact. */
-html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-region="brand"] {
-  justify-content: flex-start !important;
-}
-
-html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-region="brand"] button {
-  width: 36px !important;
-  min-width: 36px !important;
-  justify-content: flex-start !important;
-}
-
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="brand"] button {
-  display: flex;
-  width: 100%;
-  height: 36px;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  padding: 0;
-  overflow: hidden;
-  border: 0;
-  border-radius: var(--dsw-radius-md);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: start;
-}
-
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-brand-name] {
-  max-width: 160px;
-  opacity: 1;
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region] {
+  box-sizing: border-box;
+  min-width: 0;
+  margin: 0;
 }
 
 /* Reposition the native action into the conversation pane without restyling its DSH-owned button. */
@@ -182,7 +130,6 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   left: 0;
   width: var(--dsh-better-left-sidebar-open);
   clip-path: inset(0 calc(100% - var(--dsh-better-left-sidebar-rail)) 0 0);
-  transition: clip-path var(--dsh-better-left-sidebar-motion) var(--dsh-better-left-sidebar-ease);
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="conversation-top"] [data-dsh-better-left-sidebar-region="global-navigation"] {
@@ -210,7 +157,6 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   border-radius: var(--dsw-radius-md);
   background: transparent;
   color: inherit;
-  transition: background-color var(--dsh-better-left-sidebar-motion-quick) ease;
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-panel-glyph] {
@@ -229,7 +175,6 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   opacity: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: max-width var(--dsh-better-left-sidebar-motion) var(--dsh-better-left-sidebar-ease), opacity var(--dsh-better-left-sidebar-motion-quick) ease;
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="tools"] {
@@ -277,7 +222,7 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
 }
 
 /* A widget that renders nothing must not take a flex gap. */
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] .dsh-better-left-sidebar-compact-widget-box:not(:has(> [data-slot] > *)) {
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] .dsh-better-left-sidebar-compact-widget-box:empty {
   display: none;
 }
 
@@ -340,7 +285,6 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   width: var(--dsh-better-left-sidebar-open);
   padding: 0 10px;
   clip-path: inset(0 calc(100% - var(--dsh-better-left-sidebar-rail)) 0 0);
-  transition: clip-path var(--dsh-better-left-sidebar-motion) var(--dsh-better-left-sidebar-ease);
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="conversation-bottom"] [data-dsh-better-left-sidebar-region="tools"] {
@@ -352,27 +296,17 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
 }
 
 /* Conversation-side controls must sit above the full-height conversation region while compact. */
-html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="new-session"],
-html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-region="brand"],
-html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="conversation-top"] [data-dsh-better-left-sidebar-region="global-navigation"],
-html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="conversation-bottom"] [data-dsh-better-left-sidebar-region="tools"] {
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="new-session"],
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-region="brand"],
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="conversation-top"] [data-dsh-better-left-sidebar-region="global-navigation"],
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="conversation-bottom"] [data-dsh-better-left-sidebar-region="tools"] {
   z-index: 2;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="conversation-bottom"] [data-dsh-better-left-sidebar-region="tools"] {
-  z-index: 0;
 }
 
 /* The DSH-owned footer slot is inline display:contents; hide its full-width status rows on the compact rail. */
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-slot="sidebar.footer.action"] {
   display: none !important;
   min-width: 0;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-slot="sidebar.footer.action"] {
-  display: flex !important;
-  flex-direction: column;
-  width: 100%;
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-slot="sidebar.settings"] {
@@ -395,28 +329,11 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   max-width: 0;
   overflow: hidden;
   opacity: 0;
-  transition: max-width var(--dsh-better-left-sidebar-motion) var(--dsh-better-left-sidebar-ease), opacity var(--dsh-better-left-sidebar-motion-quick) ease;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-slot="sidebar.settings"] button > span:not([data-slot]) {
-  max-width: 220px;
-  opacity: 1;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-slot="sidebar.settings"] button {
-  width: 100%;
-  justify-content: flex-start;
-  gap: 10px;
-  padding: 0 10px;
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-dsh-better-left-sidebar-settings-trigger-row] {
   width: 36px;
   margin: 0;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-dsh-better-left-sidebar-settings-trigger-row] {
-  width: 100%;
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-slot="sidebar.settings"] button[aria-label]::after {
@@ -450,55 +367,9 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   visibility: visible;
 }
 
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-slot="sidebar.settings"] button[aria-label]::after {
-  display: none;
-}
-
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-obsolete-collapse] {
-  display: none !important;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root]::before {
-  clip-path: inset(0);
-  box-shadow: 4px 0 18px rgb(0 0 0 / 14%);
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="brand"] {
-  clip-path: inset(0);
-  background: inherit;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-region="brand"] {
-  clip-path: inset(0);
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-region="brand"] [data-dsh-better-left-sidebar-brand-name] {
-  max-width: 200px;
-  opacity: 1;
-  visibility: visible;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-region="global-navigation"],
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-dsh-better-left-sidebar-region="tools"] {
-  clip-path: inset(0);
-  background: inherit;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-panel-row] {
-  width: 100%;
-  justify-content: flex-start;
-  gap: 8px;
-  padding-inline: 0;
-}
-
-html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-panel-row] {
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-panel-row] {
   gap: 0;
   margin-inline: 0;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-panel-title] {
-  max-width: 200px;
-  opacity: 1;
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="conversation-top"] [data-dsh-better-left-sidebar-panel-row] {
@@ -513,87 +384,14 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   opacity: 1;
 }
 
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-slot="sidebar.footer.action"] button,
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-slot="sidebar.settings"] button {
-  width: 100%;
-  min-width: 0;
-  justify-content: flex-start;
-  gap: 10px;
-  padding-inline: 10px;
-}
-
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-panel-row]:hover,
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-slot="sidebar.footer.action"] button:hover,
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-slot="sidebar.settings"] button:hover {
   background: var(--dsw-alias-interactive-bg-hover);
 }
 
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="brand"][data-dsh-better-left-sidebar-brand-position="sidebar-top"] button:hover {
+html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-brand-button]:hover {
   background: var(--dsw-alias-interactive-bg-hover);
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-toggle {
-  position: fixed;
-  z-index: 80;
-  display: flex;
-  width: 36px;
-  height: 36px;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  border: 0;
-  border-radius: var(--dsw-radius-md);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  font-size: 13px;
-  text-align: start;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: width var(--dsh-better-left-sidebar-motion) var(--dsh-better-left-sidebar-ease), background-color var(--dsh-better-left-sidebar-motion-quick) ease;
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-toggle:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-toggle:focus-visible {
-  outline: 2px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
-  outline-offset: -2px;
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-toggle [data-dsh-better-left-sidebar-toggle-icon] {
-  display: inline-flex;
-  width: 36px;
-  min-width: 36px;
-  height: 36px;
-  align-items: center;
-  justify-content: center;
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-toggle [data-dsh-better-left-sidebar-toggle-label] {
-  display: none;
-}
-
-html.dsh-better-left-sidebar[data-dsh-better-left-sidebar-animation="fast"] {
-  --dsh-better-left-sidebar-motion: 90ms;
-  --dsh-better-left-sidebar-motion-quick: 60ms;
-}
-
-html.dsh-better-left-sidebar[data-dsh-better-left-sidebar-animation="off"] {
-  --dsh-better-left-sidebar-motion: 0ms;
-  --dsh-better-left-sidebar-motion-quick: 0ms;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html.dsh-better-left-sidebar[data-dsh-better-left-sidebar-animation] {
-    --dsh-better-left-sidebar-motion: 0ms;
-    --dsh-better-left-sidebar-motion-quick: 0ms;
-  }
 }
 
 /* DSH-native staged settings. Keep field controls and previews within one reading width. */
@@ -644,15 +442,6 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-empty {
   line-height: 1.5;
 }
 
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-link {
-  color: var(--dsw-alias-link);
-  text-decoration: none;
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-link:hover {
-  text-decoration: underline;
-}
-
 html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widgets-list {
   display: flex;
   min-width: 0;
@@ -674,37 +463,12 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-options {
   min-width: 0;
 }
 
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-options > summary,
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference > summary {
+html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-options > summary {
   width: fit-content;
   color: var(--dsw-alias-label-secondary);
   font-size: 13px;
   cursor: pointer;
   line-height: 24px;
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference {
-  color: var(--dsw-alias-label-secondary);
-  font-size: 12px;
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference dl {
-  display: grid;
-  gap: 4px;
-  margin: 12px 0;
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference dt {
-  margin-top: 6px;
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference dd {
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-widget-reference a {
-  color: var(--dsw-alias-link);
 }
 
 html.dsh-better-left-sidebar .dsh-better-left-sidebar-clock-options {
@@ -833,10 +597,6 @@ html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-status {
   color: var(--dsw-alias-label-secondary);
   font-size: 12px;
   line-height: 17px;
-}
-
-html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-status.is-failed {
-  color: var(--dsw-alias-state-danger, #b54736);
 }
 
 html.dsh-better-left-sidebar .dsh-better-left-sidebar-compact-widget-controls {
