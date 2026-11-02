@@ -46,6 +46,11 @@ const fields = [
   choiceField('brandPosition', brandValues),
   choiceField('globalNavigationPosition', globalValues),
   choiceField('toolsPosition', toolsValues),
+  {
+    field: 'showCompactPluginStatus',
+    format: (value: unknown) => String(value === true),
+    parse: (text: string) => text === 'true' || text === 'false' ? { kind: 'set' as const, value: text === 'true' } : undefined,
+  },
   compactWidgetField(),
   clockField(),
   {
@@ -194,7 +199,7 @@ function SettingsPage(props: BoundPageProps) {
               h('div', {
                 className: `dsh-better-left-sidebar-compact-widget-status is-${row.status}`,
                 'aria-live': 'polite',
-              }, row.status === 'failed' ? `${t('widgetFailed')}: ${row.error}` : t(widgetStatusKey(row.status)))),
+              }, t(widgetStatusKey(row.status)))),
             h('div', { className: 'dsh-better-left-sidebar-compact-widget-controls' },
               h(Switch, {
                 checked: row.enabled,
@@ -227,14 +232,7 @@ function SettingsPage(props: BoundPageProps) {
                   t, disabled, display: clockDraft, caption: t('effectPreview'),
                   locale: props.locale, onChange: writeClock,
                 }))
-              : null))),
-        h('details', { className: 'dsh-better-left-sidebar-widget-reference' },
-          h('summary', null, t('widgetInformation')),
-          h('dl', null, ...widgetRows.flatMap((row) => [
-            h('dt', { key: `${row.id}-label` }, row.label),
-            h('dd', { key: row.id }, h('code', null, row.id)),
-          ])),
-          h('a', { href: t('compactWidgetsDocsUrl'), target: '_blank', rel: 'noopener noreferrer' }, t('compactWidgetsDocs'))))
+              : null))))
 
   return h(SettingsForm, {
     labels: {
@@ -282,6 +280,15 @@ function SettingsPage(props: BoundPageProps) {
         h(LayoutPreview, { title: t('effectPreview'), preferences: draft, t })),
       h('section', { className: 'dsh-better-left-sidebar-settings-group' },
         h('h3', null, t('navigationBehavior')),
+        h(SettingsRow, { label: t('compactPluginStatus'), disabled: disabled || draft.toolsPosition !== 'rail-bottom' },
+          h('div', null,
+            h(Switch, {
+              checked: view.fields.showCompactPluginStatus!.text === 'true',
+              disabled: disabled || draft.toolsPosition !== 'rail-bottom',
+              label: t('compactPluginStatus'),
+              onChange: (checked) => actions.edit('showCompactPluginStatus', String(checked)),
+            }),
+            h('p', { className: 'dsh-better-left-sidebar-compact-widgets-hint' }, t('compactPluginStatusHint')))),
         h(ChoiceRow, {
           name: 'dsh-better-left-sidebar-expansion',
           label: t('expansion'),
@@ -315,14 +322,13 @@ function sameLayout(a: SidebarPreferences, b: SidebarPreferences): boolean {
     && a.toolsPosition === b.toolsPosition
 }
 
-type WidgetStatus = CompactWidgetPresentation | 'notLoaded' | 'failed' | 'pendingEnable' | 'pendingDisable'
+type WidgetStatus = CompactWidgetPresentation | 'pendingEnable' | 'pendingDisable'
 
 interface CompactWidgetRow {
   id: string
   label: string
   enabled: boolean
   status: WidgetStatus
-  error?: string
 }
 
 function readWidgetDraft(text: string | undefined): CompactWidgetPreference[] {
@@ -341,39 +347,14 @@ function buildWidgetRows(
 ): CompactWidgetRow[] {
   const preferred = new Map<string, CompactWidgetPreference>()
   for (const preference of preferences) if (!preferred.has(preference.id)) preferred.set(preference.id, preference)
-  const byId = new Map(catalog.map((entry) => [entry.id, entry]))
   const ordered = orderCompactWidgetEntries(catalog, preferences)
-  const ids: string[] = []
-  const seen = new Set<string>()
-  for (const preference of preferences) {
-    if (seen.has(preference.id)) continue
-    seen.add(preference.id)
-    ids.push(preference.id)
-  }
-  for (const item of ordered) {
-    if (seen.has(item.entry.id)) continue
-    seen.add(item.entry.id)
-    ids.push(item.entry.id)
-  }
-
-  return ids.map((id) => {
-    const registration = byId.get(id)
+  return ordered.map(({ entry: registration }) => {
+    const id = registration.id
     const enabled = preferred.get(id)?.enabled ?? true
-    const status: WidgetStatus = registration?.error !== undefined
-      ? 'failed'
-      : !registration
-        ? 'notLoaded'
-        : enabled !== (applied.find((item) => item.id === id)?.enabled ?? true)
-          ? enabled ? 'pendingEnable' : 'pendingDisable'
-          : registration.presentation
-    const row: CompactWidgetRow = {
-      id,
-      label: registration?.label ?? id,
-      enabled,
-      status,
-    }
-    if (registration?.error !== undefined) row.error = registration.error
-    return row
+    const status: WidgetStatus = enabled !== (applied.find((item) => item.id === id)?.enabled ?? true)
+      ? enabled ? 'pendingEnable' : 'pendingDisable'
+      : registration.presentation
+    return { id, label: registration.label, enabled, status }
   })
 }
 
@@ -387,8 +368,6 @@ function widgetStatusKey(status: WidgetStatus): MessageKey {
     case 'pendingEnable': return 'widgetPendingEnable'
     case 'pendingDisable': return 'widgetPendingDisable'
     case 'disabled': return 'widgetDisabled'
-    case 'notLoaded': return 'widgetNotLoaded'
-    case 'failed': return 'widgetFailed'
   }
 }
 

@@ -9,6 +9,7 @@ import { connectLayoutAdapter } from './layout-adapter.js'
 import { connectNavigation } from './navigation.js'
 import { connectSettings } from './settings.js'
 import { connectCompactWidgets } from './compact-widgets.js'
+import { connectNativeFooterState } from './native-footer-state.js'
 import type { LayoutAdapter } from './layout-adapter.js'
 import { validateCompactWidgetPreferences } from './compact-widget-preferences.js'
 
@@ -28,9 +29,13 @@ export function apply(ctx: ClientContext): void {
     html.classList.add('dsh-better-left-sidebar')
 
     let layout: LayoutAdapter | undefined
+    const nativeFooter = connectNativeFooterState(ctx)
     const interaction = connectInteraction((reserve) => layout?.setNavigationToggleReserve(reserve))
     const compactWidgets = connectCompactWidgets(ctx, (count, active) => layout?.setCompactWidgets(count, active))
-    interaction.setCompactWidgetsActive(compactWidgets.setActive)
+    interaction.setCompactListener((active) => {
+      compactWidgets.setActive(active)
+      nativeFooter.setCompact(active)
+    })
     layout = connectLayoutAdapter((root, anchorsChanged) => interaction.setRoot(root, anchorsChanged), compactWidgets.container)
     layout.setCompactWidgets(compactWidgets.count, compactWidgets.active)
     const applyPreferences = (value: unknown): void => {
@@ -39,6 +44,7 @@ export function apply(ctx: ClientContext): void {
       compactWidgets.setPreferences(validateCompactWidgetPreferences(config.compactWidgets))
       compactWidgets.setClock(normalizeClockDisplay(config.clock))
       layout.update(preferences)
+      nativeFooter.update(preferences)
       interaction.setPreferences(preferences)
     }
     const applyTranslate = (next: (key: string) => string): void => {
@@ -54,6 +60,7 @@ export function apply(ctx: ClientContext): void {
     return () => {
       disposeNavigation()
       layout.dispose()
+      nativeFooter.dispose()
       compactWidgets.dispose()
       interaction.dispose()
       html.classList.remove('dsh-better-left-sidebar')

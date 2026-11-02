@@ -14,7 +14,7 @@ export interface OrderedCompactWidget<T extends CompactWidgetRegistration> {
   saved: boolean
 }
 
-/** Keep arbitrary saved ids so registrations can disappear and return later. */
+/** Preserve saved ids; the internal catalog decides which built-ins are available. */
 export function validateCompactWidgetPreferences(value: unknown): CompactWidgetPreference[] {
   if (!Array.isArray(value)) return []
   const result: CompactWidgetPreference[] = []
@@ -30,7 +30,7 @@ export function validateCompactWidgetPreferences(value: unknown): CompactWidgetP
   return result
 }
 
-/** Saved ids lead in saved order; new registrations follow in slot order. */
+/** Saved built-ins lead in saved order; new built-ins follow their default order. */
 export function orderCompactWidgetEntries<T extends CompactWidgetRegistration>(
   entries: readonly T[],
   preferences: readonly CompactWidgetPreference[],

@@ -10,6 +10,7 @@ export interface SidebarPreferences {
   brandPosition: BrandPosition
   globalNavigationPosition: GlobalNavigationPosition
   toolsPosition: ToolsPosition
+  showCompactPluginStatus: boolean
   /** Set after the user explicitly chooses a layout or restores its defaults. */
   layoutVersion: 1 | undefined
 }
@@ -20,6 +21,7 @@ export const DEFAULT_PREFERENCES: SidebarPreferences = {
   brandPosition: 'navigation-top',
   globalNavigationPosition: 'rail',
   toolsPosition: 'rail-bottom',
+  showCompactPluginStatus: false,
   layoutVersion: undefined,
 }
 
@@ -43,6 +45,7 @@ export function normalizePreferences(value: unknown): SidebarPreferences {
     brandPosition,
     globalNavigationPosition,
     toolsPosition,
+    showCompactPluginStatus: input.showCompactPluginStatus === true,
     layoutVersion,
   }
 }

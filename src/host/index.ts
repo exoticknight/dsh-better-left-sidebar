@@ -12,6 +12,7 @@ export interface Config {
   brandPosition: Volatile<'navigation-top' | 'sidebar-top' | 'hidden'>
   globalNavigationPosition: Volatile<'rail' | 'conversation-top'>
   toolsPosition: Volatile<'rail-bottom' | 'conversation-bottom'>
+  showCompactPluginStatus: Volatile<boolean>
   layoutVersion: Volatile<1 | undefined>
   compactWidgets: Volatile<{ id: string; enabled: boolean }[]>
   clock: Volatile<{ hourCycle: 'h23' | 'h12'; monthDay: boolean; weekday: boolean; color: string }>
@@ -41,6 +42,7 @@ export const Config = z.object({
     z.const('conversation-bottom'),
   ]).default('rail-bottom').volatile().description('Where tools and status content appear.'),
   layoutVersion: z.const(1).volatile().description('Marks an explicitly selected semantic layout.'),
+  showCompactPluginStatus: z.boolean().default(false).volatile().description('Show native compact plugin status while our navigation is compact.'),
   compactWidgets: z.array(z.object({
     id: z.string(),
     enabled: z.boolean(),

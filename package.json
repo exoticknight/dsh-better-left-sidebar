@@ -1,7 +1,7 @@
 {
   "name": "dsh-better-left-sidebar",
   "version": "0.1.4",
-  "description": "A cleaner, better-organized DeepSeek Harness sidebar with support for multiple plugin-defined widgets.",
+  "description": "A clearer DeepSeek Harness sidebar with separate navigation and conversation regions and built-in widgets.",
   "icon": "./icon.svg",
   "license": "Apache-2.0",
   "author": "exoticknight",
@@ -18,8 +18,7 @@
     "widgets",
     "compact-rail",
     "compact-widgets",
-    "custom-widgets",
-    "plugin-widgets"
+    "custom-widgets"
   ],
   "repository": {
     "type": "git",
@@ -44,16 +43,12 @@
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
-    "./slots": {
-      "types": "./lib/slots.d.ts"
-    },
     "./package.json": "./package.json",
     "./locale/*.json": "./locale/*.json"
   },
   "files": [
     "lib/index.js",
     "lib/client.js",
-    "lib/slots.d.ts",
     "icon.svg",
     "cordis.patch.yml",
     "locale/*.json",
@@ -102,6 +97,7 @@
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.5",
     "@deepseek-ai/dsh-client-locale": "0.2.1-rc.3",
+    "@deepseek-ai/dsh-client-ui-layout": "0.2.1-rc.3",
     "@deepseek-ai/dsh-client-ui-plugin-manager": "0.2.1-rc.3",
     "@deepseek-ai/dsh-client-ui-primitives": "0.2.1-rc.3",
     "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-rc.3",

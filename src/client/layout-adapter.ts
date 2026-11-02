@@ -97,12 +97,11 @@ export function connectLayoutAdapter(
   let observedSidebar: HTMLElement | undefined
   let childrenObserver: MutationObserver | undefined
   let measurementObserver: MutationObserver | undefined
-  let collapseObserver: MutationObserver | undefined
   let hostObserver: MutationObserver | undefined
   let resizeObserver: ResizeObserver | undefined
+  let navigationToggleReserve = 0
   let measureFrame = 0
   let warnedFor = new WeakSet<HTMLElement>()
-  let navigationToggleReserve = 0
 
   const readAnchors = (root: HTMLElement): LayoutAnchors | undefined => {
     const brand = root.querySelector<HTMLElement>(DSH.brand)
@@ -151,14 +150,19 @@ export function connectLayoutAdapter(
     const anchors = current
     if (!anchors?.root.isConnected) return
     const heightOf = (element: HTMLElement): number => Math.ceil(Math.max(element.getBoundingClientRect().height, element.scrollHeight))
-    const brandHeight = heightOf(anchors.brand)
+    const brandHeight = heightOf(anchors.brand.querySelector<HTMLElement>(DSH.brandButton) ?? anchors.brand)
     const sessionHeight = heightOf(anchors.newSession)
     const toolsHeight = Math.max(heightOf(anchors.tools), 36)
     const chrome = anchors.root.querySelector(DSH.dragStrip) ? 52 : 0
+    const nativeToggle = anchors.root.querySelector<HTMLElement>(DSH.collapse)
+    const toggleStyle = nativeToggle && getComputedStyle(nativeToggle)
+    const toggleRect = nativeToggle?.getBoundingClientRect()
+    const nativeToggleReserve = toggleRect && toggleRect.width > 0 && toggleRect.height > 0
+      && toggleStyle?.visibility !== 'hidden' && toggleStyle?.visibility !== 'collapse' ? 44 : 0
     const brandOnSidebar = preferences?.brandPosition === 'sidebar-top'
     const brandOnRail = preferences?.brandPosition === 'navigation-top'
     const sessionTop = chrome + 10 + (brandOnSidebar ? brandHeight + 8 : 0)
-    const railGlobalTop = chrome + 10 + (brandOnRail ? brandHeight + 8 : 0)
+    const railGlobalTop = chrome + 10 + nativeToggleReserve + (brandOnRail ? brandHeight + 8 : 0)
     const conversationGlobalTop = sessionTop + sessionHeight + 8
     const panelRows = [...anchors.panelList.querySelectorAll<HTMLElement>(DSH.panelButton)]
     const rowHeight = panelRows.reduce((height, row) => height + Math.ceil(row.getBoundingClientRect().height), 0)
@@ -174,8 +178,8 @@ export function connectLayoutAdapter(
     )
     const panelHeight = conversationNavigation ? conversationSizing.panelHeight : panelContentHeight
     const conversationTop = conversationNavigation ? conversationSizing.conversationTop : conversationGlobalTop
-    const navBottomReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
     const toggleReserve = navigationToggleReserve
+    const navBottomReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
     const footerReserve = preferences?.toolsPosition === 'rail-bottom' ? toolsHeight + 8 : 8
     const widgetBoxes = [...compactWidgets.children].filter((child): child is HTMLElement => child instanceof HTMLElement)
     for (const box of widgetBoxes) resizeObserver?.observe(box)
@@ -192,12 +196,11 @@ export function connectLayoutAdapter(
       : navBottomReserve + toggleReserve
 
     anchors.root.style.setProperty('--dsh-better-left-sidebar-chrome', `${chrome}px`)
-    anchors.root.style.setProperty('--dsh-better-left-sidebar-brand-height', `${brandHeight}px`)
+    anchors.root.style.setProperty('--dsh-better-left-sidebar-native-toggle-reserve', `${nativeToggleReserve}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-session-top', `${sessionTop}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-rail-global-top', `${railGlobalTop}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-conversation-global-top', `${conversationGlobalTop}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-global-height', `${panelHeight}px`)
-    anchors.root.style.setProperty('--dsh-better-left-sidebar-tools-height', `${toolsHeight}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-conversation-top', `${conversationTop}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-conversation-bottom', `${bottomPad}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-nav-bottom-reserve', `${railBottomReserve}px`)
@@ -219,6 +222,11 @@ export function connectLayoutAdapter(
     measurementObserver.observe(anchors.panelList, { childList: true, subtree: true })
     measurementObserver.observe(anchors.tools, { childList: true, subtree: true })
     measurementObserver.observe(compactWidgets, { childList: true })
+    const nativeToggle = anchors.root.querySelector<HTMLElement>(DSH.collapse)
+    if (nativeToggle) {
+      resizeObserver.observe(nativeToggle)
+      measurementObserver.observe(nativeToggle, { attributes: true, attributeFilter: ['class', 'style', 'hidden'] })
+    }
   }
 
   const sameAnchors = (a: LayoutAnchors, b: LayoutAnchors): boolean => a.root === b.root
@@ -234,8 +242,8 @@ export function connectLayoutAdapter(
       if (retained.has(element)) continue
       element.removeAttribute(REGION_MARK)
       element.querySelector<HTMLElement>(DSH.brandButton)?.removeAttribute('inert')
-      element.querySelectorAll(`[${ROW_MARK}], [${GLYPH_MARK}], [${TITLE_MARK}], [data-dsh-better-left-sidebar-brand-mark], [data-dsh-better-left-sidebar-brand-name], [data-dsh-better-left-sidebar-session-label], [data-dsh-better-left-sidebar-settings-trigger-row]`).forEach((marked) => {
-        for (const attribute of [ROW_MARK, GLYPH_MARK, TITLE_MARK, 'data-dsh-better-left-sidebar-brand-mark', 'data-dsh-better-left-sidebar-brand-name', 'data-dsh-better-left-sidebar-session-label', 'data-dsh-better-left-sidebar-settings-trigger-row']) marked.removeAttribute(attribute)
+      element.querySelectorAll(`[${ROW_MARK}], [${GLYPH_MARK}], [${TITLE_MARK}], [data-dsh-better-left-sidebar-brand-button], [data-dsh-better-left-sidebar-brand-mark], [data-dsh-better-left-sidebar-brand-name], [data-dsh-better-left-sidebar-session-label], [data-dsh-better-left-sidebar-native-toggle], [data-dsh-better-left-sidebar-settings-trigger-row]`).forEach((marked) => {
+        for (const attribute of [ROW_MARK, GLYPH_MARK, TITLE_MARK, 'data-dsh-better-left-sidebar-brand-button', 'data-dsh-better-left-sidebar-brand-mark', 'data-dsh-better-left-sidebar-brand-name', 'data-dsh-better-left-sidebar-session-label', 'data-dsh-better-left-sidebar-native-toggle', 'data-dsh-better-left-sidebar-settings-trigger-row']) marked.removeAttribute(attribute)
       })
       element.querySelectorAll('[data-dsh-better-left-sidebar-owned-title]').forEach((ownedTitle) => {
         ownedTitle.removeAttribute('title')
@@ -250,8 +258,7 @@ export function connectLayoutAdapter(
     root.dataset.dshBetterLeftSidebarBrandPosition = next.brandPosition
     root.dataset.dshBetterLeftSidebarGlobalPosition = next.globalNavigationPosition
     root.dataset.dshBetterLeftSidebarToolsPosition = next.toolsPosition
-    root.dataset.dshBetterLeftSidebarExpansion = next.expansion
-    root.dataset.dshBetterLeftSidebarHasDragStrip = String(Boolean(root.querySelector(DSH.dragStrip)))
+    root.dataset.dshBetterLeftSidebarPluginStatus = String(next.showCompactPluginStatus)
     writeRegion(brand, 'brand')
     writeRegion(newSession, 'new-session')
     writeRegion(panelList, 'global-navigation')
@@ -262,14 +269,17 @@ export function connectLayoutAdapter(
     }
 
     const brandButton = brand.querySelector<HTMLElement>(DSH.brandButton)
-    if (brandButton) brandButton.inert = next.brandPosition !== 'sidebar-top'
+    if (brandButton) {
+      brandButton.inert = next.brandPosition !== 'sidebar-top'
+      brandButton.setAttribute('data-dsh-better-left-sidebar-brand-button', '')
+    }
     const brandMark = brand.querySelector<HTMLElement>(DSH.brandMark)
     const brandName = brand.querySelector<HTMLElement>(DSH.brandName)
     if (brandMark) brandMark.setAttribute('data-dsh-better-left-sidebar-brand-mark', '')
     if (brandName) brandName.setAttribute('data-dsh-better-left-sidebar-brand-name', '')
     const newSessionLabel = newSession.querySelector<HTMLElement>(DSH.newSessionLabel)
     newSessionLabel?.setAttribute('data-dsh-better-left-sidebar-session-label', '')
-    for (const collapse of root.querySelectorAll<HTMLElement>(DSH.collapse)) collapse.setAttribute('data-dsh-better-left-sidebar-obsolete-collapse', '')
+    for (const collapse of root.querySelectorAll<HTMLElement>(DSH.collapse)) collapse.setAttribute('data-dsh-better-left-sidebar-native-toggle', '')
     annotatePanelRows(panelList)
     scheduleMeasure()
   }
@@ -277,11 +287,9 @@ export function connectLayoutAdapter(
   const detach = (): void => {
     childrenObserver?.disconnect()
     measurementObserver?.disconnect()
-    collapseObserver?.disconnect()
     resizeObserver?.disconnect()
     childrenObserver = undefined
     measurementObserver = undefined
-    collapseObserver = undefined
     resizeObserver = undefined
     if (measureFrame) window.cancelAnimationFrame(measureFrame)
     measureFrame = 0
@@ -291,21 +299,20 @@ export function connectLayoutAdapter(
       current.root.removeAttribute('data-dsh-better-left-sidebar-brand-position')
       current.root.removeAttribute('data-dsh-better-left-sidebar-global-position')
       current.root.removeAttribute('data-dsh-better-left-sidebar-tools-position')
-      current.root.removeAttribute('data-dsh-better-left-sidebar-expansion')
-      current.root.removeAttribute('data-dsh-better-left-sidebar-has-drag-strip')
+      current.root.removeAttribute('data-dsh-better-left-sidebar-plugin-status')
       for (const element of [current.brand, current.newSession, current.panelList, current.conversation, current.tools]) {
         element.removeAttribute(REGION_MARK)
       }
       for (const custom of [
-        '--dsh-better-left-sidebar-chrome', '--dsh-better-left-sidebar-brand-height', '--dsh-better-left-sidebar-session-top',
+        '--dsh-better-left-sidebar-chrome', '--dsh-better-left-sidebar-native-toggle-reserve', '--dsh-better-left-sidebar-session-top',
         '--dsh-better-left-sidebar-rail-global-top', '--dsh-better-left-sidebar-conversation-global-top', '--dsh-better-left-sidebar-global-height',
-        '--dsh-better-left-sidebar-tools-height', '--dsh-better-left-sidebar-conversation-top', '--dsh-better-left-sidebar-conversation-bottom',
+        '--dsh-better-left-sidebar-conversation-top', '--dsh-better-left-sidebar-conversation-bottom',
         '--dsh-better-left-sidebar-nav-bottom-reserve', '--dsh-better-left-sidebar-compact-widgets-height',
         '--dsh-better-left-sidebar-compact-widgets-bottom',
       ]) current.root.style.removeProperty(custom)
       current.brand.querySelector<HTMLElement>(DSH.brandButton)?.removeAttribute('inert')
-      current.root.querySelectorAll(`[${ROW_MARK}], [${GLYPH_MARK}], [${TITLE_MARK}], [data-dsh-better-left-sidebar-brand-mark], [data-dsh-better-left-sidebar-brand-name], [data-dsh-better-left-sidebar-session-label], [data-dsh-better-left-sidebar-obsolete-collapse]`).forEach((element) => {
-        for (const attribute of [ROW_MARK, GLYPH_MARK, TITLE_MARK, 'data-dsh-better-left-sidebar-brand-mark', 'data-dsh-better-left-sidebar-brand-name', 'data-dsh-better-left-sidebar-session-label', 'data-dsh-better-left-sidebar-obsolete-collapse']) element.removeAttribute(attribute)
+      current.root.querySelectorAll(`[${ROW_MARK}], [${GLYPH_MARK}], [${TITLE_MARK}], [data-dsh-better-left-sidebar-brand-button], [data-dsh-better-left-sidebar-brand-mark], [data-dsh-better-left-sidebar-brand-name], [data-dsh-better-left-sidebar-session-label], [data-dsh-better-left-sidebar-native-toggle]`).forEach((element) => {
+        for (const attribute of [ROW_MARK, GLYPH_MARK, TITLE_MARK, 'data-dsh-better-left-sidebar-brand-button', 'data-dsh-better-left-sidebar-brand-mark', 'data-dsh-better-left-sidebar-brand-name', 'data-dsh-better-left-sidebar-session-label', 'data-dsh-better-left-sidebar-native-toggle']) element.removeAttribute(attribute)
       })
       current.root.querySelectorAll('[data-dsh-better-left-sidebar-settings-trigger-row]').forEach((element) => element.removeAttribute('data-dsh-better-left-sidebar-settings-trigger-row'))
       current.panelList.querySelectorAll('[data-dsh-better-left-sidebar-owned-title]').forEach((element) => {
@@ -327,6 +334,7 @@ export function connectLayoutAdapter(
       const targetRoot = current?.root ?? candidateRoot
       const relevant = records.some((record) => {
         const target = record.target
+        if (record.attributeName === 'data-sidebar-collapsed' && target instanceof Element && observedSidebar && target.contains(observedSidebar)) return true
         if (target === observedSidebar) return true
         if (target === targetRoot) return !current || record.type !== 'childList'
         if (target instanceof Element && (target.matches(DSH.sidebarSlot) || target.matches(DSH.root))) return true
@@ -341,7 +349,7 @@ export function connectLayoutAdapter(
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['class', 'data-slot'],
+      attributeFilter: ['class', 'data-slot', 'data-sidebar-collapsed'],
     })
   }
 
@@ -359,6 +367,15 @@ export function connectLayoutAdapter(
     }
     observedSidebar = sidebar
     candidateRoot = root
+    // Overall collapse belongs to DSH. Release our layout before its wide
+    // contents unmount; the host observer stays alive to restore it on reopen.
+    if (root.closest('[data-sidebar-collapsed="true"]') || root.classList.contains('hHd-Xa_collapsed')) {
+      if (current) {
+        detach()
+        onRoot(undefined)
+      }
+      return false
+    }
     if (current?.root === root) {
       const refreshed = readAnchors(root)
       if (!refreshed) {
@@ -389,16 +406,11 @@ export function connectLayoutAdapter(
     root.append(compactWidgets)
     if (preferences) apply(anchors, preferences)
     onRoot(root)
-    if (root.classList.contains('hHd-Xa_collapsed')) root.querySelector<HTMLButtonElement>(DSH.collapse)?.click()
     childrenObserver = new MutationObserver(() => {
       if (!current || current.root !== root) return
       attach()
     })
     childrenObserver.observe(root, { childList: true, subtree: true })
-    collapseObserver = new MutationObserver(() => {
-      if (root.classList.contains('hHd-Xa_collapsed')) root.querySelector<HTMLButtonElement>(DSH.collapse)?.click()
-    })
-    collapseObserver.observe(root, { attributes: true, attributeFilter: ['class'] })
     observeAnchors(anchors)
     return true
   }

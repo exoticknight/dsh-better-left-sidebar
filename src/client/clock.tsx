@@ -2,7 +2,6 @@ import type { LocaleRuntime } from '@deepseek-ai/dsh-client-locale/client'
 import { createElement as h, useEffect, useState, useSyncExternalStore } from 'react'
 import { clockLines } from '../clock-display.js'
 import type { ClockDisplay, ClockLines } from '../clock-display.js'
-import type { CompactFooterOwnerProps } from '../slots.js'
 
 interface ClockSource {
   subscribe(listener: () => void): () => void
@@ -17,7 +16,7 @@ export function createClockWidget(
   const subscribeLocale = (listener: () => void): (() => void) => locale.subscribe(listener)
   const activeLocale = (): string => locale.getSnapshot().active
 
-  return function ClockWidget({ active }: CompactFooterOwnerProps) {
+  return function ClockWidget({ active }: { active: boolean }) {
     const now = useMinuteClock(active)
     const localeId = useSyncExternalStore(subscribeLocale, activeLocale, activeLocale)
     const display = useSyncExternalStore(clock.subscribe, clock.getSnapshot, clock.getSnapshot)

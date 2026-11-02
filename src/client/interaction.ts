@@ -21,7 +21,7 @@ type Translate = (key: string) => string
 export interface SidebarInteraction {
   setRoot(root: HTMLElement | undefined, refreshAnchors?: boolean): void
   setPreferences(preferences: SidebarPreferences): void
-  setCompactWidgetsActive(setActive: (active: boolean) => void): void
+  setCompactListener(listener: (compact: boolean) => void): void
   setTranslate(translate: Translate): void
   dispose(): void
 }
@@ -45,7 +45,7 @@ export function connectInteraction(onToggleReserveChange: (reserve: number) => v
   let associatedPopups = new Set<Element>()
   let popupPending = false
   let toggle: HTMLButtonElement | undefined
-  let setCompactWidgetsActive: ((active: boolean) => void) | undefined
+  let onCompactChange: ((compact: boolean) => void) | undefined
   let resizeObserver: ResizeObserver | undefined
   let rootIdOwned = false
   let documentCleanup: (() => void) | undefined
@@ -89,7 +89,7 @@ export function connectInteraction(onToggleReserveChange: (reserve: number) => v
     mode = next
     classRoot.classList.toggle('dsh-better-left-sidebar-expanded', next !== 'compact')
     classRoot.classList.toggle('dsh-better-left-sidebar-pinned', next === 'pinned')
-    setCompactWidgetsActive?.(next === 'compact')
+    onCompactChange?.(Boolean(root) && next === 'compact')
     syncToggle()
   }
 
@@ -215,8 +215,8 @@ export function connectInteraction(onToggleReserveChange: (reserve: number) => v
   }
 
   const requestClose = (): void => {
-    clearEntryTimer()
     if (mode === 'pinned' || pointerInside || focusInside || popupOwnsInteraction()) return
+    clearEntryTimer()
     clearCloseTimer()
     closeTimer = window.setTimeout(() => {
       closeTimer = 0
@@ -450,6 +450,8 @@ export function connectInteraction(onToggleReserveChange: (reserve: number) => v
     }
     if (root && rootIdOwned && root.id === 'dsh-better-left-sidebar-navigation') root.removeAttribute('id')
     rootIdOwned = false
+    clearEntryTimer()
+    clearCloseTimer()
     removeToggle()
     root = next
     pointerInside = false
@@ -487,9 +489,9 @@ export function connectInteraction(onToggleReserveChange: (reserve: number) => v
       refreshToggleAvailability()
       syncToggle()
     },
-    setCompactWidgetsActive(setActive) {
-      setCompactWidgetsActive = setActive
-      setActive(mode === 'compact')
+    setCompactListener(setActive) {
+      onCompactChange = setActive
+      setActive(Boolean(root) && mode === 'compact')
     },
     setTranslate(next) {
       translate = next

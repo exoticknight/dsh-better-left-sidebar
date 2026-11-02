@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Better Left Sidebar",
-    "description": "A cleaner, better-organized DeepSeek Harness sidebar with support for multiple plugin-defined widgets."
+    "description": "A clearer DeepSeek Harness sidebar with separate navigation and conversation regions and built-in widgets."
   }
 }
