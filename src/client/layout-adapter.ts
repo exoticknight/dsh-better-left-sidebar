@@ -154,10 +154,15 @@ export function connectLayoutAdapter(
     const sessionHeight = heightOf(anchors.newSession)
     const toolsHeight = Math.max(heightOf(anchors.tools), 36)
     const chrome = anchors.root.querySelector(DSH.dragStrip) ? 52 : 0
+    const nativeToggle = anchors.root.querySelector<HTMLElement>(DSH.collapse)
+    const toggleStyle = nativeToggle && getComputedStyle(nativeToggle)
+    const toggleRect = nativeToggle?.getBoundingClientRect()
+    const nativeToggleReserve = toggleRect && toggleRect.width > 0 && toggleRect.height > 0
+      && toggleStyle?.visibility !== 'hidden' && toggleStyle?.visibility !== 'collapse' ? 44 : 0
     const brandOnSidebar = preferences?.brandPosition === 'sidebar-top'
     const brandOnRail = preferences?.brandPosition === 'navigation-top'
     const sessionTop = chrome + 10 + (brandOnSidebar ? brandHeight + 8 : 0)
-    const railGlobalTop = chrome + 54 + (brandOnRail ? brandHeight + 8 : 0)
+    const railGlobalTop = chrome + 10 + nativeToggleReserve + (brandOnRail ? brandHeight + 8 : 0)
     const conversationGlobalTop = sessionTop + sessionHeight + 8
     const panelRows = [...anchors.panelList.querySelectorAll<HTMLElement>(DSH.panelButton)]
     const rowHeight = panelRows.reduce((height, row) => height + Math.ceil(row.getBoundingClientRect().height), 0)
@@ -191,6 +196,7 @@ export function connectLayoutAdapter(
       : navBottomReserve + toggleReserve
 
     anchors.root.style.setProperty('--dsh-better-left-sidebar-chrome', `${chrome}px`)
+    anchors.root.style.setProperty('--dsh-better-left-sidebar-native-toggle-reserve', `${nativeToggleReserve}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-session-top', `${sessionTop}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-rail-global-top', `${railGlobalTop}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-conversation-global-top', `${conversationGlobalTop}px`)
@@ -216,6 +222,11 @@ export function connectLayoutAdapter(
     measurementObserver.observe(anchors.panelList, { childList: true, subtree: true })
     measurementObserver.observe(anchors.tools, { childList: true, subtree: true })
     measurementObserver.observe(compactWidgets, { childList: true })
+    const nativeToggle = anchors.root.querySelector<HTMLElement>(DSH.collapse)
+    if (nativeToggle) {
+      resizeObserver.observe(nativeToggle)
+      measurementObserver.observe(nativeToggle, { attributes: true, attributeFilter: ['class', 'style', 'hidden'] })
+    }
   }
 
   const sameAnchors = (a: LayoutAnchors, b: LayoutAnchors): boolean => a.root === b.root
@@ -291,7 +302,7 @@ export function connectLayoutAdapter(
         element.removeAttribute(REGION_MARK)
       }
       for (const custom of [
-        '--dsh-better-left-sidebar-chrome', '--dsh-better-left-sidebar-session-top',
+        '--dsh-better-left-sidebar-chrome', '--dsh-better-left-sidebar-native-toggle-reserve', '--dsh-better-left-sidebar-session-top',
         '--dsh-better-left-sidebar-rail-global-top', '--dsh-better-left-sidebar-conversation-global-top', '--dsh-better-left-sidebar-global-height',
         '--dsh-better-left-sidebar-conversation-top', '--dsh-better-left-sidebar-conversation-bottom',
         '--dsh-better-left-sidebar-nav-bottom-reserve', '--dsh-better-left-sidebar-compact-widgets-height',

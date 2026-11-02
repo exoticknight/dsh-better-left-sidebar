@@ -56,7 +56,7 @@ html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-bette
 html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-button] {
   position: absolute;
   z-index: 2;
-  top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 54px);
+  top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 10px + var(--dsh-better-left-sidebar-native-toggle-reserve, 44px));
   left: 10px;
   display: flex;
   width: 36px;
