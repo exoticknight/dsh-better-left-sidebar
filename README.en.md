@@ -49,7 +49,7 @@ Restart DSH after installing.
 You can also install the matching GitHub Release:
 
 ```sh
-dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#v0.2.0
+dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#v0.2.1
 ```
 
 Restart DSH after installing.
@@ -100,14 +100,14 @@ After you select **Save settings**, layout preferences are stored in the current
 
 ## Update, roll back, remove
 
-To update to or reinstall `0.2.0`, remove the plugin and install the exact version:
+To update to or reinstall `0.2.1`, remove the plugin and install the exact version:
 
 ```sh
 dsh plugin --profile web remove dsh-better-left-sidebar
 ```
 
 ```sh
-dsh plugin --profile web add dsh-better-left-sidebar@0.2.0
+dsh plugin --profile web add dsh-better-left-sidebar@0.2.1
 ```
 
 To roll back, replace the version in the install command with `0.1.4`. [View GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases).
