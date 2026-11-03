@@ -1,6 +1,6 @@
 {
   "name": "dsh-better-left-sidebar",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A clearer DeepSeek Harness sidebar with separate navigation and conversation regions and built-in widgets.",
   "icon": "./icon.svg",
   "license": "Apache-2.0",
