@@ -46,6 +46,7 @@ export function apply(ctx: ClientContext): void {
     interaction.setCompactListener((active) => {
       compactWidgets.setActive(active)
       nativeFooter.setCompact(active)
+      layout?.setCompact(active)
     })
     layout = connectLayoutAdapter((root, anchorsChanged) => interaction.setRoot(root, anchorsChanged), compactWidgets.container)
     layout.setCompactWidgets(compactWidgets.count, compactWidgets.active)
