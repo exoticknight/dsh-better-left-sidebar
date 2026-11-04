@@ -37,6 +37,7 @@ export interface LayoutAnchors {
 
 export interface LayoutAdapter {
   update(preferences: SidebarPreferences): void
+  setCompact(compact: boolean): void
   setCompactWidgets(count: number, active: boolean): void
   setNavigationToggleReserve(reserve: number): void
   dispose(): void
@@ -90,6 +91,7 @@ export function connectLayoutAdapter(
   compactWidgets: HTMLElement,
 ): LayoutAdapter {
   let preferences: SidebarPreferences | undefined
+  let compact = true
   let compactWidgetCount = 0
   let compactWidgetsActive = true
   let current: LayoutAnchors | undefined
@@ -141,6 +143,24 @@ export function connectLayoutAdapter(
       if (label && (!row.hasAttribute('title') || row.hasAttribute('data-dsh-better-left-sidebar-owned-title'))) {
         row.setAttribute('title', label)
         row.setAttribute('data-dsh-better-left-sidebar-owned-title', '')
+      }
+    }
+  }
+
+  // Browser hints escape the footer's scrolling/clipping boundaries. Keep
+  // launcher-owned titles intact, and withdraw our hint when labels expand.
+  const syncSettingsTitles = (tools: HTMLElement): void => {
+    for (const button of tools.querySelectorAll<HTMLElement>('[data-slot="sidebar.settings"] button')) {
+      const owned = button.hasAttribute('data-dsh-better-left-sidebar-owned-title')
+      const label = button.getAttribute('aria-label')
+      if (compact && preferences?.toolsPosition === 'rail-bottom' && label) {
+        if (!button.hasAttribute('title') || owned) {
+          button.setAttribute('title', label)
+          button.setAttribute('data-dsh-better-left-sidebar-owned-title', '')
+        }
+      } else if (owned) {
+        button.removeAttribute('title')
+        button.removeAttribute('data-dsh-better-left-sidebar-owned-title')
       }
     }
   }
@@ -281,6 +301,7 @@ export function connectLayoutAdapter(
     newSessionLabel?.setAttribute('data-dsh-better-left-sidebar-session-label', '')
     for (const collapse of root.querySelectorAll<HTMLElement>(DSH.collapse)) collapse.setAttribute('data-dsh-better-left-sidebar-native-toggle', '')
     annotatePanelRows(panelList)
+    syncSettingsTitles(tools)
     scheduleMeasure()
   }
 
@@ -315,7 +336,7 @@ export function connectLayoutAdapter(
         for (const attribute of [ROW_MARK, GLYPH_MARK, TITLE_MARK, 'data-dsh-better-left-sidebar-brand-button', 'data-dsh-better-left-sidebar-brand-mark', 'data-dsh-better-left-sidebar-brand-name', 'data-dsh-better-left-sidebar-session-label', 'data-dsh-better-left-sidebar-native-toggle']) element.removeAttribute(attribute)
       })
       current.root.querySelectorAll('[data-dsh-better-left-sidebar-settings-trigger-row]').forEach((element) => element.removeAttribute('data-dsh-better-left-sidebar-settings-trigger-row'))
-      current.panelList.querySelectorAll('[data-dsh-better-left-sidebar-owned-title]').forEach((element) => {
+      current.root.querySelectorAll('[data-dsh-better-left-sidebar-owned-title]').forEach((element) => {
         element.removeAttribute('title')
         element.removeAttribute('data-dsh-better-left-sidebar-owned-title')
       })
@@ -410,7 +431,7 @@ export function connectLayoutAdapter(
       if (!current || current.root !== root) return
       attach()
     })
-    childrenObserver.observe(root, { childList: true, subtree: true })
+    childrenObserver.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-label'] })
     observeAnchors(anchors)
     return true
   }
@@ -419,6 +440,10 @@ export function connectLayoutAdapter(
   attach()
 
   return {
+    setCompact(next) {
+      compact = next
+      if (current) syncSettingsTitles(current.tools)
+    },
     update(next) {
       preferences = next
       if (current) apply(current, next)

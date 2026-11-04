@@ -397,41 +397,6 @@ html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-l
   width: 100%;
 }
 
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-slot="sidebar.settings"] button[aria-label]::after {
-  display: none;
-  position: absolute;
-  z-index: 100;
-  top: 50%;
-  left: calc(100% + 8px);
-  width: max-content;
-  max-width: 240px;
-  padding: 5px 8px;
-  transform: translateY(-50%);
-  border: .5px solid var(--dsw-alias-border-l3);
-  border-radius: var(--dsw-radius-md);
-  background: var(--dsw-alias-label-primary);
-  box-shadow: var(--dsw-shadow-popup, 0 4px 16px rgb(0 0 0 / 18%));
-  color: var(--dsw-alias-label-primary-inverted);
-  content: attr(aria-label);
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 18px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-}
-
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-slot="sidebar.settings"] button[aria-label]:is(:hover, :focus-visible)::after {
-  display: block;
-  opacity: 1;
-  visibility: visible;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-slot="sidebar.settings"] button[aria-label]::after {
-  display: none;
-}
-
 html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root]::before {
   clip-path: inset(0);
   box-shadow: 4px 0 18px rgb(0 0 0 / 14%);

@@ -40,7 +40,7 @@ Semantic Versioning. Before 1.0.0, a breaking change bumps the minor version (0.
 ## 2. Update files
 
 - Optional: `docs/release-notes/vX.Y.Z.md` for highlights or migration steps prepended to the automatic GitHub Release notes. See [the example](../docs/release-notes/README.md).
-- `README.md` and `README.en.md`: check them against the "When to update" table in [reference/readme.md](reference/readme.md), and update the pinned `github:<owner>/<name>#vX.Y.Z` install command.
+- `README.md` and `README.en.md`: check them against the "When to update" table in [reference/readme.md](reference/readme.md), and keep user-facing install commands unversioned (npm package name or `github:<owner>/<name>`). Exact versions are only for release verification below.
 - If the verified DSH version changed: update the places listed in [40-maintain.md](40-maintain.md) § New DSH version, step 4.
 
 ## 3. Bump, build, check
