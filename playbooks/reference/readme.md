@@ -59,7 +59,7 @@ Write for 1 first, keep 2 complete, and never break 3.
 | ---------------------------------------- | --------------------------------------------------------------- |
 | New or changed feature, setting, UI path | Features, Usage, Configuration, screenshots                     |
 | New network access, stored data, or file | Privacy and data                                                |
-| Release                                  | Pinned `#vX.Y.Z` install command (30-release)                   |
+| Release                                  | Check unversioned install commands (30-release)                   |
 | New verified DSH version                 | Requirements line, DSH badge, Compatibility                     |
 | Confirmed directory listing              | Badge row 2 (50-listings)                                       |
 

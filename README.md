@@ -46,10 +46,10 @@ dsh plugin --profile web add dsh-better-left-sidebar
 
 ### 从 GitHub 安装
 
-也可以安装对应版本的 GitHub Release：
+也可以直接从 GitHub 默认分支安装：
 
 ```sh
-dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar#v0.2.1
+dsh plugin --profile web add github:exoticknight/dsh-better-left-sidebar
 ```
 
 安装后重启 DSH。
@@ -63,7 +63,7 @@ pnpm install
 ```
 
 ```sh
-pnpm dev:cli 0.2.1-rc.3
+pnpm dev:cli
 ```
 
 ```sh
@@ -100,17 +100,17 @@ pnpm dev
 
 ## 更新、回滚与卸载
 
-更新到 `0.2.1` 或重新安装时，先移除插件，再安装精确版本：
+更新或重新安装时，先移除插件，再安装：
 
 ```sh
 dsh plugin --profile web remove dsh-better-left-sidebar
 ```
 
 ```sh
-dsh plugin --profile web add dsh-better-left-sidebar@0.2.1
+dsh plugin --profile web add dsh-better-left-sidebar
 ```
 
-需要回滚时，将安装命令中的版本改为 `0.1.4`。[查看 GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases)。
+历史版本见 [查看 GitHub Releases](https://github.com/exoticknight/dsh-better-left-sidebar/releases)。
 
 移除插件只会卸载插件包；当前 DSH profile 中的会话和其他插件会保留。
 
