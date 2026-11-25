@@ -8,12 +8,19 @@ const DSH = {
   brandMark: '.hHd-Xa_brandMark',
   brandName: '.hHd-Xa_brandName',
   newSession: ':scope > .hHd-Xa_newSession',
+  newSessionRow: ':scope > .hHd-Xa_newSessionRow',
   newSessionLabel: '.hHd-Xa_newSessionLabel',
   panelList: ':scope > .hHd-Xa_panelList',
   panelButton: '.hHd-Xa_panelRow',
   panelGlyph: '.hHd-Xa_panelGlyph',
   panelTitle: '.hHd-Xa_panelTitle',
+  panelEntry: ':scope > .hHd-Xa_panelEntry',
+  panelUnpin: '.hHd-Xa_panelUnpin',
+  panelTrailing: '.hHd-Xa_panelTrailing',
   conversation: ':scope > .hHd-Xa_regionArea',
+  scrollRegion: ':scope > .hHd-Xa_scrollRegion',
+  scrollViewport: ':scope > [data-sidebar-scrollport].hHd-Xa_scrollArea',
+  scrollFade: ':scope > .hHd-Xa_scrollFade',
   tools: ':scope > .hHd-Xa_footArea',
   settingsTriggerRow: '.VOzbGW_triggerRow',
   collapse: '.hHd-Xa_toggle',
@@ -25,6 +32,23 @@ const REGION_MARK = 'data-dsh-better-left-sidebar-region'
 const ROW_MARK = 'data-dsh-better-left-sidebar-panel-row'
 const GLYPH_MARK = 'data-dsh-better-left-sidebar-panel-glyph'
 const TITLE_MARK = 'data-dsh-better-left-sidebar-panel-title'
+const ENTRY_MARK = 'data-dsh-better-left-sidebar-panel-entry'
+const UNPIN_MARK = 'data-dsh-better-left-sidebar-panel-unpin'
+const TRAILING_MARK = 'data-dsh-better-left-sidebar-panel-trailing'
+const SCROLL_MARK = 'data-dsh-better-left-sidebar-scroll'
+
+const nativePanelMarkers = [ENTRY_MARK, UNPIN_MARK, TRAILING_MARK]
+const clearNativePanelMarkers = (panelList: HTMLElement): void => {
+  panelList.querySelectorAll(nativePanelMarkers.map((attribute) => `[${attribute}]`).join(',')).forEach((element) => {
+    for (const attribute of nativePanelMarkers) element.removeAttribute(attribute)
+  })
+}
+
+interface NativeScroll {
+  region: HTMLElement
+  viewport: HTMLElement
+  fade: HTMLElement | null
+}
 
 export interface LayoutAnchors {
   root: HTMLElement
@@ -33,6 +57,7 @@ export interface LayoutAnchors {
   panelList: HTMLElement
   conversation: HTMLElement
   tools: HTMLElement
+  scroll?: NativeScroll
 }
 
 export interface LayoutAdapter {
@@ -107,9 +132,12 @@ export function connectLayoutAdapter(
 
   const readAnchors = (root: HTMLElement): LayoutAnchors | undefined => {
     const brand = root.querySelector<HTMLElement>(DSH.brand)
-    const newSession = root.querySelector<HTMLElement>(DSH.newSession)
-    const panelList = root.querySelector<HTMLElement>(DSH.panelList)
-    const conversation = root.querySelector<HTMLElement>(DSH.conversation)
+    const region = root.querySelector<HTMLElement>(DSH.scrollRegion)
+    const viewport = region?.querySelector<HTMLElement>(DSH.scrollViewport)
+    const scroll = region && viewport ? { region, viewport, fade: region.querySelector<HTMLElement>(DSH.scrollFade) } : undefined
+    const newSession = root.querySelector<HTMLElement>(region ? DSH.newSessionRow : DSH.newSession)
+    const panelList = (viewport ?? root).querySelector<HTMLElement>(DSH.panelList)
+    const conversation = (viewport ?? root).querySelector<HTMLElement>(DSH.conversation)
     const tools = root.querySelector<HTMLElement>(DSH.tools)
     const missing = [
       !brand && 'brand row',
@@ -125,7 +153,7 @@ export function connectLayoutAdapter(
       }
       return undefined
     }
-    return { root, brand: brand!, newSession: newSession!, panelList: panelList!, conversation: conversation!, tools: tools! }
+    return { root, brand: brand!, newSession: newSession!, panelList: panelList!, conversation: conversation!, tools: tools!, scroll }
   }
 
   const writeRegion = (element: HTMLElement, region: string): void => {
@@ -133,10 +161,15 @@ export function connectLayoutAdapter(
   }
 
   const annotatePanelRows = (panelList: HTMLElement): void => {
+    for (const entry of panelList.querySelectorAll<HTMLElement>(DSH.panelEntry)) {
+      entry.setAttribute(ENTRY_MARK, '')
+      entry.querySelector(DSH.panelUnpin)?.setAttribute(UNPIN_MARK, '')
+    }
     for (const row of panelList.querySelectorAll<HTMLElement>(DSH.panelButton)) {
       row.setAttribute(ROW_MARK, '')
       const glyph = row.querySelector<HTMLElement>(DSH.panelGlyph)
       const title = row.querySelector<HTMLElement>(DSH.panelTitle)
+      row.querySelector(DSH.panelTrailing)?.setAttribute(TRAILING_MARK, '')
       if (glyph) glyph.setAttribute(GLYPH_MARK, '')
       if (title) title.setAttribute(TITLE_MARK, '')
       const label = row.getAttribute('aria-label')
@@ -249,18 +282,35 @@ export function connectLayoutAdapter(
     }
   }
 
+  // The native viewport also listens for wheel events and forwards them to
+  // workspaces. Split layout gives panel navigation its own native scroller.
+  const keepNavigationWheelLocal = (event: WheelEvent): void => event.stopPropagation()
+
+  const releaseScroll = (anchors: LayoutAnchors): void => {
+    if (!anchors.scroll) return
+    anchors.scroll.region.removeAttribute(SCROLL_MARK)
+    anchors.scroll.viewport.removeAttribute(SCROLL_MARK)
+    anchors.scroll.fade?.removeAttribute(SCROLL_MARK)
+    anchors.panelList.removeEventListener('wheel', keepNavigationWheelLocal)
+  }
+
   const sameAnchors = (a: LayoutAnchors, b: LayoutAnchors): boolean => a.root === b.root
     && a.brand === b.brand
     && a.newSession === b.newSession
     && a.panelList === b.panelList
     && a.conversation === b.conversation
     && a.tools === b.tools
+    && a.scroll?.region === b.scroll?.region
+    && a.scroll?.viewport === b.scroll?.viewport
+    && a.scroll?.fade === b.scroll?.fade
 
   const releaseStaleAnchors = (previous: LayoutAnchors, next: LayoutAnchors): void => {
+    releaseScroll(previous)
     const retained = new Set([next.brand, next.newSession, next.panelList, next.conversation, next.tools])
     for (const element of [previous.brand, previous.newSession, previous.panelList, previous.conversation, previous.tools]) {
       if (retained.has(element)) continue
       element.removeAttribute(REGION_MARK)
+      if (element === previous.panelList) clearNativePanelMarkers(element)
       element.querySelector<HTMLElement>(DSH.brandButton)?.removeAttribute('inert')
       element.querySelectorAll(`[${ROW_MARK}], [${GLYPH_MARK}], [${TITLE_MARK}], [data-dsh-better-left-sidebar-brand-button], [data-dsh-better-left-sidebar-brand-mark], [data-dsh-better-left-sidebar-brand-name], [data-dsh-better-left-sidebar-session-label], [data-dsh-better-left-sidebar-native-toggle], [data-dsh-better-left-sidebar-settings-trigger-row]`).forEach((marked) => {
         for (const attribute of [ROW_MARK, GLYPH_MARK, TITLE_MARK, 'data-dsh-better-left-sidebar-brand-button', 'data-dsh-better-left-sidebar-brand-mark', 'data-dsh-better-left-sidebar-brand-name', 'data-dsh-better-left-sidebar-session-label', 'data-dsh-better-left-sidebar-native-toggle', 'data-dsh-better-left-sidebar-settings-trigger-row']) marked.removeAttribute(attribute)
@@ -284,6 +334,12 @@ export function connectLayoutAdapter(
     writeRegion(panelList, 'global-navigation')
     writeRegion(conversation, 'conversation')
     writeRegion(tools, 'tools')
+    if (anchors.scroll) {
+      anchors.scroll.region.setAttribute(SCROLL_MARK, 'region')
+      anchors.scroll.viewport.setAttribute(SCROLL_MARK, 'viewport')
+      anchors.scroll.fade?.setAttribute(SCROLL_MARK, 'fade')
+      panelList.addEventListener('wheel', keepNavigationWheelLocal, { passive: true })
+    }
     for (const row of tools.querySelectorAll<HTMLElement>(DSH.settingsTriggerRow)) {
       row.setAttribute('data-dsh-better-left-sidebar-settings-trigger-row', '')
     }
@@ -315,6 +371,7 @@ export function connectLayoutAdapter(
     if (measureFrame) window.cancelAnimationFrame(measureFrame)
     measureFrame = 0
     if (current) {
+      releaseScroll(current)
       if (compactWidgets.parentElement === current.root) compactWidgets.remove()
       current.root.removeAttribute(ROOT_MARK)
       current.root.removeAttribute('data-dsh-better-left-sidebar-brand-position')
@@ -324,6 +381,7 @@ export function connectLayoutAdapter(
       for (const element of [current.brand, current.newSession, current.panelList, current.conversation, current.tools]) {
         element.removeAttribute(REGION_MARK)
       }
+      clearNativePanelMarkers(current.panelList)
       for (const custom of [
         '--dsh-better-left-sidebar-chrome', '--dsh-better-left-sidebar-native-toggle-reserve', '--dsh-better-left-sidebar-session-top',
         '--dsh-better-left-sidebar-rail-global-top', '--dsh-better-left-sidebar-conversation-global-top', '--dsh-better-left-sidebar-global-height',
@@ -360,6 +418,7 @@ export function connectLayoutAdapter(
         if (target === targetRoot) return !current || record.type !== 'childList'
         if (target instanceof Element && (target.matches(DSH.sidebarSlot) || target.matches(DSH.root))) return true
         if (target instanceof Element && target.parentElement === targetRoot) return !current || record.type !== 'childList'
+        if (!current && target instanceof Element && target.matches('[data-sidebar-scrollport]') && targetRoot?.contains(target)) return true
         return [...record.addedNodes, ...record.removedNodes].some((node) =>
           node === targetRoot || subtreeHas(node, DSH.sidebarSlot) || subtreeHas(node, DSH.root),
         )
