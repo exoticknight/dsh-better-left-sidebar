@@ -53,7 +53,7 @@ pnpm verify
 
 All local testing happens in `.dsh-dev/`, a DSH home inside the repository. Your daily DSH home (`~/.dsh`) is never used.
 
-Init asks for a target version; unavailable input defaults to the latest verified 0.2 baseline, `0.2.1-rc.3`. `config.dshVersion` pins the default for `pnpm dev:cli`. The optional DSH host peer and `engines.dsh` carry the same bounded compatibility range. `pnpm-workspace.yaml` sets `autoInstallPeers: false` so a normal workspace install does not pull in the CLI; install additional development peers explicitly.
+Init asks for a target version and falls back to `0.2.2-rc.5`. `config.dshVersion` pins the default for `pnpm dev:cli`. The optional DSH host peer and `engines.dsh` carry the same bounded compatibility range. `pnpm-workspace.yaml` sets `autoInstallPeers: false` so a normal workspace install does not pull in the CLI; install additional development peers explicitly.
 
 - `pnpm dev` links this checkout into `.dsh-dev` with `dsh plugin --profile <profile> add .`, checks that the install really landed there, and starts the web profile on a free port without opening a browser. The printed link contains a login token; do not share it.
 - The install is a link: after a change, run `pnpm build`, stop DSH with `Ctrl+C`, and run `pnpm dev` again.

@@ -2,7 +2,7 @@
 
 [简体中文](README.md) | English
 
-[![CI](https://github.com/exoticknight/dsh-better-left-sidebar/actions/workflows/ci.yml/badge.svg)](https://github.com/exoticknight/dsh-better-left-sidebar/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/exoticknight/dsh-better-left-sidebar)](LICENSE) ![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.3-blue) [![Maintained with RED](https://img.shields.io/badge/maintained_with-RED-C1121F)](https://github.com/exoticknight/red)
+[![CI](https://github.com/exoticknight/dsh-better-left-sidebar/actions/workflows/ci.yml/badge.svg)](https://github.com/exoticknight/dsh-better-left-sidebar/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/exoticknight/dsh-better-left-sidebar)](LICENSE) ![DSH](https://img.shields.io/badge/DSH-0.2.2--rc.5-blue) [![Maintained with RED](https://img.shields.io/badge/maintained_with-RED-C1121F)](https://github.com/exoticknight/red)
 
 [![dsh.pub registry status](https://dsh.pub/api/badges/exoticknight/dsh-better-left-sidebar.svg)](https://dsh.pub/en/plugins/?q=exoticknight%2Fdsh-better-left-sidebar) [![Listed on DSH Market](https://raw.githubusercontent.com/2BingLing/dsh-market/master/assets/readme/badge-listed-en.svg)](https://dsh.market/?q=exoticknight%2Fdsh-better-left-sidebar)
 
@@ -32,7 +32,7 @@ A clearer DeepSeek Harness sidebar with separate navigation and conversation reg
 
 ## Install
 
-The current source was verified on DSH `0.2.1-rc.3` in the `web` profile. See the [compatibility record](docs/compatibility.md) for the supported range.
+Verified in the `web` profile on DSH `0.2.1-rc.3`, `0.2.2-rc.5`, and `0.2.3-alpha.2`. See the [compatibility record](docs/compatibility.md) for the supported range.
 
 ### Everyday users: npm release
 
@@ -130,7 +130,7 @@ The plugin reads no conversation content, writes no workspace files, keeps no se
 
 ## Compatibility
 
-Supports the `web` profile on DSH `>=0.2.0-rc.2 <0.2.2-0`. With Global navigation set to Above conversations, the global-navigation list scrolls independently to leave room for conversation content and footer tools; it shrinks first in short windows and can reach `0` at extreme heights. DSH's native “Standard mode” label can still truncate at a `567×626` viewport and the default `280px` or minimum `264px` sidebar width; widen the DSH sidebar if the full label matters. See the [compatibility record](docs/compatibility.md).
+Supports the `web` profile on DSH `>=0.2.0-rc.2 <0.2.2-0`, `0.2.2-rc.5`, and `0.2.3-alpha.2`. With Global navigation set to Above conversations, the global-navigation list scrolls independently to leave room for conversation content and footer tools; it shrinks first in short windows and can reach `0` at extreme heights. DSH's native “Standard mode” label can still truncate at a `567×626` viewport and the default `280px` or minimum `264px` sidebar width; widen the DSH sidebar if the full label matters. See the [compatibility record](docs/compatibility.md).
 
 ## Development
 
