@@ -7,7 +7,7 @@ import type { ComponentType } from 'react'
 import type { SidebarPreferences } from '../preferences.js'
 
 /**
- * rc.3 compatibility seam, not an official DSH decoration API.
+ * Compatibility seam over the DSH slot registry, not a decoration API.
  * Wrap only the native sidebar owner, retaining its entry identity and bound
  * renderSlot face. DSH still composes/owns every footer entry, store and error
  * boundary. This avoids copying providers or implementing a second renderer.
@@ -49,11 +49,12 @@ export function connectNativeFooterState(ctx: Context) {
         const Original = entry.component as ComponentType<SidebarRootComponentProps>
         function SidebarWithFooterState(props: SidebarRootComponentProps) {
           const forceCompact = useSyncExternalStore(subscribe, snapshot, snapshot)
-          const renderSlot: typeof props.renderSlot = (key, owner, options) => props.renderSlot(
-            key,
-            key === 'sidebar.footer.action' && forceCompact ? { ...owner, wide: false } : owner,
-            options,
-          )
+          // DSH types this as a set of overloads. Forward each call with its
+          // original arguments, except for the footer's typed owner props.
+          const renderSlot = ((...args: [key: string, owner?: object, ...rest: unknown[]]) => {
+            if (args[0] === 'sidebar.footer.action' && forceCompact) args[1] = { ...args[1], wide: false }
+            return Reflect.apply(props.renderSlot, props, args)
+          }) as typeof props.renderSlot
           return h(Original, { ...props, renderSlot })
         }
         wrapped.set(entry, { original: entry.component, wrapper: SidebarWithFooterState })

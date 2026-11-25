@@ -35,6 +35,32 @@ html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-bette
   border-left: .5px solid var(--dsw-alias-border-l3);
 }
 
+/* Keep the native viewport box for workspace drag scrolling; navigation now
+   has its own scroll box and the conversation box supplies workspace 100cqh. */
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-scroll="region"],
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-scroll="viewport"] {
+  position: absolute;
+  inset: 0;
+  display: block;
+  margin: 0;
+  overflow: clip;
+  pointer-events: none;
+}
+
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-scroll="viewport"] > [data-dsh-better-left-sidebar-region] {
+  pointer-events: auto;
+}
+
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-scroll="viewport"] > [data-dsh-better-left-sidebar-region="conversation"] {
+  container-type: size;
+  /* Native workspaces extend their scroller into this gutter. */
+  padding-inline-end: var(--dsh-sidebar-inline-padding);
+}
+
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-scroll="fade"] {
+  display: none;
+}
+
 /* Keep the native toggle independent of the brand's chosen placement or visibility. */
 html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="brand"] {
   display: contents !important;
@@ -54,44 +80,28 @@ html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-bette
 }
 
 html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-button] {
+  --dsh-better-left-sidebar-brand-inset: calc(var(--dsh-sidebar-inline-padding) + var(--dsh-better-left-sidebar-brand-row-inset, 0px));
   position: absolute;
   z-index: 2;
   top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 10px + var(--dsh-better-left-sidebar-native-toggle-reserve, 44px));
-  left: 10px;
-  display: flex;
+  left: var(--dsh-better-left-sidebar-brand-inset);
   width: 36px;
   height: 36px;
-  padding: 0;
-  align-items: center;
-  justify-content: flex-start;
-  overflow: hidden;
-  border: 0;
-  background: transparent;
-  color: inherit;
 }
 
 html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-brand-button] {
   top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 10px);
-  left: calc(var(--dsh-better-left-sidebar-rail) + 14px);
-  width: calc(var(--dsh-better-left-sidebar-conversation) - 28px);
+  left: calc(var(--dsh-better-left-sidebar-rail) + var(--dsh-better-left-sidebar-brand-inset));
+  width: max(0px, calc(var(--dsh-better-left-sidebar-conversation) - var(--dsh-better-left-sidebar-brand-inset) - 14px));
 }
 
 html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="hidden"] [data-dsh-better-left-sidebar-brand-button] {
   display: none;
 }
 
-html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-mark] {
-  display: inline-flex;
-  min-width: 36px;
-  justify-content: center;
-}
-
-html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-name] {
+/* Keep DSH's mark dimensions and spacing; hide only the wordmark in the compact rail. */
+html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-brand-name] {
   display: none;
-}
-
-html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-brand-name] {
-  display: inline-flex;
 }
 
 html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region] {
@@ -402,21 +412,6 @@ html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-l
   box-shadow: 4px 0 18px rgb(0 0 0 / 14%);
 }
 
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="brand"] {
-  clip-path: inset(0);
-  background: inherit;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-region="brand"] {
-  clip-path: inset(0);
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-region="brand"] [data-dsh-better-left-sidebar-brand-name] {
-  max-width: 200px;
-  opacity: 1;
-  visibility: visible;
-}
-
 html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-region="global-navigation"],
 html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-dsh-better-left-sidebar-region="tools"] {
   clip-path: inset(0);
@@ -435,16 +430,43 @@ html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-slot="
   margin-inline: 0;
 }
 
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-panel-title] {
-  max-width: 200px;
-  opacity: 1;
-}
-
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="conversation-top"] [data-dsh-better-left-sidebar-panel-row] {
   width: 100%;
   justify-content: flex-start;
   gap: 8px;
   padding-inline: 0;
+}
+
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-panel-entry] {
+  border-inline: 0;
+}
+
+html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-panel-entry]:has([data-dsh-better-left-sidebar-panel-unpin]) [data-dsh-better-left-sidebar-panel-row] {
+  padding-inline-end: 28px;
+}
+
+html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-panel-entry] {
+  width: 36px;
+}
+
+html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-panel-entry] [data-dsh-better-left-sidebar-panel-row] {
+  padding-inline-end: 0;
+}
+
+html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-panel-unpin] {
+  display: none;
+}
+
+html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-panel-trailing] {
+  position: absolute;
+  inset: 0 0 auto auto;
+  min-width: 0;
+  pointer-events: none;
+}
+
+html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-panel-title] {
+  max-width: 200px;
+  opacity: 1;
 }
 
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="conversation-top"] [data-dsh-better-left-sidebar-panel-title] {
@@ -464,10 +486,6 @@ html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-l
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-panel-row]:hover,
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-slot="sidebar.footer.action"] button:hover,
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-slot="sidebar.settings"] button:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-}
-
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="brand"][data-dsh-better-left-sidebar-brand-position="sidebar-top"] button:hover {
   background: var(--dsw-alias-interactive-bg-hover);
 }
 
@@ -536,16 +554,8 @@ html.dsh-better-left-sidebar[data-dsh-better-left-sidebar-animation="off"] {
 }
 
 
-/* The brand row is display:contents so native collapse remains independent. */
 html.dsh-better-left-sidebar-expanded [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-brand-button] {
-  width: calc(100% - 20px);
-}
-
-html.dsh-better-left-sidebar-expanded [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-brand-name] {
-  display: inline-flex;
-  max-width: 200px;
-  opacity: 1;
-  visibility: visible;
+  width: max(0px, calc(100% - var(--dsh-better-left-sidebar-brand-inset) - 10px));
 }
 
 html.dsh-better-left-sidebar-expanded [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-brand-button] {

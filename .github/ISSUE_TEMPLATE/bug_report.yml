@@ -15,7 +15,7 @@ body:
     attributes:
       label: DSH version
       description: Output of `dsh --version`.
-      placeholder: '0.2.1-rc.3'
+      placeholder: '0.2.2-rc.5'
     validations:
       required: true
   - type: textarea

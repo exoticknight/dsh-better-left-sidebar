@@ -2,7 +2,7 @@
 
 简体中文 | [English](README.en.md)
 
-[![CI](https://github.com/exoticknight/dsh-better-left-sidebar/actions/workflows/ci.yml/badge.svg)](https://github.com/exoticknight/dsh-better-left-sidebar/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/exoticknight/dsh-better-left-sidebar)](LICENSE) ![DSH](https://img.shields.io/badge/DSH-0.2.1--rc.3-blue) [![Maintained with RED](https://img.shields.io/badge/maintained_with-RED-C1121F)](https://github.com/exoticknight/red)
+[![CI](https://github.com/exoticknight/dsh-better-left-sidebar/actions/workflows/ci.yml/badge.svg)](https://github.com/exoticknight/dsh-better-left-sidebar/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/exoticknight/dsh-better-left-sidebar)](LICENSE) ![DSH](https://img.shields.io/badge/DSH-0.2.2--rc.5-blue) [![Maintained with RED](https://img.shields.io/badge/maintained_with-RED-C1121F)](https://github.com/exoticknight/red)
 
 [![dsh.pub registry status](https://dsh.pub/api/badges/exoticknight/dsh-better-left-sidebar.svg)](https://dsh.pub/en/plugins/?q=exoticknight%2Fdsh-better-left-sidebar) [![Listed on DSH Market](https://raw.githubusercontent.com/2BingLing/dsh-market/master/assets/readme/badge-listed-en.svg)](https://dsh.market/?q=exoticknight%2Fdsh-better-left-sidebar)
 
@@ -32,7 +32,7 @@
 
 ## 安装
 
-当前源码已在 DSH `0.2.1-rc.3` 的 `web` profile 验证；支持范围见[兼容性记录](docs/compatibility.md)。
+已在 DSH `0.2.1-rc.3`、`0.2.2-rc.5` 和 `0.2.3-alpha.2` 的 `web` profile 验证；支持范围见[兼容性记录](docs/compatibility.md)。
 
 ### 普通用户：npm 发布版
 
@@ -130,7 +130,7 @@ pnpm dev:dsh --profile web plugin remove dsh-better-left-sidebar
 
 ## 兼容性
 
-支持 DSH `>=0.2.0-rc.2 <0.2.2-0` 的 `web` profile。将“全局导航”设为“对话列表上方”时，导航列表独立滚动，为会话内容和底部工具留出空间；窗口变矮时导航区优先收缩，极端高度下可缩至 `0`。DSH 自带的“Standard mode”标签在 `567×626` 窗口和默认 `280px` 或最小 `264px` 侧栏宽度下仍可能被截断，可调宽 DSH 侧栏。详见[兼容性记录](docs/compatibility.md)。
+支持 DSH `>=0.2.0-rc.2 <0.2.2-0`、`0.2.2-rc.5` 和 `0.2.3-alpha.2` 的 `web` profile。将“全局导航”设为“对话列表上方”时，导航列表独立滚动，为会话内容和底部工具留出空间；窗口变矮时导航区优先收缩，极端高度下可缩至 `0`。DSH 自带的“Standard mode”标签在 `567×626` 窗口和默认 `280px` 或最小 `264px` 侧栏宽度下仍可能被截断，可调宽 DSH 侧栏。详见[兼容性记录](docs/compatibility.md)。
 
 ## 开发
 

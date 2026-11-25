@@ -3,7 +3,7 @@ import { createInterface } from 'node:readline/promises'
 
 // Keep the development fallback pinned to the latest adapted prerelease;
 // do not resolve a moving dist-tag during init.
-export const DEFAULT_DSH_VERSION = '0.2.1-rc.3'
+export const DEFAULT_DSH_VERSION = '0.2.2-rc.5'
 
 export function exactDshVersion(input) {
   const value = input.trim() === '0.2' ? DEFAULT_DSH_VERSION : input.trim()
