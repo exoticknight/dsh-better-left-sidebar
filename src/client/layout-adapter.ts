@@ -5,7 +5,6 @@ const DSH = {
   root: '.hHd-Xa_root',
   brand: ':scope > .hHd-Xa_logoRow',
   brandButton: '.hHd-Xa_brand',
-  brandMark: '.hHd-Xa_brandMark',
   brandName: '.hHd-Xa_brandName',
   newSession: ':scope > .hHd-Xa_newSession',
   newSessionRow: ':scope > .hHd-Xa_newSessionRow',
@@ -204,6 +203,8 @@ export function connectLayoutAdapter(
     if (!anchors?.root.isConnected) return
     const heightOf = (element: HTMLElement): number => Math.ceil(Math.max(element.getBoundingClientRect().height, element.scrollHeight))
     const brandHeight = heightOf(anchors.brand.querySelector<HTMLElement>(DSH.brandButton) ?? anchors.brand)
+    // Preserve the native row's horizontal inset even though its box is flattened.
+    const brandRowInset = getComputedStyle(anchors.brand).paddingLeft
     const sessionHeight = heightOf(anchors.newSession)
     const toolsHeight = Math.max(heightOf(anchors.tools), 36)
     const chrome = anchors.root.querySelector(DSH.dragStrip) ? 52 : 0
@@ -249,6 +250,7 @@ export function connectLayoutAdapter(
       : navBottomReserve + toggleReserve
 
     anchors.root.style.setProperty('--dsh-better-left-sidebar-chrome', `${chrome}px`)
+    anchors.root.style.setProperty('--dsh-better-left-sidebar-brand-row-inset', brandRowInset)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-native-toggle-reserve', `${nativeToggleReserve}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-session-top', `${sessionTop}px`)
     anchors.root.style.setProperty('--dsh-better-left-sidebar-rail-global-top', `${railGlobalTop}px`)
@@ -312,8 +314,8 @@ export function connectLayoutAdapter(
       element.removeAttribute(REGION_MARK)
       if (element === previous.panelList) clearNativePanelMarkers(element)
       element.querySelector<HTMLElement>(DSH.brandButton)?.removeAttribute('inert')
-      element.querySelectorAll(`[${ROW_MARK}], [${GLYPH_MARK}], [${TITLE_MARK}], [data-dsh-better-left-sidebar-brand-button], [data-dsh-better-left-sidebar-brand-mark], [data-dsh-better-left-sidebar-brand-name], [data-dsh-better-left-sidebar-session-label], [data-dsh-better-left-sidebar-native-toggle], [data-dsh-better-left-sidebar-settings-trigger-row]`).forEach((marked) => {
-        for (const attribute of [ROW_MARK, GLYPH_MARK, TITLE_MARK, 'data-dsh-better-left-sidebar-brand-button', 'data-dsh-better-left-sidebar-brand-mark', 'data-dsh-better-left-sidebar-brand-name', 'data-dsh-better-left-sidebar-session-label', 'data-dsh-better-left-sidebar-native-toggle', 'data-dsh-better-left-sidebar-settings-trigger-row']) marked.removeAttribute(attribute)
+      element.querySelectorAll(`[${ROW_MARK}], [${GLYPH_MARK}], [${TITLE_MARK}], [data-dsh-better-left-sidebar-brand-button], [data-dsh-better-left-sidebar-brand-name], [data-dsh-better-left-sidebar-session-label], [data-dsh-better-left-sidebar-native-toggle], [data-dsh-better-left-sidebar-settings-trigger-row]`).forEach((marked) => {
+        for (const attribute of [ROW_MARK, GLYPH_MARK, TITLE_MARK, 'data-dsh-better-left-sidebar-brand-button', 'data-dsh-better-left-sidebar-brand-name', 'data-dsh-better-left-sidebar-session-label', 'data-dsh-better-left-sidebar-native-toggle', 'data-dsh-better-left-sidebar-settings-trigger-row']) marked.removeAttribute(attribute)
       })
       element.querySelectorAll('[data-dsh-better-left-sidebar-owned-title]').forEach((ownedTitle) => {
         ownedTitle.removeAttribute('title')
@@ -349,9 +351,7 @@ export function connectLayoutAdapter(
       brandButton.inert = next.brandPosition !== 'sidebar-top'
       brandButton.setAttribute('data-dsh-better-left-sidebar-brand-button', '')
     }
-    const brandMark = brand.querySelector<HTMLElement>(DSH.brandMark)
     const brandName = brand.querySelector<HTMLElement>(DSH.brandName)
-    if (brandMark) brandMark.setAttribute('data-dsh-better-left-sidebar-brand-mark', '')
     if (brandName) brandName.setAttribute('data-dsh-better-left-sidebar-brand-name', '')
     const newSessionLabel = newSession.querySelector<HTMLElement>(DSH.newSessionLabel)
     newSessionLabel?.setAttribute('data-dsh-better-left-sidebar-session-label', '')
@@ -383,15 +383,15 @@ export function connectLayoutAdapter(
       }
       clearNativePanelMarkers(current.panelList)
       for (const custom of [
-        '--dsh-better-left-sidebar-chrome', '--dsh-better-left-sidebar-native-toggle-reserve', '--dsh-better-left-sidebar-session-top',
+        '--dsh-better-left-sidebar-chrome', '--dsh-better-left-sidebar-brand-row-inset', '--dsh-better-left-sidebar-native-toggle-reserve', '--dsh-better-left-sidebar-session-top',
         '--dsh-better-left-sidebar-rail-global-top', '--dsh-better-left-sidebar-conversation-global-top', '--dsh-better-left-sidebar-global-height',
         '--dsh-better-left-sidebar-conversation-top', '--dsh-better-left-sidebar-conversation-bottom',
         '--dsh-better-left-sidebar-nav-bottom-reserve', '--dsh-better-left-sidebar-compact-widgets-height',
         '--dsh-better-left-sidebar-compact-widgets-bottom',
       ]) current.root.style.removeProperty(custom)
       current.brand.querySelector<HTMLElement>(DSH.brandButton)?.removeAttribute('inert')
-      current.root.querySelectorAll(`[${ROW_MARK}], [${GLYPH_MARK}], [${TITLE_MARK}], [data-dsh-better-left-sidebar-brand-button], [data-dsh-better-left-sidebar-brand-mark], [data-dsh-better-left-sidebar-brand-name], [data-dsh-better-left-sidebar-session-label], [data-dsh-better-left-sidebar-native-toggle]`).forEach((element) => {
-        for (const attribute of [ROW_MARK, GLYPH_MARK, TITLE_MARK, 'data-dsh-better-left-sidebar-brand-button', 'data-dsh-better-left-sidebar-brand-mark', 'data-dsh-better-left-sidebar-brand-name', 'data-dsh-better-left-sidebar-session-label', 'data-dsh-better-left-sidebar-native-toggle']) element.removeAttribute(attribute)
+      current.root.querySelectorAll(`[${ROW_MARK}], [${GLYPH_MARK}], [${TITLE_MARK}], [data-dsh-better-left-sidebar-brand-button], [data-dsh-better-left-sidebar-brand-name], [data-dsh-better-left-sidebar-session-label], [data-dsh-better-left-sidebar-native-toggle]`).forEach((element) => {
+        for (const attribute of [ROW_MARK, GLYPH_MARK, TITLE_MARK, 'data-dsh-better-left-sidebar-brand-button', 'data-dsh-better-left-sidebar-brand-name', 'data-dsh-better-left-sidebar-session-label', 'data-dsh-better-left-sidebar-native-toggle']) element.removeAttribute(attribute)
       })
       current.root.querySelectorAll('[data-dsh-better-left-sidebar-settings-trigger-row]').forEach((element) => element.removeAttribute('data-dsh-better-left-sidebar-settings-trigger-row'))
       current.root.querySelectorAll('[data-dsh-better-left-sidebar-owned-title]').forEach((element) => {

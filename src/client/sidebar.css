@@ -80,44 +80,28 @@ html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-bette
 }
 
 html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-button] {
+  --dsh-better-left-sidebar-brand-inset: calc(var(--dsh-sidebar-inline-padding) + var(--dsh-better-left-sidebar-brand-row-inset, 0px));
   position: absolute;
   z-index: 2;
   top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 10px + var(--dsh-better-left-sidebar-native-toggle-reserve, 44px));
-  left: 10px;
-  display: flex;
+  left: var(--dsh-better-left-sidebar-brand-inset);
   width: 36px;
   height: 36px;
-  padding: 0;
-  align-items: center;
-  justify-content: flex-start;
-  overflow: hidden;
-  border: 0;
-  background: transparent;
-  color: inherit;
 }
 
 html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-brand-button] {
   top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 10px);
-  left: calc(var(--dsh-better-left-sidebar-rail) + 14px);
-  width: calc(var(--dsh-better-left-sidebar-conversation) - 28px);
+  left: calc(var(--dsh-better-left-sidebar-rail) + var(--dsh-better-left-sidebar-brand-inset));
+  width: max(0px, calc(var(--dsh-better-left-sidebar-conversation) - var(--dsh-better-left-sidebar-brand-inset) - 14px));
 }
 
 html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="hidden"] [data-dsh-better-left-sidebar-brand-button] {
   display: none;
 }
 
-html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-mark] {
-  display: inline-flex;
-  min-width: 36px;
-  justify-content: center;
-}
-
-html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-brand-name] {
+/* Keep DSH's mark dimensions and spacing; hide only the wordmark in the compact rail. */
+html.dsh-better-left-sidebar:not(.dsh-better-left-sidebar-expanded) [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-brand-name] {
   display: none;
-}
-
-html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-brand-name] {
-  display: inline-flex;
 }
 
 html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region] {
@@ -428,21 +412,6 @@ html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-l
   box-shadow: 4px 0 18px rgb(0 0 0 / 14%);
 }
 
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="brand"] {
-  clip-path: inset(0);
-  background: inherit;
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-region="brand"] {
-  clip-path: inset(0);
-}
-
-html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-region="brand"] [data-dsh-better-left-sidebar-brand-name] {
-  max-width: 200px;
-  opacity: 1;
-  visibility: visible;
-}
-
 html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-global-position="rail"] [data-dsh-better-left-sidebar-region="global-navigation"],
 html.dsh-better-left-sidebar-expanded [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-tools-position="rail-bottom"] [data-dsh-better-left-sidebar-region="tools"] {
   clip-path: inset(0);
@@ -520,10 +489,6 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   background: var(--dsw-alias-interactive-bg-hover);
 }
 
-html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] [data-dsh-better-left-sidebar-region="brand"][data-dsh-better-left-sidebar-brand-position="sidebar-top"] button:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
-}
-
 html.dsh-better-left-sidebar .dsh-better-left-sidebar-toggle {
   position: fixed;
   z-index: 80;
@@ -589,16 +554,8 @@ html.dsh-better-left-sidebar[data-dsh-better-left-sidebar-animation="off"] {
 }
 
 
-/* The brand row is display:contents so native collapse remains independent. */
 html.dsh-better-left-sidebar-expanded [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-brand-button] {
-  width: calc(100% - 20px);
-}
-
-html.dsh-better-left-sidebar-expanded [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="navigation-top"] [data-dsh-better-left-sidebar-brand-name] {
-  display: inline-flex;
-  max-width: 200px;
-  opacity: 1;
-  visibility: visible;
+  width: max(0px, calc(100% - var(--dsh-better-left-sidebar-brand-inset) - 10px));
 }
 
 html.dsh-better-left-sidebar-expanded [data-dsh-better-left-sidebar-root][data-dsh-better-left-sidebar-brand-position="sidebar-top"] [data-dsh-better-left-sidebar-brand-button] {
