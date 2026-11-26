@@ -1,6 +1,6 @@
 # Built-in rail widgets
 
-Better Left Sidebar includes a clock and a balance widget in its 56px navigation rail. Open **Plugins → Better Left Sidebar → Widgets** to enable, disable or reorder them. Changes apply when you select **Save settings**; **Discard changes** restores the saved values.
+Better Left Sidebar includes a clock and a balance widget in its compact navigation rail. Open **Plugins → Better Left Sidebar → Widgets** to enable, disable or reorder them. Changes apply when you select **Save settings**; **Discard changes** restores the saved values.
 
 The widgets belong to the split layout while the whole sidebar is natively expanded. They hide when navigation opens or DSH collapses the whole sidebar, then resume when the compact navigation rail returns.
 
@@ -18,7 +18,7 @@ Active widgets query immediately and refresh about one minute after each query c
 
 ## Widget box
 
-Each box uses the rail's full 56px width. Content supplies its height; the host adds no padding or border. The list keeps complete boxes in saved order while they fit above the native bottom controls. The first box that does not fit and those after it are hidden, without a scrollbar. Settings distinguishes **Hidden: not enough space**, inactive, empty and disabled states.
+Each box spans the full rail width and takes its height from its content. The host adds no padding or border. The list keeps complete boxes in saved order while they fit above the native bottom controls. The first box that does not fit and those after it are hidden, without a scrollbar. Settings distinguishes **Hidden: not enough space**, inactive, empty and disabled states.
 
 Built-ins are display-only. Their boxes use `pointer-events: none` so the navigation region retains pointer behavior. Hover expansion and the explicit click/touch toggle remain navigation controls rather than widget controls.
 
