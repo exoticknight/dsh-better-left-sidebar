@@ -35,6 +35,22 @@ const ENTRY_MARK = 'data-dsh-better-left-sidebar-panel-entry'
 const UNPIN_MARK = 'data-dsh-better-left-sidebar-panel-unpin'
 const TRAILING_MARK = 'data-dsh-better-left-sidebar-panel-trailing'
 const SCROLL_MARK = 'data-dsh-better-left-sidebar-scroll'
+const RAIL_WIDTH = '--dsh-better-left-sidebar-rail-width'
+
+function readNativeRailWidth(root: HTMLElement, panelList: HTMLElement): number | undefined {
+  const glyphs = panelList.querySelectorAll<HTMLElement>(`${DSH.panelButton} ${DSH.panelGlyph}`)
+  if (!glyphs.length) return
+  // A list can mount or gain its first icon after the plugin has already
+  // attached. Read native geometry before restoring the marker in apply().
+  root.removeAttribute(ROOT_MARK)
+  const { left, width } = root.getBoundingClientRect()
+  for (const glyph of glyphs) {
+    const rect = glyph.getBoundingClientRect()
+    if (rect.width <= 0 || rect.height <= 0 || getComputedStyle(glyph).visibility !== 'visible') continue
+    const railWidth = 2 * (rect.left - left + rect.width / 2)
+    if (railWidth >= 36 && railWidth <= width) return railWidth
+  }
+}
 
 const nativePanelMarkers = [ENTRY_MARK, UNPIN_MARK, TRAILING_MARK]
 const clearNativePanelMarkers = (panelList: HTMLElement): void => {
@@ -127,6 +143,7 @@ export function connectLayoutAdapter(
   let resizeObserver: ResizeObserver | undefined
   let navigationToggleReserve = 0
   let measureFrame = 0
+  let sampledPanelList: HTMLElement | undefined
   let warnedFor = new WeakSet<HTMLElement>()
 
   const readAnchors = (root: HTMLElement): LayoutAnchors | undefined => {
@@ -326,6 +343,13 @@ export function connectLayoutAdapter(
 
   const apply = (anchors: LayoutAnchors, next: SidebarPreferences): void => {
     const { root, brand, newSession, panelList, conversation, tools } = anchors
+    if (sampledPanelList !== panelList) {
+      const width = readNativeRailWidth(root, panelList)
+      if (width !== undefined) {
+        root.style.setProperty(RAIL_WIDTH, `${width}px`)
+        sampledPanelList = panelList
+      }
+    }
     root.setAttribute(ROOT_MARK, '')
     root.dataset.dshBetterLeftSidebarBrandPosition = next.brandPosition
     root.dataset.dshBetterLeftSidebarGlobalPosition = next.globalNavigationPosition
@@ -370,6 +394,7 @@ export function connectLayoutAdapter(
     resizeObserver = undefined
     if (measureFrame) window.cancelAnimationFrame(measureFrame)
     measureFrame = 0
+    sampledPanelList = undefined
     if (current) {
       releaseScroll(current)
       if (compactWidgets.parentElement === current.root) compactWidgets.remove()
@@ -383,6 +408,7 @@ export function connectLayoutAdapter(
       }
       clearNativePanelMarkers(current.panelList)
       for (const custom of [
+        RAIL_WIDTH,
         '--dsh-better-left-sidebar-chrome', '--dsh-better-left-sidebar-brand-row-inset', '--dsh-better-left-sidebar-native-toggle-reserve', '--dsh-better-left-sidebar-session-top',
         '--dsh-better-left-sidebar-rail-global-top', '--dsh-better-left-sidebar-conversation-global-top', '--dsh-better-left-sidebar-global-height',
         '--dsh-better-left-sidebar-conversation-top', '--dsh-better-left-sidebar-conversation-bottom',
@@ -469,6 +495,10 @@ export function connectLayoutAdapter(
         return true
       }
       releaseStaleAnchors(current, refreshed)
+      if (current.panelList !== refreshed.panelList) {
+        sampledPanelList = undefined
+        root.style.removeProperty(RAIL_WIDTH)
+      }
       current = refreshed
       root.append(compactWidgets)
       observeAnchors(refreshed)

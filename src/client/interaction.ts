@@ -235,9 +235,13 @@ export function connectInteraction(onToggleReserveChange: (reserve: number) => v
   const updateTogglePosition = (): void => {
     if (!root || !toggle) return
     const rect = root.getBoundingClientRect()
+    const conversation = root.querySelector<HTMLElement>('[data-dsh-better-left-sidebar-region="conversation"]')
     const tools = root.querySelector<HTMLElement>('[data-dsh-better-left-sidebar-region="tools"]')
     const toolReserve = preferences?.toolsPosition === 'rail-bottom' && tools ? Math.max(tools.getBoundingClientRect().height, tools.scrollHeight) + 8 : 0
-    toggle.style.left = `${Math.round(rect.left + 10)}px`
+    if (conversation) {
+      const railWidth = conversation.getBoundingClientRect().left - rect.left
+      toggle.style.left = `${rect.left + Math.max(0, (railWidth - NAVIGATION_TOGGLE_SIZE) / 2)}px`
+    }
     toggle.style.top = `${Math.max(rect.top + 8, Math.round(rect.bottom - NAVIGATION_TOGGLE_GAP - NAVIGATION_TOGGLE_SIZE - toolReserve))}px`
   }
 
@@ -265,6 +269,8 @@ export function connectInteraction(onToggleReserveChange: (reserve: number) => v
     resizeObserver?.disconnect()
     resizeObserver = new ResizeObserver(updateTogglePosition)
     resizeObserver.observe(root)
+    const conversation = root.querySelector<HTMLElement>('[data-dsh-better-left-sidebar-region="conversation"]')
+    if (conversation) resizeObserver.observe(conversation)
     const tools = root.querySelector<HTMLElement>('[data-dsh-better-left-sidebar-region="tools"]')
     if (tools) resizeObserver.observe(tools)
     updateTogglePosition()

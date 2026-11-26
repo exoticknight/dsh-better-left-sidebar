@@ -6,7 +6,8 @@ html.dsh-better-left-sidebar {
 
 /* Native DSH owns collapse. This layout only separates the expanded regions. */
 html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sidebar-root] {
-  --dsh-better-left-sidebar-rail: min(56px, 100%);
+  --dsh-better-left-sidebar-rail: min(var(--dsh-better-left-sidebar-rail-width, 56px), 100%);
+  --dsh-better-left-sidebar-rail-inset: max(0px, calc((var(--dsh-better-left-sidebar-rail) - 36px) / 2));
   --dsh-better-left-sidebar-open: 100%;
   --dsh-better-left-sidebar-conversation: max(0px, calc(100% - var(--dsh-better-left-sidebar-rail)));
   position: relative !important;
@@ -70,7 +71,7 @@ html.dsh-better-left-sidebar [data-dsh-better-left-sidebar-root] [data-dsh-bette
   position: absolute !important;
   z-index: 3;
   top: calc(var(--dsh-better-left-sidebar-chrome, 0px) + 10px) !important;
-  left: 10px !important;
+  left: var(--dsh-better-left-sidebar-rail-inset) !important;
   display: inline-flex;
   width: 36px;
   height: 36px;
@@ -160,6 +161,7 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   bottom: var(--dsh-better-left-sidebar-nav-bottom-reserve, 44px);
   left: 0;
   width: var(--dsh-better-left-sidebar-open);
+  padding-inline: var(--dsh-better-left-sidebar-rail-inset) 10px;
   clip-path: inset(0 calc(100% - var(--dsh-better-left-sidebar-rail)) 0 0);
   transition: clip-path var(--dsh-better-left-sidebar-motion) var(--dsh-better-left-sidebar-ease);
 }
@@ -230,7 +232,7 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   bottom: var(--dsh-better-left-sidebar-compact-widgets-bottom, 16px);
   left: 0;
   display: flex;
-  width: 56px;
+  width: var(--dsh-better-left-sidebar-rail);
   max-height: var(--dsh-better-left-sidebar-compact-widgets-height, 0px);
   flex-direction: column;
   align-items: stretch;
@@ -317,7 +319,7 @@ html.dsh-better-left-sidebar [data-slot="sidebar"] > [data-dsh-better-left-sideb
   bottom: 8px;
   left: 0;
   width: var(--dsh-better-left-sidebar-open);
-  padding: 0 10px;
+  padding: 0 var(--dsh-better-left-sidebar-rail-inset);
   clip-path: inset(0 calc(100% - var(--dsh-better-left-sidebar-rail)) 0 0);
   transition: clip-path var(--dsh-better-left-sidebar-motion) var(--dsh-better-left-sidebar-ease);
 }
